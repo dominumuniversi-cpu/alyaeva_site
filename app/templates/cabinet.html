@@ -17,7 +17,9 @@
   {% for o in orders %}
   <div class="card" style="margin-top:20px">
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
-      <strong style="font-size:18px">Заказ {{ o.number }}</strong>
+      <a href="/cabinet/order/{{ o.id }}" style="font-size:18px;font-weight:800;color:var(--c-strong);text-decoration:none">
+        Заказ {{ o.number }}
+      </a>
       <span class="pill">{{ status_name(o.status) }}</span>
     </div>
     <div class="hint" style="margin-top:4px">
@@ -28,14 +30,17 @@
 
     {% set photos = photos_by_order.get(o.id, []) %}
     {% if photos %}
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-        {% for f in photos %}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
+        {% for f in photos[:6] %}
           <a href="/api/file/{{ f.id }}" target="_blank" rel="noopener"
-             style="display:block;width:96px;height:96px;border-radius:12px;overflow:hidden;background:#F1ECFF">
+             style="display:block;width:92px;height:92px;border-radius:12px;overflow:hidden;background:var(--c-lilac)">
             <img src="/api/file/{{ f.id }}" alt="{{ f.orig_name }}" loading="lazy"
                  style="width:100%;height:100%;object-fit:cover">
           </a>
         {% endfor %}
+        <a href="/cabinet/order/{{ o.id }}" class="hint" style="margin-left:6px;font-weight:700">
+          {% if photos|length > 6 %}ещё {{ photos|length - 6 }} · {% endif %}все фото ({{ photos|length }}) →
+        </a>
       </div>
     {% else %}
       <p class="hint" style="margin-top:12px">Фото ещё не загружены. <a href="/order">Добавить фото к заказу</a></p>

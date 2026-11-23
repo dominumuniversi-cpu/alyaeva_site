@@ -241,6 +241,34 @@ def cabinet(request: Request):
                   photos_by_order=photos_by_order, status_name=status_name)
 
 
+@app.get("/cabinet/order/{order_id}", response_class=HTMLResponse)
+def cabinet_order(order_id: int, request: Request):
+    """Один заказ клиента: фото крупно и в полном размере.
+
+    Владелец проверяется по user_id из сессии. Чужой заказ не открывается
+    ни под каким видом — номер заказа НЕ является ключом доступа.
+    """
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+    with db.pool.connection() as conn:
+        row = conn.execute(
+            """SELECT id, number, status, total_rub, created_at, comment
+               FROM orders WHERE id = %s AND user_id = %s""",
+            (order_id, user["id"]),
+        ).fetchone()
+        if not row:
+            return _deny(request)
+        photos = conn.execute(
+            """SELECT f.id, f.orig_name, f.size_bytes, f.created_at
+               FROM project_files f JOIN projects p ON p.id = f.project_id
+               WHERE p.order_id = %s ORDER BY f.created_at""",
+            (order_id,),
+        ).fetchall()
+    return render(request, "cabinet_order.html", user=user, order=row,
+                  photos=photos, status_name=status_name)
+
+
 @app.get("/cabinet/projects", response_class=HTMLResponse)
 def projects_page(request: Request):
     """Проекты (папки) с фотографиями клиента."""

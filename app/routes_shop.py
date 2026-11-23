@@ -158,12 +158,12 @@ def serve_file(file_id: int, request: Request):
     with db.pool.connection() as conn:
         row = conn.execute("SELECT * FROM project_files WHERE id = %s", (file_id,)).fetchone()
     if not row:
-        return HTMLResponse("Файл не найден", status_code=404)
+        return denied(request, "Файл не найден", 404)
     if row["user_id"] != user["id"] and user["role"] != "admin":
-        return HTMLResponse("Нет доступа", status_code=403)
+        return denied(request)
     path = shop.file_path(row)
     if not os.path.exists(path):
-        return HTMLResponse("Файл недоступен", status_code=404)
+        return denied(request, "Файл недоступен", 404)
     return FileResponse(path, filename=row["orig_name"])
 
 

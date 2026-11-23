@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Заказ {{ order.number }} — Алёна Аляева{% endblock %}
+{% block content %}
+<div style="padding:32px 0 64px">
+  <p class="hint" style="margin:0 0 6px"><a href="/cabinet">← Мои заказы</a></p>
+
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <h1 style="margin:0">Заказ {{ order.number }}</h1>
+      <p class="hint" style="margin:6px 0 0">
+        {{ order.created_at.strftime('%d.%m.%Y') }}
+        {% if order.total_rub %} · {{ '%.0f'|format(order.total_rub) }} ₽{% endif %}
+      </p>
+    </div>
+    <span class="pill">{{ status_name(order.status) }}</span>
+  </div>
+
+  {% if order.comment %}
+    <div class="card card-cream" style="margin-top:18px">
+      <div class="hint" style="margin-bottom:4px">Пожелания к заказу</div>
+      <div>{{ order.comment }}</div>
+    </div>
+  {% endif %}
+
+  <h2 style="margin:28px 0 12px">Фотографии · {{ photos|length }}</h2>
+
+  {% if photos %}
+    <div class="photo-grid">
+      {% for f in photos %}
+        <figure class="photo">
+          <a href="/api/file/{{ f.id }}" target="_blank" rel="noopener">
+            <img src="/api/file/{{ f.id }}" alt="{{ f.orig_name }}" loading="lazy">
+          </a>
+          <figcaption>
+            <span class="photo-name" title="{{ f.orig_name }}">{{ f.orig_name }}</span>
+            <a class="photo-dl" href="/api/file/{{ f.id }}" download>Скачать</a>
+          </figcaption>
+        </figure>
+      {% endfor %}
+    </div>
+    <p class="hint" style="margin-top:14px">
+      Эти фотографии видите только вы и исполнитель. Для остальных они закрыты.
+    </p>
+  {% else %}
+    <div class="card">
+      <p style="margin:0">Фотографий в этом заказе пока нет.</p>
+      <p class="hint" style="margin:10px 0 0">Добавить можно на <a href="/order">странице заказа</a>.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

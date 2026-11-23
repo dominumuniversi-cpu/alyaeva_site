@@ -253,3 +253,14 @@ tr:last-child td{border-bottom:none}
 .consent { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; }
 .consent input { width: auto; margin-top: 4px; }
 .err, .errors { color: #a3283a; }
+
+/* ---- Фотографии в кабинете и у админа ---- */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-top:6px}
+.photo{margin:0;background:#fff;border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--c-lilac);box-shadow:0 2px 10px rgba(42,38,80,.06);transition:box-shadow .18s,transform .18s}
+.photo:hover{box-shadow:0 8px 24px rgba(42,38,80,.13);transform:translateY(-2px)}
+.photo img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--c-lilac)}
+.photo figcaption{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:13px}
+.photo-name{color:var(--c-body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.photo-dl{color:var(--c-accent);font-weight:700;text-decoration:none;white-space:nowrap}
+.photo-dl:hover{text-decoration:underline}
