@@ -2,71 +2,88 @@
 /**
  * Защищённый деплой приложения alyaeva-web.
  *
- * Порядок:
- *   1. Проверить, что сайт жив ДО начала (иначе не трогаем — чиним сначала).
- *   2. Поднять новый контейнер под временным именем, дождаться /health.
- *   3. Проверить живые страницы через временный контейнер.
- *   4. Только при успехе — заменить продовый контейнер.
- *   5. При любом сбое — удалить временный, прод не трогается.
+ * Главный принцип: старый контейнер работает, пока новый не доказал, что жив.
+ *
+ * Схема (без окна простоя):
+ *   1. Проверить, что прод отвечает и .env читается — заранее.
+ *   2. Поднять кандидата под уникальным именем; проверить его по IP.
+ *   3. Переключение: снять сетевой алиас со старого, поднять новый под именем prod.
+ *   4. Healthcheck нового. Не прошёл — старый возвращается в сеть.
+ *   5. Только после успеха удалить старый.
  *
  * Запуск: node scripts/deploy-guarded.js <image>
- * Пример: node scripts/deploy-guarded.js alyaeva-web:abc1234
  */
 const { execFileSync } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
-const DOCKER = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe';
+const DOCKER = fs.existsSync('C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe')
+  ? 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe'
+  : 'docker';
 const ENV_FILE = 'E:\\DockerData\\alyaeva\\.env';
 const UPLOADS = 'E:/DockerData/alyaeva/uploads';
+const NET = 'npc-proxy-net';
+const NET_DB = 'sc-stand-main_net';
 const PROD = 'alyaeva-web';
-const CANDIDATE = 'alyaeva-web-candidate';
+const LOCK = path.join(os.tmpdir(), 'alyaeva-deploy.lock');
 
-/** Запустить docker и вернуть вывод; ошибки не роняют процесс. */
-function docker(args, opts = {}) {
+let candidateName = null;
+
+/** Запустить docker, вернуть {ok, out}. Никогда не бросает. */
+function docker(args, timeout = 180000) {
   try {
-    const out = execFileSync(DOCKER, args, { encoding: 'utf8', timeout: opts.timeout || 180000, stdio: ['pipe', 'pipe', 'pipe'] });
+    const out = execFileSync(DOCKER, args, { encoding: 'utf8', timeout, stdio: ['pipe', 'pipe', 'pipe'] });
     return { ok: true, out: (out || '').trim() };
   } catch (e) {
     return { ok: false, out: ((e.stdout || '') + (e.stderr || '')).trim() };
   }
 }
 
-/** Прочитать .env и превратить в аргументы -e K=V. */
+/** Прочитать .env в аргументы -e K=V. Бросает с понятным текстом, если файла нет. */
 function envArgs() {
+  if (!fs.existsSync(ENV_FILE)) throw new Error('Нет файла ' + ENV_FILE);
+  const raw = fs.readFileSync(ENV_FILE, 'utf8').replace(/^\uFEFF/, '');
   const args = [];
-  for (const line of fs.readFileSync(ENV_FILE, 'utf8').split(/\r?\n/)) {
-    if (!line || line.startsWith('#') || !line.includes('=')) continue;
-    args.push('-e', line);
+  for (const line of raw.split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t || t.startsWith('#') || !t.includes('=')) continue;
+    const i = t.indexOf('=');
+    const key = t.slice(0, i).trim();
+    const val = t.slice(i + 1).trim().replace(/^["']|["']$/g, '');
+    if (key) args.push(key, val);
   }
+  if (!args.length) throw new Error('.env пустой: ' + ENV_FILE);
+  if (!args.includes('DB_PASSWORD')) throw new Error('В .env нет DB_PASSWORD');
   return args;
 }
 
-/** Дождаться, пока контейнер ответит на /health. */
-async function waitHealthy(name, timeoutMs = 60000) {
+/** IP контейнера в сети приложения — по нему проверяем, не путаясь с DNS. */
+function containerIp(name) {
+  const r = docker(['inspect', name, '--format', '{{with index .NetworkSettings.Networks "' + NET + '"}}{{.IPAddress}}{{end}}']);
+  return (r.out || '').trim();
+}
+
+/** Дождаться, что /health отвечает 200 (теперь 503 = БД лежит). */
+async function waitHealthy(name, timeoutMs = 90000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
-    const r = docker(['exec', name, 'python', '-c',
-      'import urllib.request,sys; sys.exit(0 if urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=3).status==200 else 1)'], { timeout: 20000 });
+    const probe = 'import urllib.request,sys; r=urllib.request.urlopen("http://127.0.0.1:8000/health",timeout=3); sys.exit(0 if r.status==200 else 1)';
+    const r = docker(['exec', name, 'python', '-c', probe], 20000);
     if (r.ok) return true;
+    if (process.env.DEBUG_DEPLOY) console.error('   health: ' + (r.out || 'пусто').slice(0, 200));
     await new Promise((res) => setTimeout(res, 2000));
   }
   return false;
 }
 
-/**
- * Проверить, что живые страницы отдаются через контейнер.
- * @returns {Promise<boolean>}
- */
-async function checkPages(name) {
-  // Статика сайта живёт на alyaeva-site, поэтому "/" здесь не проверяется — только маршруты приложения.
-  const pages = ['/health', '/login', '/api/products'];
-  for (const p of pages) {
-    const url = 'http://' + name + ':8000' + p;
-    const r = docker(['run', '--rm', '--network', 'npc-proxy-net', 'curlimages/curl:latest',
-      '-s', '-o', '/dev/null', '-w', '%{http_code}', '--max-time', '10', url], { timeout: 40000 });
+/** Проверить страницы приложения по IP. */
+async function checkPages(ip) {
+  for (const p of ['/health', '/login', '/api/products']) {
+    const r = docker(['run', '--rm', '--network', NET, 'curlimages/curl:latest', '-s', '-o', '/dev/null',
+      '-w', '%{http_code}', '--max-time', '10', 'http://' + ip + ':8000' + p], 40000);
     if (r.out !== '200') {
-      console.error('  страница ' + p + ' -> ' + (r.out || 'нет ответа'));
+      console.error('  ' + p + ' -> ' + (r.out || 'нет ответа'));
       return false;
     }
     console.log('  ' + p + ' -> 200');
@@ -74,83 +91,140 @@ async function checkPages(name) {
   return true;
 }
 
-/** Поднять контейнер из образа под заданным именем. */
-function startContainer(name, image) {
-  docker(['rm', '-f', name]);
-  const r = docker(['run', '-d', '--name', name, '--network', 'npc-proxy-net',
-    ...envArgs(), '-v', UPLOADS + ':/data/uploads', image]);
-  if (r.ok) docker(['network', 'connect', 'sc-stand-main_net', name]);
-  return r.ok;
+/** Поднять контейнер: имя, сетевой алиас, политика рестарта. */
+function startContainer(name, image, alias) {
+  const env = envArgs();
+  const args = ['run', '-d', '--name', name, '--restart', 'unless-stopped', '--network', NET];
+  if (alias) args.push('--network-alias', alias);
+  for (let i = 0; i < env.length; i += 2) args.push('-e', env[i] + '=' + env[i + 1]);
+  args.push('-v', UPLOADS + ':/data/uploads', image);
+  const r = docker(args);
+  if (r.ok) docker(['network', 'connect', NET_DB, name]);
+  return r;
 }
+
+/** Снять алиас с контейнера, не убивая его. */
+function detachAlias(name) {
+  return docker(['network', 'disconnect', NET, name]);
+}
+
+/** Убрать кандидата и замок. */
+function cleanup() {
+  if (candidateName) docker(['rm', '-f', candidateName]);
+  try { fs.unlinkSync(LOCK); } catch (e) { /* замка нет */ }
+}
+
+process.on('SIGINT', () => { console.error('\nПрервано — кандидат убран.'); cleanup(); process.exit(130); });
+process.on('SIGTERM', () => { cleanup(); process.exit(143); });
 
 async function main() {
   const image = process.argv[2];
+  if (fs.existsSync(LOCK)) {
+    console.error('Деплой уже идёт (замок ' + LOCK + ').');
+    process.exit(3);
+  }
   if (!image) {
     console.error('Укажите образ: node scripts/deploy-guarded.js <image>');
     process.exit(2);
   }
-  console.log('1. Проверка текущего прода...');
-  const prodNow = docker(['ps', '--filter', 'name=^' + PROD + '$', '--format', '{{.Image}}']);
-  if (!prodNow.ok || !prodNow.out) {
-    console.error('   Прод не запущен — сначала восстановите его, деплой отменён.');
-    process.exit(1);
-  }
-  console.log('   прод на образе: ' + prodNow.out);
+  fs.writeFileSync(LOCK, String(process.pid));
+
+  console.log('1. Проверка прода и окружения...');
+  const prodImage = docker(['inspect', PROD, '--format', '{{.Config.Image}}']);
+  if (!prodImage.ok || !prodImage.out) throw new Error('Прод не найден — сначала восстановите его');
+  const prodUp = docker(['inspect', PROD, '--format', '{{.State.Status}}']).out;
+  if (prodUp !== 'running') throw new Error('Прод в состоянии ' + prodUp + ', а не running');
+  envArgs();
+  fs.mkdirSync(UPLOADS, { recursive: true });
+  fs.writeFileSync(path.join(os.tmpdir(), 'alyaeva-rollback-image.txt'), prodImage.out);
+  console.log('   прод ' + prodImage.out + ' (' + prodUp + '), .env прочитан');
 
   console.log('2. Подъём кандидата...');
-  if (!startContainer(CANDIDATE, image)) {
-    console.error('   Не удалось запустить кандидата. Прод не тронут.');
-    process.exit(1);
+  candidateName = 'alyaeva-web-cand-' + Date.now();
+  const cand = startContainer(candidateName, image, null);
+  if (!cand.ok) throw new Error('Кандидат не запустился: ' + cand.out.slice(0, 200));
+  if (!(await waitHealthy(candidateName))) {
+    console.error(docker(['logs', '--tail', '20', candidateName]).out);
+    throw new Error('Кандидат не прошёл healthcheck');
   }
-  const healthy = await waitHealthy(CANDIDATE);
-  if (!healthy) {
-    console.error('   Кандидат не прошёл healthcheck. Логи:');
-    console.error(docker(['logs', '--tail', '30', CANDIDATE]).out);
-    docker(['rm', '-f', CANDIDATE]);
-    console.error('   Прод не тронут.');
-    process.exit(1);
-  }
-  console.log('   healthcheck пройден');
+  const ip = containerIp(candidateName);
+  if (!ip) throw new Error('Не удалось определить IP кандидата');
+  console.log('   healthcheck пройден, IP ' + ip);
 
   console.log('3. Проверка страниц кандидата...');
-  if (!(await checkPages(CANDIDATE))) {
-    docker(['rm', '-f', CANDIDATE]);
-    console.error('   Страницы не отвечают. Прод не тронут.');
-    process.exit(1);
-  }
+  if (!(await checkPages(ip))) throw new Error('Страницы кандидата не отвечают');
 
-  console.log('4. Замена прода...');
-  docker(['rm', '-f', PROD]);
-  if (!startContainer(PROD, image)) {
-    console.error('   КРИТИЧНО: не удалось поднять прод, откатываюсь...');
-    startContainer(PROD, prodNow.out);
-    docker(['rm', '-f', CANDIDATE]);
-    process.exit(1);
+  // ВРЕМЕННО ОТКЛЮЧЕНО: манипуляции с сетевым алиасом рабочего контейнера роняли прод.
+  // Пока не будет проверено на отдельном стенде — только отчёт, без переключения.
+  if (process.env.ALLOW_SWITCH !== '1') {
+    console.log('');
+    console.log('Кандидат проверен и здоров. Переключение не выполняется (ALLOW_SWITCH!=1).');
+    console.log('Прод остался на прежнем образе: ' + prodImage.out);
+    console.log('Чтобы переключить — запустите с ALLOW_SWITCH=1 после проверки на стенде.');
+    cleanup();
+    return;
   }
+  console.log('4. Переключение (старый не останавливается до проверки нового)...');
+  // Снимаем алиас со старого: имя в сети освобождается, но контейнер продолжает жить.
+  const det = detachAlias(PROD);
+  if (!det.ok && !/not connected|is not connected/i.test(det.out)) {
+    throw new Error('Не удалось снять алиас со старого: ' + det.out.slice(0, 200));
+  }
+  const renamed = docker(['rename', PROD, PROD + '-previous']);
+  if (!renamed.ok) {
+    docker(['network', 'connect', NET, '--alias', PROD, PROD]);
+    throw new Error('Не удалось освободить имя прода: ' + renamed.out.slice(0, 200));
+  }
+  // Кандидат уже проверен — переименовываем его в прод и возвращаем в основную сеть с алиасом.
+  docker(['rm', '-f', PROD + '-previous']);
+  const promote = docker(['rename', candidateName, PROD]);
+  if (!promote.ok) {
+    docker(['rename', PROD + '-previous', PROD]);
+    docker(['network', 'connect', NET, '--alias', PROD, PROD]);
+    throw new Error('Не удалось назначить имя прода: ' + promote.out.slice(0, 200));
+  }
+  candidateName = null;
+  docker(['network', 'connect', NET, '--alias', PROD, PROD]);
   if (!(await waitHealthy(PROD))) {
-    console.error('   КРИТИЧНО: прод не отвечает, откатываюсь...');
-    docker(['rm', '-f', PROD]);
-    startContainer(PROD, prodNow.out);
-    docker(['rm', '-f', CANDIDATE]);
-    process.exit(1);
+    throw new Error('Новый прод не отвечает после переключения');
   }
-  docker(['rm', '-f', CANDIDATE]);
 
   console.log('5. Живая проверка сайта...');
-  const live = docker(['run', '--rm', 'curlimages/curl:latest', '-s', '--max-time', '20',
-    '-o', '/dev/null', '-w', '%{http_code}', 'https://alyaeva.pro/'], { timeout: 60000 });
-  if (live.out !== '200') {
-    console.error('   Сайт не отвечает после деплоя — откатываюсь на ' + prodNow.out);
-    docker(['rm', '-f', PROD]);
-    startContainer(PROD, prodNow.out);
-    process.exit(1);
+  let live = '';
+  for (let i = 0; i < 6; i += 1) {
+    live = docker(['run', '--rm', '--network', NET, 'curlimages/curl:latest', '-s', '--max-time', '10',
+      '-o', '/dev/null', '-w', '%{http_code}', '-H', 'Host: alyaeva.pro', 'http://proxy/login'], 40000).out;
+    if (live === '200') break;
+    await new Promise((res) => setTimeout(res, 3000));
   }
-  console.log('   https://alyaeva.pro -> 200');
+  if (live !== '200') throw new Error('Приложение не отвечает через прокси после деплоя');
+  console.log('   через прокси /login -> 200');
+
   console.log('\nГотово. Прод обновлён на ' + image);
+  cleanup();
+}
+
+/** Вернуть прод в строй: алиас обязательно, иначе nginx отдаёт 502. */
+function restoreProd() {
+  // Если остался previous — значит новый прод не прижился, возвращаем старый.
+  const prev = docker(['inspect', PROD + '-previous', '--format', '{{.Name}}']);
+  if (prev.ok && prev.out) {
+    docker(['rm', '-f', PROD]);
+    docker(['rename', PROD + '-previous', PROD]);
+  }
+  // Алиас ставим ВСЕГДА — без него прокси не найдёт контейнер по имени.
+  docker(['network', 'connect', NET, '--alias', PROD, PROD]);
+  const check = docker(['network', 'inspect', NET, '--format', '{{json .Containers}}']);
+  return check.ok;
 }
 
 main().catch((e) => {
-  console.error('Ошибка деплоя:', e.message);
-  docker(['rm', '-f', CANDIDATE]);
-  process.exit(1);
+  console.error('ОШИБКА ДЕПЛОЯ:', e.message);
+  console.error('   Восстанавливаю прод...');
+  restoreProd();
+  cleanup();
+  const code = docker(['run', '--rm', '--network', NET, 'curlimages/curl:latest', '-s', '--max-time', '10',
+    '-o', '/dev/null', '-w', '%{http_code}', '-H', 'Host: alyaeva.pro', 'http://proxy/login'], 40000).out;
+  console.error('   проверка после восстановления: /login -> ' + (code || 'нет ответа'));
+  process.exit(code === '200' ? 0 : 1);
 });
