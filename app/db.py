@@ -101,6 +101,10 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
+class DuplicateEmail(Exception):
+    """Почта уже занята. Своё исключение — чтобы страница показала текст, а не 500."""
+
+
 def create_user(email: str, password: str, full_name: str = "", role: str = "customer",
                 phone: str = "") -> int:
     """Создать пользователя, вернуть id.
@@ -109,12 +113,18 @@ def create_user(email: str, password: str, full_name: str = "", role: str = "cus
     привязываются к клиенту — вместе с загруженными фото.
     """
     with pool.connection() as conn:
-        row = conn.execute(
-            """INSERT INTO users (email, password_hash, full_name, role, phone)
-               VALUES (lower(%s), %s, %s, %s, %s) RETURNING id""",
-            (email, hash_password(password), full_name, role, (phone or "").strip() or None),
-        ).fetchone()
-        conn.commit()
+        try:
+            row = conn.execute(
+                """INSERT INTO users (email, password_hash, full_name, role, phone)
+                   VALUES (lower(btrim(%s)), %s, %s, %s, %s) RETURNING id""",
+                (email, hash_password(password), full_name, role, (phone or "").strip() or None),
+            ).fetchone()
+            conn.commit()
+        except psycopg.errors.UniqueViolation:
+            # Между проверкой find_user_by_email и вставкой мог проскочить второй запрос
+            # (двойной клик по кнопке). На такой случай — честный отказ, а не 500.
+            conn.rollback()
+            raise DuplicateEmail(email) from None
     return row["id"]
 
 
@@ -122,7 +132,7 @@ def find_user_by_email(email: str) -> dict | None:
     """Найти пользователя по email."""
     with pool.connection() as conn:
         return conn.execute(
-            "SELECT * FROM users WHERE lower(email) = lower(%s) AND is_active", (email,)
+            "SELECT * FROM users WHERE lower(btrim(email)) = lower(btrim(%s)) AND is_active", (email,)
         ).fetchone()
 
 

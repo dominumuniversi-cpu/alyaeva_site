@@ -9,7 +9,14 @@
     <h1>Вход</h1>
     <p class="muted">Личный кабинет или админка</p>
   {% endif %}
-  {% if error %}<div class="errors">{{ error }}</div>{% endif %}
+  {% if error %}
+    <div class="errors">{{ error }}</div>
+    {% if hint %}<p class="muted" style="margin-top:-8px">{{ hint }}</p>{% endif %}
+    <p class="muted" style="font-size:14px">
+      Нет аккаунта? <a href="/register">Зарегистрируйтесь</a> —
+      а если регистрировались, но не пускает, напишите нам: восстановим доступ.
+    </p>
+  {% endif %}
   <form method="post" action="/login">
     <input type="hidden" name="next" value="{{ next }}">
     <label for="email">E-mail</label>

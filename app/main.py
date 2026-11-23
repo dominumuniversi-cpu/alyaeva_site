@@ -97,12 +97,24 @@ def order_page(request: Request):
 def login(request: Request, email: str = Form(...), password: str = Form(...),
           next: str = Form("")):
     """Проверка логина и пароля, выдача cookie-сессии."""
-    user = db.find_user_by_email(email.strip())
-    ok = bool(user) and db.verify_password(password, user["password_hash"])
-    _log_login(email, ok, request)
-    if not ok:
+    raw_email = (email or "").strip()
+    user = db.find_user_by_email(raw_email)
+    # Диагностика: в лог пишем ТОЧНУЮ причину, человеку — одну общую фразу.
+    if not user:
+        _log_login(raw_email, False, request, why="почта не найдена")
+    else:
+        ok = db.verify_password(password, user["password_hash"])
+        _log_login(raw_email, ok, request,
+                   why="ок" if ok else f"пароль не подошёл (id={user['id']})")
+    if not user or not ok:
+        # Подсказки по частым причинам — не раскрывая, есть ли такой аккаунт.
+        hint = ""
+        if raw_email != raw_email.lower() or raw_email != raw_email.strip():
+            hint = "Почта вводится без учёта регистра — регистр не важен."
+        elif password != password.strip():
+            hint = "Похоже, в пароле оказался пробел в начале или в конце."
         return render(request, "login.html", error="Неверный e-mail или пароль", user=None,
-                      next=_safe_next(next, ""), reason="", email=email.strip())
+                      next=_safe_next(next, ""), reason="", email=raw_email, hint=hint)
     token = db.create_session(
         user["id"],
         ua=request.headers.get("user-agent", ""),
@@ -128,10 +140,15 @@ def logout(request: Request):
     return resp
 
 
-def _log_login(email: str, ok: bool, request: Request) -> None:
-    """Отметка о попытке входа в логах. Пароль не пишем никогда — только факт."""
+def _log_login(email: str, ok: bool, request: Request, why: str = "") -> None:
+    """Отметка о попытке входа. Пароль не пишем никогда — только факт и причину отказа.
+
+    Без причины «не пускает» приходилось угадывать: почта не та, пароль не тот
+    или человек завёл второй аккаунт на другой адрес.
+    """
     ip = request.client.host if request.client else ""
-    print(f"[login] {'ok' if ok else 'FAIL'} {email.strip().lower()} ip={ip}", flush=True)
+    tail = f" why={why}" if why else ""
+    print(f"[login] {'ok' if ok else 'FAIL'} {email.strip().lower()} ip={ip}{tail}", flush=True)
 
 
 # ---------------- Личный кабинет ----------------
@@ -180,7 +197,13 @@ def register(request: Request, email: str = Form(""), password: str = Form(""),
                       error="Аккаунт с такой почтой уже есть. Войдите под ним — пароль тот, что вы задали при регистрации.",
                       email=email, full_name=full_name.strip(), phone=phone.strip(),
                       next=_safe_next(next, ""), exists=True)
-    uid = db.create_user(email, password, full_name.strip(), "customer", phone.strip())
+    try:
+        uid = db.create_user(email, password, full_name.strip(), "customer", phone.strip())
+    except db.DuplicateEmail:
+        return render(request, "register.html", user=None,
+                      error="Аккаунт с такой почтой уже есть. Войдите под ним — пароль тот, что вы задали при регистрации.",
+                      email=email, full_name=full_name.strip(), phone=phone.strip(),
+                      next=_safe_next(next, ""), exists=True)
     # Заказы, оформленные гостем с этим телефоном, становились «ничьими» —
     # теперь у них есть владелец, и фото из guest/ попадают в его кабинет.
     if phone.strip():
