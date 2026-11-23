@@ -1,0 +1,60 @@
+{
+  "schema": "site.periodic-tasks.v1",
+  "site": "alyaeva.pro",
+  "created": "2026-11-23",
+  "tasks": [
+    {
+      "id": "yandex-suggest",
+      "title": "Проверка подсказок Яндекса",
+      "every_days": 90,
+      "anchor_month": 11,
+      "last_run": null,
+      "doc": "seo/KEYWORDS.md",
+      "how": "скрипт scripts/seo-suggest.ps1 + сверка с KEYWORDS.md"
+    },
+    {
+      "id": "wordstat",
+      "title": "Частоты Wordstat",
+      "every_days": 91,
+      "last_run": null,
+      "needs": "аккаунт Яндекса",
+      "how": "Wordstat по 5 шаблонам из KEYWORDS.md"
+    },
+    {
+      "id": "season-title",
+      "title": "Title/description под сезон",
+      "months": [
+        10,
+        12
+      ],
+      "last_run": null,
+      "how": "перед октябрём и декабрём"
+    },
+    {
+      "id": "new-articles",
+      "title": "Новые статьи",
+      "every_days": 30,
+      "last_run": null,
+      "how": "1-2 статьи в месяц по подарочным long-tail"
+    },
+    {
+      "id": "structure-review",
+      "title": "Пересмотр структуры",
+      "every_days": 182,
+      "last_run": null
+    },
+    {
+      "id": "positions",
+      "title": "Позиции и трафик",
+      "every_days": 30,
+      "last_run": null,
+      "needs": "Вебмастер/Метрика"
+    },
+    {
+      "id": "cert-renew",
+      "title": "Сертификат",
+      "every_days": 7,
+      "note": "автоматически, задача AlyaevaPro-CertRenew"
+    }
+  ]
+}

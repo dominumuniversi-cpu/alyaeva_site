@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Настройки — админка{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+<h1>Настройки интеграций</h1>
+{% if request.query_params.get('saved') %}
+<div class="card card-cream" style="padding:16px 24px">Сохранено.</div>
+{% endif %}
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Telegram</h2>
+    <form method="post" action="{{ admin_url }}/settings">
+      <label>Токен бота</label>
+      <input type="text" name="telegram_token" placeholder="{{ tg_token_mask }}" autocomplete="off">
+      <div class="hint">Сейчас: {{ tg_token_mask }}. Пустое поле — не менять.</div>
+
+      <label>Прокси</label>
+      <input type="text" name="telegram_proxy" value="{{ settings.get('telegram.proxy','') }}"
+             placeholder="http://host.docker.internal:10809">
+      <div class="hint">API Telegram заблокирован провайдером. Прокси обязателен.</div>
+
+      <label>Чат для уведомлений</label>
+      <input type="text" name="telegram_chat" value="{{ settings.get('telegram.chat','') }}" placeholder="@username или ID">
+
+      <h2 style="margin-top:32px">ВКонтакте</h2>
+      <label>Токен сообщества</label>
+      <input type="text" name="vk_token" placeholder="{{ vk_token_mask }}" autocomplete="off">
+      <div class="hint">Сейчас: {{ vk_token_mask }}. Пустое поле — не менять.</div>
+
+      <h2 style="margin-top:32px">Контакты сайта</h2>
+      <label>Телефон</label>
+      <input type="text" name="site_phone" value="{{ settings.get('site.phone','') }}">
+      <label>E-mail</label>
+      <input type="text" name="site_email" value="{{ settings.get('site.email','') }}">
+
+      <div style="margin-top:28px"><button class="btn">Сохранить</button></div>
+    </form>
+  </div>
+
+  <div class="card card-lilac">
+    <h2>Как это работает</h2>
+    <p>Токены хранятся в базе <strong>зашифрованными</strong> и никогда не попадают в файлы конфигурации.</p>
+    <p>Изменения пишутся в журнал аудита — видно, кто и когда менял настройки.</p>
+    <p class="muted" style="margin-top:20px">Проблемы с доступом к API Telegram решаются через прокси: укажите его здесь, и бот пойдёт через него.</p>
+  </div>
+</div>
+{% endblock %}

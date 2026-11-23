@@ -1,0 +1,23 @@
+# Секреты и локальное окружение
+.env
+*.env.local
+.admin_creds
+.admin_slug
+.admin_cookie
+.gh_token
+.gh_issues.json
+.pg_alyaeva_pw
+
+# Артефакты
+uploads/
+__pycache__/
+*.pyc
+node_modules/
+build/dist/
+
+# Огромный исходный бандл (13 МБ) — хранится только собранная версия
+site/index.html
+Сайт_визитка_*.html
+
+# Мусор, созданный переменными окружения
+%SystemDrive%/

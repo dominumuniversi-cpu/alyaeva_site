@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Вход — Алёна Аляева{% endblock %}
+{% block content %}
+<div class="auth-box card">
+  <h1>Вход</h1>
+  <p class="muted">Личный кабинет или админка</p>
+  {% if error %}<div class="errors">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <label>E-mail</label>
+    <input type="email" name="email" required autofocus placeholder="you@example.ru">
+    <label>Пароль</label>
+    <input type="password" name="password" required>
+    <div style="margin-top:24px"><button class="btn">Войти</button></div>
+  </form>
+  <p class="hint" style="margin-top:20px">Нет аккаунта? Оформите заказ — мы создадим кабинет автоматически.</p>
+</div>
+{% endblock %}

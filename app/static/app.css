@@ -1,0 +1,79 @@
+/* Админка и кабинет — в стилистике сайта alyaeva.pro
+   Акцент #4B4690, тёмный #2A2650, тело #4A4678,
+   пастель #E6DFFA, скругления 28/32, Philosopher + Nunito */
+@font-face { font-family: 'Philosopher'; src: url('/static/fonts/philosopher.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Nunito'; src: url('/static/fonts/nunito.woff2') format('woff2'); font-display: swap; }
+
+:root {
+  --accent: #4B4690;
+  --strong: #2A2650;
+  --body: #4A4678;
+  --lilac: #E6DFFA;
+  --cream: #FFF1C7;
+  --mint: #EAF7F4;
+  --r-lg: 32px;
+  --r-md: 28px;
+  --r-sm: 14px;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Nunito', system-ui, sans-serif; color: var(--body); background: #FDFBFF; }
+h1, h2, h3 { font-family: 'Philosopher', Georgia, serif; color: var(--strong); margin: 0 0 16px; }
+h1 { font-size: 32px; } h2 { font-size: 24px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 18px 32px; background: var(--accent); color: #fff; flex-wrap: wrap; }
+.topbar .brand { font-family: 'Philosopher', serif; font-size: 22px; color: #fff; text-decoration: none; }
+.topbar nav { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.topbar nav a { color: #EDEBFF; text-decoration: none; font-size: 15px; padding: 6px 0; border-bottom: 2px solid transparent; }
+.topbar nav a:hover { color: #fff; border-bottom-color: var(--cream); }
+.topbar .who { color: #CFC9F5; font-size: 14px; }
+.inline { display: inline; margin: 0; }
+.link, button.link { background: none; border: 0; color: #EDEBFF; cursor: pointer; font: inherit; padding: 6px 0; }
+.link:hover { color: #fff; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 32px; }
+.wide { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+.card { background: #fff; border-radius: var(--r-md); padding: 28px; margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(75,70,144,.08); }
+.card-lilac { background: var(--lilac); }
+.card-cream { background: var(--cream); }
+
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th { text-align: left; font-weight: 700; color: var(--strong); padding: 12px 14px;
+  border-bottom: 2px solid var(--lilac); white-space: nowrap; }
+td { padding: 12px 14px; border-bottom: 1px solid #F0EDF9; vertical-align: top; }
+tr:hover td { background: #FBFAFF; }
+
+.btn { display: inline-block; background: var(--accent); color: #fff; border: 0;
+  padding: 12px 26px; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer;
+  text-decoration: none; transition: transform .15s, box-shadow .15s; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(75,70,144,.25); }
+.btn-ghost { background: transparent; color: var(--accent); border: 2px solid var(--lilac); }
+.btn-sm { padding: 7px 16px; font-size: 14px; }
+.btn-danger { background: #B4443C; }
+
+input[type=text], input[type=email], input[type=password], input[type=tel],
+input[type=number], input[type=datetime-local], select, textarea {
+  width: 100%; padding: 12px 16px; border: 2px solid #E8E4F5; border-radius: var(--r-sm);
+  font: inherit; color: var(--strong); background: #fff; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+label { display: block; font-weight: 700; color: var(--strong); margin: 16px 0 6px; font-size: 14px; }
+.hint { font-size: 13px; color: #8A86AD; margin-top: 4px; }
+
+.badge { display: inline-block; padding: 4px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.badge-new { background: var(--cream); color: #8A6D1F; }
+.badge-in_work { background: var(--lilac); color: var(--accent); }
+.badge-sent { background: #D6ECFF; color: #1D5FA8; }
+.badge-done { background: var(--mint); color: #1F7A63; }
+.badge-cancelled { background: #F5DAD8; color: #9B3A32; }
+
+.auth-box { max-width: 440px; margin: 80px auto; }
+.errors { background: #F5DAD8; color: #9B3A32; padding: 14px 20px; border-radius: var(--r-sm);
+  margin-bottom: 20px; font-size: 14px; }
+.grid { display: grid; gap: 20px; }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.muted { color: #8A86AD; font-size: 14px; }
+.stack > * + * { margin-top: 16px; }

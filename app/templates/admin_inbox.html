@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Сообщения — админка{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+<style>
+.inbox { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+.threads { background:#fff; border-radius:var(--r-md); overflow:hidden; box-shadow:0 8px 32px rgba(75,70,144,.08); }
+.thread { padding:16px 20px; border-bottom:1px solid #F0EDF9; cursor:pointer; }
+.thread:hover { background:#FBFAFF; }
+.thread.active { background:var(--lilac); }
+.thread .ch { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--accent); font-weight:700; }
+.thread .t { font-weight:700; color:var(--strong); margin:4px 0; }
+.thread .b { font-size:14px; color:#8A86AD; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat { background:#fff; border-radius:var(--r-md); padding:24px; min-height:420px;
+  display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(75,70,144,.08); }
+.msgs { flex:1; overflow-y:auto; max-height:520px; display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.m { padding:10px 16px; border-radius:18px; max-width:78%; font-size:15px; }
+.m.in { background:#F4F2FB; align-self:flex-start; }
+.m.out { background:var(--accent); color:#fff; align-self:flex-end; }
+.m .tm { font-size:11px; opacity:.65; margin-top:4px; }
+.reply { display:flex; gap:10px; }
+.reply textarea { flex:1; min-height:56px; resize:vertical; }
+.empty { color:#8A86AD; text-align:center; padding:60px 20px; }
+</style>
+
+<h1>Сообщения</h1>
+<p class="muted">Всё общение с клиентами — сайт, Telegram, ВКонтакте — в одном окне.</p>
+
+<div class="inbox">
+  <div class="threads" id="threads">
+    {% if threads %}
+      {% for t in threads %}
+      <div class="thread" data-id="{{ t.id }}">
+        <div class="ch">{{ t.channel }}</div>
+        <div class="t">{{ t.title or 'Без имени' }}</div>
+        <div class="b">{{ t.last_body or '—' }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Пока нет диалогов</div>
+    {% endif %}
+  </div>
+
+  <div class="chat">
+    <div class="msgs" id="msgs"><div class="empty">Выберите диалог слева</div></div>
+    <form class="reply" id="replyForm" style="display:none">
+      <textarea id="replyText" placeholder="Ответить клиенту..."></textarea>
+      <button class="btn" type="submit">Отправить</button>
+    </form>
+  </div>
+</div>
+
+<script>
+let current = null;
+const msgs = document.getElementById('msgs');
+const form = document.getElementById('replyForm');
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+async function openThread(id, el){
+  current = id;
+  document.querySelectorAll('.thread').forEach(t=>t.classList.remove('active'));
+  el && el.classList.add('active');
+  const r = await fetch('/api/inbox/thread/'+id);
+  const data = await r.json();
+  msgs.innerHTML = data.map(m =>
+    '<div class="m '+m.direction+'">'+esc(m.body)+
+    '<div class="tm">'+new Date(m.created_at).toLocaleString('ru-RU')+'</div></div>').join('')
+    || '<div class="empty">Нет сообщений</div>';
+  msgs.scrollTop = msgs.scrollHeight;
+  form.style.display = 'flex';
+}
+
+document.querySelectorAll('.thread').forEach(el=>{
+  el.addEventListener('click', ()=> openThread(el.dataset.id, el));
+});
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const text = document.getElementById('replyText').value.trim();
+  if (!text || !current) return;
+  document.getElementById('replyText').value = '';
+  const fd = new FormData(); fd.append('body', text);
+  const r = await fetch('/api/inbox/thread/'+current+'/reply', {method:'POST', body: fd});
+  const res = await r.json();
+  msgs.insertAdjacentHTML('beforeend',
+    '<div class="m out">'+esc(text)+'<div class="tm">отправлено'+(res.sent?'':' (не доставлено)')+'</div></div>');
+  msgs.scrollTop = msgs.scrollHeight;
+});
+</script>
+{% endblock %}

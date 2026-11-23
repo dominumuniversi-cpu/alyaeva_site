@@ -1,0 +1,36 @@
+# alyaeva.pro — приложение (API + админка + кабинет)
+# Запуск: docker compose -f docker-compose.app.yml up -d --build
+# НЕ трогает прокси и другие стенды: порты не публикуются, работаем через npc-proxy-net.
+name: alyaeva-app
+
+services:
+  web:
+    build: ./app
+    image: alyaeva-web:latest
+    container_name: alyaeva-web
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      ADMIN_SLUG: ${ADMIN_SLUG}
+      SECRET_KEY: ${SECRET_KEY}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - ./uploads:/data/uploads
+    networks:
+      - pg
+      - proxy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  pg:
+    name: sc-stand-main_net
+    external: true
+  proxy:
+    name: npc-proxy-net
+    external: true

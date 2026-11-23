@@ -1,0 +1,30 @@
+# alyaeva.pro — статический сайт за общим nginx-прокси (порт 443, SSL).
+# Файл кладётся/подключается на хосте с внешним IP 188.226.71.169.
+# Прокси публикует ТОЛЬКО 443 (и 80 — только для Let's Encrypt redirect).
+name: alyaeva-site
+
+services:
+  proxy:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"     # только redirect на https + webroot certbot
+      - "443:443"
+    volumes:
+      - E:/DockerData/nginx/conf.d:/etc/nginx/conf.d:ro
+      - E:/DockerData/nginx/certs:/etc/nginx/certs:ro
+      - E:/DockerData/nginx/certbot-www:/var/www/certbot:ro
+    networks: [web]
+
+  site:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    # БЕЗ ports: наружу не публикуем, доступ только через proxy
+    volumes:
+      - ../site:/usr/share/nginx/html:ro
+      - ./site-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [web]
+
+networks:
+  web:
+    driver: bridge

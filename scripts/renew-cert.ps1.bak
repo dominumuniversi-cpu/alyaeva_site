@@ -1,0 +1,31 @@
+# Продление сертификата alyaeva.pro (Let's Encrypt, TLS-ALPN-01).
+# ВАЖНО: lego запускается С ПУБЛИКАЦИЕЙ ПОРТА (-p 443), а не --network host:
+# в Docker Desktop host-сеть указывает внутрь WSL, а внешний трафик приходит на Windows-хост.
+# Запуск: Планировщик Windows, раз в неделю. Порт 80 провайдером перехвачен, поэтому только TLS-ALPN.
+param([string]$Email = 'alena@alyaeva.pro')
+$ErrorActionPreference = 'Stop'
+$docker = 'C:\Program Files\Docker\Docker\resources\bin\docker.exe'
+$conf   = 'E:/DockerData/alyaeva/certbot/conf'
+$live   = 'E:\DockerData\alyaeva\certbot\conf\live\alyaeva.pro'
+
+Write-Host "[$(Get-Date -f s)] Останавливаю proxy (lego нужен порт 443)"
+& $docker stop proxy | Out-Null
+try {
+    & $docker run --rm --name lego-alpn -p 443:443 -v "${conf}:/out" goacme/lego:latest `
+        run --accept-tos --email $Email --path /out --tls -d alyaeva.pro
+    if ($LASTEXITCODE -ne 0) { Write-Warning 'lego вернул ошибку — серт не обновлён'; return }
+
+    # lego не обновляет live/, если срок ещё не подошёл: проверяем mtime
+    $crt = Join-Path $conf 'certificates\alyaeva.pro.crt'
+    $iss = Join-Path $conf 'certificates\alyaeva.pro.issuer.crt'
+    $key = Join-Path $conf 'certificates\alyaeva.pro.key'
+    Get-Content $crt    -Raw | Set-Content (Join-Path $live 'fullchain.pem') -NoNewline
+    Get-Content $iss    -Raw | Add-Content (Join-Path $live 'fullchain.pem')
+    Copy-Item $key (Join-Path $live 'privkey.pem') -Force
+    Write-Host 'Сертификат обновлён в live/'
+}
+finally {
+    Write-Host 'Поднимаю proxy'
+    & $docker start proxy | Out-Null
+    & $docker exec proxy nginx -s reload
+}

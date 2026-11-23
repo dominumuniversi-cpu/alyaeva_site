@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Мои фотографии{% endblock %}
+{% block content %}
+<h1>Мои фотографии</h1>
+<p class="muted">Фото хранятся в ваших проектах. Видите только вы и исполнитель.</p>
+{% if projects %}
+<div class="grid grid-2">
+  {% for p in projects %}
+  <div class="card">
+    <h2 style="font-size:20px">{{ p.title }}</h2>
+    <p class="muted">{{ p.files }} фото{% if p.note %} · {{ p.note }}{% endif %}</p>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card card-cream">
+  <h2>Проектов пока нет</h2>
+  <p>Проект создаётся при оформлении заказа — туда загружаются фото ребёнка.</p>
+</div>
+{% endif %}
+{% endblock %}
