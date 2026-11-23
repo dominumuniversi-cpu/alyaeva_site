@@ -258,6 +258,17 @@ def projects_page(request: Request):
 
 # ---------------- Админка ----------------
 
+# Старый секретный слаг. Уводим на нормальный адрес: ссылки, что владелец
+# сохранил в закладках, не должны отдавать 404.
+OLD_ADMIN = "/6b03c5256535e9ab5a"
+
+
+@app.get(OLD_ADMIN + "{rest:path}")
+def old_admin_redirect(rest: str):
+    """Любой путь под старым слагом → на /admin."""
+    return RedirectResponse(ADMIN + rest, status_code=301)
+
+
 def _deny(request: Request):
     """Отказ в доступе: не залогинен — на вход, залогинен — страница «доступ закрыт»."""
     person = current_user(request)

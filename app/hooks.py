@@ -122,27 +122,41 @@ async def vk_hook(request: Request):
     return PlainTextResponse("ok")
 
 
-def _hook_landing(request: Request, channel: str):
-    """Страница «вы открыли служебный адрес» — одинаковая для всех каналов."""
+def _hook_landing(request: Request, channel: str = ""):
+    """Адрес вебхука открыли глазами — ведём на единственную страницу настроек приёма.
+
+    Держим ОДНУ страницу на тему: /admin/hooks. Вторая «объяснялка» только
+    путала владельца — две страницы про одно и то же.
+    """
     user = db.session_user(request.cookies.get("sid", ""))
     if not (user and user.get("role") == "admin"):
         return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
-    return render(request, "hook_landing.html", user=user, channel=channel)
+    return RedirectResponse("/admin/hooks", status_code=303)
 
 
 @router.get("/hooks")
 @router.get("/hooks/")
+def hooks_alias(request: Request):
+    """Старый адрес страницы приёма — на /admin/hooks."""
+    return _hook_landing(request)
+
+
+@router.get("/admin/hooks")
+@router.get("/admin/hooks/")
 def hooks_root(request: Request):
     """Адрес вебхуков открывают случайно — показываем страницу, а не служебный JSON.
 
     Залогиненному админу показываем статус каналов, остальных ведём на вход.
     """
     user = db.session_user(request.cookies.get("sid", ""))
-    if user and user.get("role") == "admin":
-        tg = bool(secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or "")))
-        vk = bool(secrets_helper.decrypt(str(db.get_setting("vk.token", "") or "")))
-        return render(request, "hooks_help.html", user=user, tg_ready=tg, vk_ready=vk)
-    return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
+    if not (user and user.get("role") == "admin"):
+        return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
+    tg = bool(secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or "")))
+    vk = bool(secrets_helper.decrypt(str(db.get_setting("vk.token", "") or "")))
+    hook_secret = secrets_helper.decrypt(str(db.get_setting("telegram.hook_secret", "") or ""))
+    site = str(db.get_setting("site.url", "") or "https://alyaeva.pro").rstrip("/")
+    return render(request, "hooks_help.html", user=user, tg_ready=tg, vk_ready=vk,
+                  hook_secret=hook_secret, site_url=site)
 
 
 @router.get("/hooks/telegram/{secret}")
@@ -161,7 +175,7 @@ def vk_get(request: Request):
     return _hook_landing(request, "ВКонтакте")
 
 
-@router.get("/hooks/status")
+@router.get("/hooks/status")  # для скриптов, не для людей
 async def hooks_status(request: Request):
     """Готов ли приём: какие каналы настроены (без раскрытия секретов).
 

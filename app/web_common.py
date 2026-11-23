@@ -12,7 +12,9 @@ import db
 from config import config
 
 templates = Jinja2Templates(directory="templates")
-ADMIN = "/" + config.ADMIN_SLUG if config.ADMIN_SLUG else "/admin"
+# Админка живёт по /admin — нормальный, читаемый адрес.
+# Раньше был секретный слаг /6b03c5256535e9ab5a: владелец набирал его руками и путался.
+ADMIN = "/admin"
 
 
 def current_user(request: Request) -> dict | None:
