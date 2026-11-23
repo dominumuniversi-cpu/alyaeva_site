@@ -279,3 +279,34 @@ nginx проверяет регулярки (`location ~* \\.(css|js)$`) **РА�
 `create_user` пишет `NULL`, а не пустую строку.
 
 **Проверять:** регистрация с пустыми необязательными полями — отдельный тест.
+
+
+## КАЖДЫЙ МАРШРУТ ПРИЛОЖЕНИЯ — В NGINX ВРУЧНУЮ (23.11.2026)
+
+Маршруты приложения в `alyaeva.pro.conf` прописаны **по одному**: `/login`, `/register`, `/order`,
+`/cabinet`, `/logout`, `/settings`, `/api/`, `/health`, `/6b03c5256535e9ab5a`, `/static/`.
+
+**Добавил страницу в FastAPI — добавь `location` в vhost, иначе 404.**
+Именно так `/settings` отдавал 404 после деплоя, хотя в приложении всё работало.
+
+**Порядок:**
+1. быстрое исправление — `location /settings { proxy_pass http://alyaeva-web:8000; include /etc/nginx/vhosts/_app-proxy.inc; }`
+2. **обязательно** `docker exec proxy nginx -t` → потом `nginx -s reload`
+3. проверять на проде **тем адресом, который откроет человек** (не только изнутри сети)
+
+```
+docker exec proxy nginx -t && docker exec proxy nginx -s reload
+curl -s -o /dev/null -w '%{http_code}' https://alyaeva.pro/settings   # 200, не 404
+```
+
+**Проверка соседей:** стенды живут на 192.168.8.49 / внешнем IP, **не** на домене alyaeva.pro —
+`https://alyaeva.pro/sc/main/` = 404 это норма, а `https://188.226.71.169/sc/main/` = 303.
+
+## ПАРОЛЬ АДМИНИСТРАТОРА (23.11.2026)
+
+- Смена пароля — самому: вход → «Настройки» → смена (нужен текущий пароль).
+- Первичная выдача/сброс: `node scripts\set-admin-password.js alena@alyaeva.pro <пароль>`.
+  Хеширование идёт **внутри контейнера**, пароль не попадает в историю psql.
+- Пароль в открытом виде нигде не хранится — только bcrypt. Забыли → сброс скриптом.
+- **set_password/create_user требуют `db.open_pool()`**: в отдельном скрипте пул закрыт,
+  иначе `PoolClosed: the pool 'pool-1' is not open yet`.
