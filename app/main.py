@@ -30,7 +30,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="alyaeva.pro", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-from routes_shop import router as shop_router  # noqa: E402
+import orders as orders_mod  # noqa: E402
+from routes_shop import router as shop_router, status_name  # noqa: E402
 app.include_router(shop_router)
 
 
@@ -91,6 +92,27 @@ def logout(request: Request):
 
 # ---------------- Личный кабинет ----------------
 
+@app.post("/register")
+def register(request: Request, email: str = Form(""), password: str = Form(""),
+             full_name: str = Form(""), phone: str = Form("")):
+    """Регистрация клиента. Гостевые заказы с тем же телефоном переходят к нему."""
+    email = (email or "").strip().lower()
+    if not email or len(password or "") < 8:
+        return RedirectResponse("/login?error=reg", status_code=303)
+    if db.find_user_by_email(email):
+        return RedirectResponse("/login?error=exists", status_code=303)
+    uid = db.create_user(email, password, full_name.strip(), "customer", phone.strip())
+    # Заказы, оформленные гостем с этим телефоном, становились «ничьими» —
+    # теперь у них есть владелец, и фото из guest/ попадают в его кабинет.
+    if phone.strip():
+        orders_mod.claim_guest_orders(uid, phone.strip(), email)
+    token = db.create_session(uid, ua=request.headers.get("user-agent", ""),
+                              ip=request.client.host if request.client else "")
+    resp = RedirectResponse("/cabinet", status_code=303)
+    resp.set_cookie("sid", token, httponly=True, secure=True, samesite="lax", max_age=30 * 86400)
+    return resp
+
+
 @app.get("/cabinet", response_class=HTMLResponse)
 def cabinet(request: Request):
     """Заказы клиента."""
@@ -103,7 +125,18 @@ def cabinet(request: Request):
                FROM orders WHERE user_id = %s ORDER BY created_at DESC""",
             (user["id"],),
         ).fetchall()
-    return render(request, "cabinet.html", user=user, orders=orders)
+        # Фото раскладываем по заказам сразу — иначе в шаблоне будет запрос на каждый заказ.
+        photos = conn.execute(
+            """SELECT f.id, f.orig_name, p.order_id
+               FROM project_files f JOIN projects p ON p.id = f.project_id
+               WHERE p.order_id = ANY(%s) ORDER BY f.created_at""",
+            ([o["id"] for o in orders] or [0],),
+        ).fetchall()
+    photos_by_order = {}
+    for p in photos:
+        photos_by_order.setdefault(p["order_id"], []).append(p)
+    return render(request, "cabinet.html", user=user, orders=orders,
+                  photos_by_order=photos_by_order, status_name=status_name)
 
 
 @app.get("/cabinet/projects", response_class=HTMLResponse)

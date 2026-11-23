@@ -149,24 +149,34 @@ def save_upload(project_id: int, user_id: int | None, filename: str, content: by
     if len(content) > config.MAX_UPLOAD_MB * 1024 * 1024:
         raise ValueError("Файл слишком большой")
     stored = secrets.token_hex(16) + ext
-    dest_dir = os.path.join(config.UPLOAD_DIR, str(user_id or "guest"), str(project_id))
+    # Папка — по проекту, без привязки к владельцу: гость может стать клиентом,
+    # и файл не должен из-за этого «переезжать».
+    rel_path = os.path.join("guest", str(project_id), stored)
+    dest_dir = os.path.join(config.UPLOAD_DIR, "guest", str(project_id))
     os.makedirs(dest_dir, exist_ok=True)
     path = os.path.join(dest_dir, stored)
     with open(path, "wb") as f:
         f.write(content)
     with db.pool.connection() as conn:
         row = conn.execute(
-            """INSERT INTO project_files (project_id, user_id, orig_name, stored_name, size_bytes)
-               VALUES (%s,%s,%s,%s,%s) RETURNING *""",
-            (project_id, user_id, _safe_name(filename), stored, len(content)),
+            """INSERT INTO project_files (project_id, user_id, orig_name, stored_name, size_bytes, rel_path)
+               VALUES (%s,%s,%s,%s,%s,%s) RETURNING *""",
+            (project_id, user_id, _safe_name(filename), stored, len(content), rel_path),
         ).fetchone()
         conn.commit()
     return row
 
 
 def file_path(row: dict) -> str:
-    """Полный путь к файлу на диске."""
-    return os.path.join(config.UPLOAD_DIR, str(row["user_id"]), str(row["project_id"]), row["stored_name"])
+    """Полный путь к файлу на диске.
+
+    Берём сохранённый rel_path, а если его нет (старые записи) — собираем из проекта.
+    Путь НЕ зависит от user_id: иначе привязка гостевого заказа к аккаунту ломала бы ссылку.
+    """
+    rel = row.get("rel_path") if isinstance(row, dict) else None
+    if not rel:
+        rel = os.path.join("guest", str(row["project_id"]), row["stored_name"])
+    return os.path.join(config.UPLOAD_DIR, rel)
 
 
 # ---------- Шлюз сообщений ----------
@@ -204,3 +214,35 @@ def thread_messages(thread_id: int) -> list[dict]:
         return conn.execute(
             "SELECT * FROM message_hub WHERE thread_id = %s ORDER BY id", (thread_id,)
         ).fetchall()
+
+
+def claim_guest_orders(user_id: int, phone: str, email: str = "") -> int:
+    """Забрать гостевые заказы клиента при регистрации.
+
+    Гость оформлял заказ без аккаунта — заказ лежит без владельца, а фото в папке guest/.
+    Когда человек регистрируется с тем же телефоном, заказы и их фото становятся его.
+    Возвращает, сколько заказов присвоено.
+    """
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    if not digits:
+        return 0
+    with db.pool.connection() as conn:
+        # Сравниваем только цифры: +7 902 875-93-87 и 89028759387 — один и тот же человек.
+        rows = conn.execute(
+            """SELECT id FROM orders
+               WHERE user_id IS NULL
+                 AND regexp_replace(coalesce(customer_phone,''), '\\D', '', 'g') LIKE %s""",
+            ("%" + digits[-10:],),
+        ).fetchall()
+        ids = [r["id"] for r in rows]
+        if not ids:
+            return 0
+        conn.execute("UPDATE orders SET user_id = %s WHERE id = ANY(%s)", (user_id, ids))
+        # Проекты этих заказов тоже переводим на клиента — фото уходят из guest/ в его папку.
+        conn.execute(
+            """UPDATE projects SET user_id = %s
+               WHERE order_id = ANY(%s) AND (user_id IS NULL OR user_id = 0)""",
+            (user_id, ids))
+        conn.execute("UPDATE project_files SET user_id = %s WHERE project_id IN (SELECT id FROM projects WHERE order_id = ANY(%s))",
+                     (user_id, ids))
+        return len(ids)

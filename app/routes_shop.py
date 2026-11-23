@@ -12,6 +12,23 @@ from web_common import render, require_admin, require_user
 
 router = APIRouter()
 
+# Статусы заказа: в базе код, клиенту — понятный текст.
+STATUS_NAMES = {
+    "new": "Новый",
+    "in_work": "В работе",
+    "layout": "На согласовании макета",
+    "paid": "Оплачен",
+    "printing": "В печати",
+    "shipped": "Отправлен",
+    "done": "Выполнен",
+    "cancelled": "Отменён",
+}
+
+
+def status_name(code: str) -> str:
+    """Понятное клиенту название статуса заказа."""
+    return STATUS_NAMES.get(code or "new", "Новый")
+
 
 # ---------- Каталог и заказ ----------
 
@@ -121,6 +138,7 @@ async def api_order_photos(number: str, request: Request, files: list[UploadFile
     return JSONResponse({"ok": True, "saved": len(saved), "skipped": len(skipped), "project_id": project_id})
 
 
+@router.get("/api/file/{file_id}")
 @router.get("/cabinet/file/{file_id}")
 def serve_file(file_id: int, request: Request):
     """Отдать файл. Только владельцу или админу — прямые ссылки не работают."""

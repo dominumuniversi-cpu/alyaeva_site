@@ -1,25 +1,46 @@
 {% extends "base.html" %}
-{% block title %}Мои заказы{% endblock %}
+{% block title %}Мои заказы — Алёна Аляева{% endblock %}
 {% block content %}
-<h1>Мои заказы</h1>
-{% if orders %}
-<div class="card">
-  <table>
-    <tr><th>Номер</th><th>Дата</th><th>Сумма</th><th>Статус</th></tr>
-    {% for o in orders %}
-    <tr>
-      <td><strong>{{ o.number }}</strong></td>
-      <td>{{ o.created_at.strftime('%d.%m.%Y') }}</td>
-      <td>{{ '%.0f'|format(o.total_rub) }} ₽</td>
-      <td><span class="badge badge-{{ o.status }}">{{ {'new':'Новый','in_work':'В работе','sent':'Отправлен','done':'Выполнен','cancelled':'Отменён'}[o.status] }}</span></td>
-    </tr>
-    {% endfor %}
-  </table>
+<div class="wrap" style="padding:32px 0 64px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+    <h1 style="margin:0">Мои заказы</h1>
+    <a class="btn btn-ghost" href="/order">Новый заказ</a>
+  </div>
+  <p class="hint">Здравствуйте, {{ user.full_name or user.phone }}. Здесь ваши книги и загруженные фото.</p>
+
+  {% if not orders %}
+    <div class="card" style="margin-top:24px">
+      <p style="margin:0">Заказов пока нет. <a href="/order">Оформите первый</a> — и он появится здесь вместе с фото.</p>
+    </div>
+  {% endif %}
+
+  {% for o in orders %}
+  <div class="card" style="margin-top:20px">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+      <strong style="font-size:18px">Заказ {{ o.number }}</strong>
+      <span class="pill">{{ status_name(o.status) }}</span>
+    </div>
+    <div class="hint" style="margin-top:4px">
+      {{ o.created_at.strftime('%d.%m.%Y') }}
+      {% if o.total_rub %} · {{ '%.0f'|format(o.total_rub) }} ₽{% endif %}
+    </div>
+    {% if o.comment %}<p style="margin:10px 0 0">{{ o.comment }}</p>{% endif %}
+
+    {% set photos = photos_by_order.get(o.id, []) %}
+    {% if photos %}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        {% for f in photos %}
+          <a href="/api/file/{{ f.id }}" target="_blank" rel="noopener"
+             style="display:block;width:96px;height:96px;border-radius:12px;overflow:hidden;background:#F1ECFF">
+            <img src="/api/file/{{ f.id }}" alt="{{ f.orig_name }}" loading="lazy"
+                 style="width:100%;height:100%;object-fit:cover">
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="hint" style="margin-top:12px">Фото ещё не загружены. <a href="/order">Добавить фото к заказу</a></p>
+    {% endif %}
+  </div>
+  {% endfor %}
 </div>
-{% else %}
-<div class="card card-lilac">
-  <h2>Заказов пока нет</h2>
-  <p>Когда оформите, они появятся здесь со статусами.</p>
-</div>
-{% endif %}
 {% endblock %}

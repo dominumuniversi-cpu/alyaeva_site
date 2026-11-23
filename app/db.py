@@ -101,13 +101,18 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def create_user(email: str, password: str, full_name: str = "", role: str = "customer") -> int:
-    """Создать пользователя, вернуть id."""
+def create_user(email: str, password: str, full_name: str = "", role: str = "customer",
+                phone: str = "") -> int:
+    """Создать пользователя, вернуть id.
+
+    Телефон важен не меньше пароля: по нему гостевые заказы (оформленные без аккаунта)
+    привязываются к клиенту — вместе с загруженными фото.
+    """
     with pool.connection() as conn:
         row = conn.execute(
-            """INSERT INTO users (email, password_hash, full_name, role)
-               VALUES (lower(%s), %s, %s, %s) RETURNING id""",
-            (email, hash_password(password), full_name, role),
+            """INSERT INTO users (email, password_hash, full_name, role, phone)
+               VALUES (lower(%s), %s, %s, %s, %s) RETURNING id""",
+            (email, hash_password(password), full_name, role, phone or None),
         ).fetchone()
         conn.commit()
     return row["id"]
