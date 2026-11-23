@@ -58,7 +58,7 @@ let exitCode = 1;
 try {
   const r = docker(['run', '--rm', '--name', 'lego-alpn', '-p', '443:443',
     '-v', 'E:/DockerData/alyaeva/certbot/conf:/out', 'goacme/lego:latest',
-    'run', '--accept-tos', '--email', EMAIL, '--path', '/out', '--tls', '-d', 'alyaeva.pro']);
+    'run', '--accept-tos', '--email', EMAIL, '--path', '/out', '--tls', '-d', 'alyaeva.pro', '-d', 'www.alyaeva.pro']);
   log('lego exit=' + r.status);
   if (r.status === 0) {
     const crt = fs.readFileSync(path.join(CERT_DIR, 'alyaeva.pro.crt'), 'utf8');
