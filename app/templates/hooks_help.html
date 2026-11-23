@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Приём сообщений — Алёна Аляева{% endblock %}
+{% block content %}
+<div class="card" style="margin-top:32px; padding:32px">
+  <h1 style="margin-top:0">Приём сообщений из мессенджеров</h1>
+  <p class="muted">
+    Это служебный адрес. Сюда мессенджеры присылают сообщения — открывать его в браузере не нужно.
+    Всё, что придёт, вы увидите в <a href="{{ admin_url }}/inbox">инбоксе</a>.
+  </p>
+  <table style="margin-top:20px">
+    <tr><th>Канал</th><th>Состояние</th></tr>
+    <tr>
+      <td><strong>Telegram</strong></td>
+      <td>{% if tg_ready %}<span style="color:#2e7d5a">подключён</span>{% else %}токен не задан — <a href="{{ admin_url }}/settings">настроить</a>{% endif %}</td>
+    </tr>
+    <tr>
+      <td><strong>ВКонтакте</strong></td>
+      <td>{% if vk_ready %}<span style="color:#2e7d5a">подключён</span>{% else %}токен не задан — <a href="{{ admin_url }}/settings">настроить</a>{% endif %}</td>
+    </tr>
+    <tr>
+      <td><strong>Сайт</strong></td>
+      <td><span style="color:#2e7d5a">работает</span> — заказы и сообщения с формы попадают в инбокс</td>
+    </tr>
+  </table>
+  <p style="margin:24px 0 0">
+    <a class="btn" href="{{ admin_url }}/inbox">Открыть инбокс</a>
+  </p>
+</div>
+{% endblock %}

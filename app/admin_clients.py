@@ -17,6 +17,7 @@ import os
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from urllib.parse import quote
 
 import db
 from web_common import render
@@ -38,12 +39,20 @@ def _esc(value) -> str:
 
 
 def admin_only(request: Request):
-    """Администратор или редирект на вход."""
+    """Администратор или понятный отказ.
+
+    Не залогинен → на вход (чтобы войти под админом).
+    Залогинен, но не админ → страница «доступ запрещён», а не молчаливый
+    выброс в кабинет: человек должен понимать, почему его не пустили.
+    """
     user = db.session_user(request.cookies.get("sid", ""))
     if not user:
-        return None, RedirectResponse("/login", status_code=303)
+        return None, RedirectResponse(
+            "/login?next=" + quote(request.url.path), status_code=303)
     if user.get("role") != "admin":
-        return None, RedirectResponse("/cabinet", status_code=303)
+        resp = render(request, "403.html", user=user, who=user.get("email"))
+        resp.status_code = 403
+        return None, resp
     return user, None
 
 

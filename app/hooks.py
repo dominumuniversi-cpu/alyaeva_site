@@ -13,11 +13,13 @@ import json
 import logging
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 
 import db
 import orders
 import secrets_helper
+from urllib.parse import quote
+from web_common import render
 
 log = logging.getLogger("alyaeva.hooks")
 
@@ -118,6 +120,21 @@ async def vk_hook(request: Request):
             meta={"from_id": frm},
         )
     return PlainTextResponse("ok")
+
+
+@router.get("/hooks")
+@router.get("/hooks/")
+def hooks_root(request: Request):
+    """Адрес вебхуков открывают случайно — показываем страницу, а не служебный JSON.
+
+    Залогиненному админу показываем статус каналов, остальных ведём на вход.
+    """
+    user = db.session_user(request.cookies.get("sid", ""))
+    if user and user.get("role") == "admin":
+        tg = bool(secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or "")))
+        vk = bool(secrets_helper.decrypt(str(db.get_setting("vk.token", "") or "")))
+        return render(request, "hooks_help.html", user=user, tg_ready=tg, vk_ready=vk)
+    return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
 
 
 @router.get("/hooks/status")

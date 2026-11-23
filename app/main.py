@@ -258,12 +258,22 @@ def projects_page(request: Request):
 
 # ---------------- Админка ----------------
 
+def _deny(request: Request):
+    """Отказ в доступе: не залогинен — на вход, залогинен — страница «доступ закрыт»."""
+    person = current_user(request)
+    if not person:
+        return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
+    resp = render(request, "403.html", user=person, who=person.get("email"))
+    resp.status_code = 403
+    return resp
+
+
 @app.get(ADMIN, response_class=HTMLResponse)
 def admin_orders(request: Request):
     """Заказы: список для администратора."""
     user = require_admin(request)
     if not user:
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
     with db.pool.connection() as conn:
         orders = conn.execute(
             """SELECT o.*, u.email AS user_email,
@@ -286,7 +296,7 @@ def admin_products(request: Request):
     """Товары и цены — редактируются здесь, а не в HTML."""
     user = require_admin(request)
     if not user:
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
     with db.pool.connection() as conn:
         products = conn.execute("SELECT * FROM products ORDER BY sort_order, id").fetchall()
     return render(request, "admin_products.html", user=user, products=products)
@@ -297,7 +307,7 @@ def admin_settings(request: Request):
     """Настройки интеграций: Telegram, VK. Токены — зашифрованы в БД."""
     user = require_admin(request)
     if not user:
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
     import secrets_helper
     s = db.all_settings("telegram.") | db.all_settings("vk.") | db.all_settings("site.")
     return render(
@@ -322,7 +332,7 @@ def save_settings(
     """Сохранение интеграций. Пустое поле токена = не менять."""
     user = require_admin(request)
     if not user:
-        return RedirectResponse("/login", status_code=303)
+        return _deny(request)
     import secrets_helper
     if telegram_token.strip():
         db.set_setting("telegram.token", secrets_helper.encrypt(telegram_token.strip()), user["id"])
@@ -338,3 +348,47 @@ def save_settings(
     db.set_setting("site.phone", site_phone.strip(), user["id"])
     db.set_setting("site.email", site_email.strip(), user["id"])
     return RedirectResponse(ADMIN + "/settings?saved=1", status_code=303)
+
+
+# ---------------- Страницы ошибок ----------------
+# Раньше несуществующий путь приложения отдавал голый {"detail":"Not Found"} —
+# человек видел служебный JSON вместо страницы. Теперь — страница в стиле сайта.
+
+from fastapi.exceptions import RequestValidationError as _RVE
+from starlette.exceptions import HTTPException as _HTTPExc
+
+
+def _wants_json(request: Request) -> bool:
+    """Запрос от скрипта/бота, а не из браузера? Тогда отвечаем JSON."""
+    path = request.url.path
+    if path.startswith(("/api/", "/hooks/")):
+        return True
+    return "application/json" in (request.headers.get("accept") or "")
+
+
+@app.exception_handler(_HTTPExc)
+async def _http_error(request: Request, exc: _HTTPExc):
+    """404 → страница «не найдено»; 403 → «сюда нельзя»; остальное — честный код."""
+    if _wants_json(request) or exc.status_code not in (403, 404, 405):
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+    user = current_user(request)
+    if exc.status_code == 403:
+        resp = render(request, "403.html", user=user,
+                      who=(user.get("email") if user else None))
+        resp.status_code = 403
+        return resp
+    if exc.status_code == 405:
+        return JSONResponse({"detail": exc.detail}, status_code=405)
+    resp = render(request, "404.html", user=user)
+    resp.status_code = 404
+    return resp
+
+
+@app.exception_handler(_RVE)
+async def _validation_error(request: Request, exc: _RVE):
+    """Кривые данные от формы: человеку — понятный текст, а не список полей Pydantic."""
+    if _wants_json(request):
+        return JSONResponse({"detail": exc.errors()}, status_code=422)
+    resp = render(request, "404.html", user=current_user(request))
+    resp.status_code = 404
+    return resp
