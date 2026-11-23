@@ -34,8 +34,10 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 import orders as orders_mod  # noqa: E402
 from routes_shop import router as shop_router, status_name
-from admin_clients import router as admin_clients_router  # noqa: E402
+from admin_clients import router as admin_clients_router
+from hooks import router as hooks_router  # noqa: E402
 app.include_router(admin_clients_router)
+app.include_router(hooks_router)
 app.include_router(shop_router)
 
 
@@ -279,6 +281,8 @@ def admin_settings(request: Request):
         request, "admin_settings.html", user=user, settings=s,
         tg_token_mask=secrets_helper.mask(secrets_helper.decrypt(str(s.get("telegram.token", "")))),
         vk_token_mask=secrets_helper.mask(secrets_helper.decrypt(str(s.get("vk.token", "")))),
+        tg_hook_secret=secrets_helper.decrypt(str(s.get("telegram.hook_secret", "") or "")),
+        tg_hook_ready=bool(secrets_helper.decrypt(str(s.get("telegram.token", "") or ""))),
     )
 
 
@@ -299,6 +303,11 @@ def save_settings(
     import secrets_helper
     if telegram_token.strip():
         db.set_setting("telegram.token", secrets_helper.encrypt(telegram_token.strip()), user["id"])
+        # Секрет адреса вебхука: без него кто угодно мог бы слать нам «сообщения».
+        if not db.get_setting("telegram.hook_secret"):
+            import secrets as _secrets
+            db.set_setting("telegram.hook_secret",
+                           secrets_helper.encrypt(_secrets.token_urlsafe(32)), user["id"])
     db.set_setting("telegram.proxy", telegram_proxy.strip(), user["id"])
     db.set_setting("telegram.chat", telegram_chat.strip(), user["id"])
     if vk_token.strip():

@@ -179,16 +179,27 @@ def inbox_page(request: Request, admin_url: str) -> HTMLResponse:
 
 
 @router.get("/api/inbox/threads")
-def api_threads():
-    """Список диалогов (JSON)."""
-    return JSONResponse([{**t, "last_at": t["last_at"].isoformat()} for t in shop.threads()])
+def api_threads(request: Request):
+    """Список диалогов. ТОЛЬКО администратор: здесь переписка реальных клиентов."""
+    if not require_admin(request):
+        return JSONResponse({"ok": False, "error": "Нет доступа"}, status_code=403)
+    return JSONResponse([
+        {**t, "last_at": t["last_at"].isoformat() if t.get("last_at") else None,
+         "created_at": t["created_at"].isoformat() if t.get("created_at") else None}
+        for t in shop.threads()
+    ])
 
 
 @router.get("/api/inbox/thread/{thread_id}")
-def api_thread(thread_id: int):
-    """Сообщения диалога."""
+def api_thread(thread_id: int, request: Request):
+    """Сообщения диалога. ТОЛЬКО администратор."""
+    if not require_admin(request):
+        return JSONResponse({"ok": False, "error": "Нет доступа"}, status_code=403)
     msgs = shop.thread_messages(thread_id)
-    return JSONResponse([{**m, "created_at": m["created_at"].isoformat()} for m in msgs])
+    return JSONResponse([
+        {**m, "created_at": m["created_at"].isoformat() if m.get("created_at") else None}
+        for m in msgs
+    ])
 
 
 @router.post("/api/inbox/thread/{thread_id}/reply")
