@@ -99,6 +99,7 @@ async function uploadPhotos(number) {
     for (const f of input.files) fd.append('files', f);
     const r = await fetch('/api/order/' + encodeURIComponent(number) + '/photos', {method:'POST', body: fd});
     const d = await r.json();
+    if (d.login) { window.location.href = '/login?next=/order&reason=order'; return; }
     if (d.ok) {
       out.innerHTML = '<div class="ok" style="margin-top:0">Загружено фото: ' + d.saved +
         (d.skipped ? '<br>Пропущено: ' + d.skipped : '') + '</div>';
@@ -128,6 +129,10 @@ form.addEventListener('submit', async (e)=>{
     const fd = new FormData(form);
     const r = await fetch('/api/order', {method:'POST', body: fd});
     const data = await r.json();
+    if (data.login) {  // сессия истекла — возвращаем человека к заказу после входа
+      window.location.href = '/login?next=/order&reason=order';
+      return;
+    }
     if (data.ok) {
       showUpload(data.number);
       form.reset();

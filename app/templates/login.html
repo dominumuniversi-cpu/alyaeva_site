@@ -1,17 +1,26 @@
 {% extends "base.html" %}
-{% block title %}Вход — Алёна Аляева{% endblock %}
+{% block title %}{% if reason == 'order' %}Вход для заказа{% else %}Вход{% endif %} — Алёна Аляева{% endblock %}
 {% block content %}
 <div class="auth-box card">
-  <h1>Вход</h1>
-  <p class="muted">Личный кабинет или админка</p>
+  {% if reason == 'order' %}
+    <h1>Войдите, чтобы заказать</h1>
+    <p class="muted">Заказ сохранится в вашем кабинете вместе с фотографиями.</p>
+  {% else %}
+    <h1>Вход</h1>
+    <p class="muted">Личный кабинет или админка</p>
+  {% endif %}
   {% if error %}<div class="errors">{{ error }}</div>{% endif %}
   <form method="post" action="/login">
+    <input type="hidden" name="next" value="{{ next }}">
     <label for="email">E-mail</label>
     <input id="email" type="email" name="email" required autocomplete="username">
     <label for="password">Пароль</label>
     <input id="password" type="password" name="password" required autocomplete="current-password">
     <div style="margin-top:22px"><button class="btn" type="submit">Войти</button></div>
   </form>
-  <p class="hint">Нет аккаунта? <a href="/register">Зарегистрироваться</a> — заказы, оформленные гостем, найдутся по номеру телефона.</p>
+  <p class="hint">
+    Нет аккаунта? <a href="/register{% if reason == 'order' %}?next=/order{% endif %}">Зарегистрироваться</a>
+    {% if reason == 'order' %} — займёт минуту, и сразу вернётесь к заказу.{% endif %}
+  </p>
 </div>
 {% endblock %}

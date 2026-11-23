@@ -53,8 +53,14 @@ def api_order(
     qty: int = Form(1),
     consent: str = Form(""),
 ):
-    """Оформить заказ. Ответ — JSON, без перезагрузки страницы."""
+    """Оформить заказ. Ответ — JSON, без перезагрузки страницы.
+
+    Только для вошедших: заказ сразу принадлежит клиенту, фото идут в его папку.
+    Гость получает 401 — страница заказа в этом случае отправляет на вход.
+    """
     user = db.session_user(request.cookies.get("sid", ""))
+    if not user:
+        return JSONResponse({"ok": False, "error": "Нужно войти", "login": True}, status_code=401)
     items = []
     if product_id:
         with db.pool.connection() as conn:
@@ -64,7 +70,7 @@ def api_order(
                           "price_rub": float(p["price_rub"]), "qty": qty})
     if consent not in ("on", "1", "true"):
         return JSONResponse({"ok": False, "error": "Нужно согласие на обработку данных"}, status_code=400)
-    order = shop.create_order(user["id"] if user else None, name, phone, email, comment, items)
+    order = shop.create_order(user["id"], name, phone, email, comment, items)
     shop.log_message("site", "in", f"Новый заказ {order['number']} от {name}, {phone}. {comment}".strip(),
                      author=name)
     return JSONResponse({"ok": True, "number": order["number"], "id": order["id"]})
@@ -115,8 +121,8 @@ async def api_order_photos(number: str, request: Request, files: list[UploadFile
         order = conn.execute("SELECT * FROM orders WHERE number = %s", (number.strip(),)).fetchone()
     if not order:
         return JSONResponse({"ok": False, "error": "Заказ не найден"}, status_code=404)
-    # Чужой заказ не трогаем: либо это гость по номеру, либо владелец заказа, либо админ.
-    if user and order.get("user_id") and order["user_id"] != user["id"] and user.get("role") != "admin":
+    # Только владелец заказа или админ.
+    if order.get("user_id") != user["id"] and user.get("role") != "admin":
         return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
     if not files:
         return JSONResponse({"ok": False, "error": "Нет файлов"}, status_code=400)

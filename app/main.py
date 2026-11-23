@@ -49,38 +49,60 @@ def health():
 # ---------------- Вход / выход ----------------
 
 @app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request, error: str = ""):
-    """Форма входа."""
+def login_page(request: Request, error: str = "", next: str = "", reason: str = ""):
+    """Форма входа. Хранит, куда человек шёл: после входа вернём его туда."""
     user = current_user(request)
     if user:
-        return RedirectResponse(ADMIN if user["role"] == "admin" else "/cabinet", status_code=303)
+        target = _safe_next(next, ADMIN if user["role"] == "admin" else "/cabinet")
+        return RedirectResponse(target, status_code=303)
+    if reason == "order":
+        # Человек нажал «Заказать» — объясняем, зачем вход, а не просто показываем форму.
+        pass
     messages = {
         "reg": "Не получилось зарегистрироваться: проверьте почту и пароль (минимум 8 символов).",
         "exists": "Аккаунт с такой почтой уже есть — войдите.",
         "1": "Неверная почта или пароль.",
     }
     return render(request, "login.html", user=None, error=messages.get(error, ""),
-                  admin_slug=ADMIN.strip("/"))
+                  next=_safe_next(next, ""), reason=reason)
+
+
+def _safe_next(value: str, default: str) -> str:
+    """Куда вернуть после входа. Только внутренние адреса — иначе открытый редирект."""
+    value = (value or "").strip()
+    if not value.startswith("/") or value.startswith("//") or "\\" in value:
+        return default
+    return value
 
 
 @app.get("/order", response_class=HTMLResponse)
 def order_page(request: Request):
-    """Страница заказа: форма + загрузка фото. Цены подтягиваются из БД."""
-    return templates.TemplateResponse(request, "order.html", {"user": current_user(request)})
+    """Страница заказа. Заказывать могут только вошедшие — так заказ сразу привязан к клиенту.
+
+    Гость уходит на вход с пометкой, что шёл за заказом, и после входа попадает сюда же.
+    """
+    user = current_user(request)
+    if not user:
+        return RedirectResponse("/login?next=/order&reason=order", status_code=303)
+    return templates.TemplateResponse(request, "order.html", {"user": user})
 
 
 @app.post("/login")
-def login(request: Request, email: str = Form(...), password: str = Form(...)):
+def login(request: Request, email: str = Form(...), password: str = Form(...),
+          next: str = Form("")):
     """Проверка логина и пароля, выдача cookie-сессии."""
     user = db.find_user_by_email(email.strip())
     if not user or not db.verify_password(password, user["password_hash"]):
-        return render(request, "login.html", error="Неверный e-mail или пароль", user=None)
+        return render(request, "login.html", error="Неверный e-mail или пароль", user=None,
+                      next=_safe_next(next, ""), reason="")
     token = db.create_session(
         user["id"],
         ua=request.headers.get("user-agent", ""),
         ip=request.client.host if request.client else "",
     )
-    target = ADMIN if user["role"] == "admin" else "/cabinet"
+    # Админ всё равно идёт в админку, но если он явно шёл заказывать — ведём к заказу.
+    wanted = _safe_next(next, "")
+    target = wanted or (ADMIN if user["role"] == "admin" else "/cabinet")
     resp = RedirectResponse(target, status_code=303)
     resp.set_cookie("sid", token, httponly=True, secure=True, samesite="lax", max_age=30 * 86400)
     return resp
@@ -100,16 +122,16 @@ def logout(request: Request):
 # ---------------- Личный кабинет ----------------
 
 @app.get("/register", response_class=HTMLResponse)
-def register_page(request: Request, error: str = ""):
+def register_page(request: Request, error: str = "", next: str = ""):
     """Форма регистрации."""
     if current_user(request):
-        return RedirectResponse("/cabinet", status_code=303)
-    return render(request, "register.html", user=None, error=error)
+        return RedirectResponse(_safe_next(next, "/cabinet"), status_code=303)
+    return render(request, "register.html", user=None, error=error, next=_safe_next(next, ""))
 
 
 @app.post("/register")
 def register(request: Request, email: str = Form(""), password: str = Form(""),
-             full_name: str = Form(""), phone: str = Form("")):
+             full_name: str = Form(""), phone: str = Form(""), next: str = Form("")):
     """Регистрация клиента. Гостевые заказы с тем же телефоном переходят к нему."""
     email = (email or "").strip().lower()
     if not email or len(password or "") < 8:
@@ -123,7 +145,7 @@ def register(request: Request, email: str = Form(""), password: str = Form(""),
         orders_mod.claim_guest_orders(uid, phone.strip(), email)
     token = db.create_session(uid, ua=request.headers.get("user-agent", ""),
                               ip=request.client.host if request.client else "")
-    resp = RedirectResponse("/cabinet", status_code=303)
+    resp = RedirectResponse(_safe_next(next, "/cabinet"), status_code=303)
     resp.set_cookie("sid", token, httponly=True, secure=True, samesite="lax", max_age=30 * 86400)
     return resp
 
