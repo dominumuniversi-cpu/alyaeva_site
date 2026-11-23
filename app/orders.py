@@ -121,7 +121,27 @@ def _safe_name(name: str) -> str:
     return base[:120] or "file"
 
 
-def save_upload(project_id: int, user_id: int, filename: str, content: bytes) -> dict | None:
+def project_for_order(order_row: dict) -> int:
+    """Проект для заказа. Один проект на заказ — чтобы фото не смешивались между заказами.
+
+    Клиент видит свои проекты по user_id. Гость (user_id=None) — проект без владельца,
+    привязывается к клиенту при регистрации по тому же телефону.
+    """
+    with db.pool.connection() as conn:
+        existing = conn.execute(
+            "SELECT id FROM projects WHERE order_id = %s LIMIT 1", (order_row["id"],)).fetchone()
+        if existing:
+            return existing["id"]
+        row = conn.execute(
+            """INSERT INTO projects (user_id, order_id, title, note)
+               VALUES (%s,%s,%s,%s) RETURNING id""",
+            (order_row.get("user_id"), order_row["id"],
+             f"Заказ {order_row['number']}",
+             order_row.get("customer_name") or "")).fetchone()
+        return row["id"]
+
+
+def save_upload(project_id: int, user_id: int | None, filename: str, content: bytes) -> dict | None:
     """Сохранить фото в проект. Возвращает запись или None, если тип не разрешён."""
     ext = os.path.splitext(filename)[1].lower()
     if ext not in ALLOWED_IMAGE:
@@ -129,7 +149,7 @@ def save_upload(project_id: int, user_id: int, filename: str, content: bytes) ->
     if len(content) > config.MAX_UPLOAD_MB * 1024 * 1024:
         raise ValueError("Файл слишком большой")
     stored = secrets.token_hex(16) + ext
-    dest_dir = os.path.join(config.UPLOAD_DIR, str(user_id), str(project_id))
+    dest_dir = os.path.join(config.UPLOAD_DIR, str(user_id or "guest"), str(project_id))
     os.makedirs(dest_dir, exist_ok=True)
     path = os.path.join(dest_dir, stored)
     with open(path, "wb") as f:

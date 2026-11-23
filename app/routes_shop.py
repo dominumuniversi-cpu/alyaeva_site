@@ -86,6 +86,41 @@ async def api_upload(project_id: int, request: Request, file: UploadFile = File(
     return JSONResponse({"ok": True, "id": row["id"], "name": row["orig_name"]})
 
 
+@router.post("/api/order/{number}/photos")
+async def api_order_photos(number: str, request: Request, files: list[UploadFile] = File(...)):
+    """Фото к заказу. Гость загружает по номеру заказа, клиент — ещё и из своего списка.
+
+    Номер заказа знает только тот, кому он выдан на экране после отправки формы,
+    поэтому он и работает как ключ доступа для незалогиненного покупателя.
+    """
+    user = db.session_user(request.cookies.get("sid", ""))
+    with db.pool.connection() as conn:
+        order = conn.execute("SELECT * FROM orders WHERE number = %s", (number.strip(),)).fetchone()
+    if not order:
+        return JSONResponse({"ok": False, "error": "Заказ не найден"}, status_code=404)
+    # Чужой заказ не трогаем: либо это гость по номеру, либо владелец заказа, либо админ.
+    if user and order.get("user_id") and order["user_id"] != user["id"] and user.get("role") != "admin":
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    if not files:
+        return JSONResponse({"ok": False, "error": "Нет файлов"}, status_code=400)
+    project_id = shop.project_for_order(order)
+    saved, skipped = [], []
+    for f in files:
+        if len(saved) >= 20:
+            break
+        content = await f.read()
+        try:
+            row = shop.save_upload(project_id, order.get("user_id"), f.filename or "photo.jpg", content)
+        except ValueError as e:
+            skipped.append((f.filename, str(e)))
+            continue
+        if row:
+            saved.append(row["orig_name"])
+        else:
+            skipped.append((f.filename, "не изображение"))
+    return JSONResponse({"ok": True, "saved": len(saved), "skipped": len(skipped), "project_id": project_id})
+
+
 @router.get("/cabinet/file/{file_id}")
 def serve_file(file_id: int, request: Request):
     """Отдать файл. Только владельцу или админу — прямые ссылки не работают."""

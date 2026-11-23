@@ -76,6 +76,49 @@ fetch('/api/products').then(r=>r.json()).then(list=>{
   });
 });
 
+/** Показать блок загрузки фото после того, как заказ создан. */
+function showUpload(number) {
+  result.innerHTML =
+    '<div class="ok"><strong>Заявка принята!</strong><br>Номер: ' + number +
+    '<br>Свяжусь с вами в течение дня.</div>' +
+    '<div class="card" style="margin-top:18px">' +
+      '<label>Добавьте фото ребёнка <span class="hint" style="display:inline">(можно выбрать сразу несколько)</span></label>' +
+      '<input type="file" id="photoInput" accept="image/*,.heic,.heif" multiple style="border:none;padding:6px 0">' +
+      '<div style="margin-top:14px"><button class="btn" type="button" id="uploadBtn">Загрузить фото</button></div>' +
+      '<div id="uploadResult" style="margin-top:12px"></div>' +
+      '<p class="hint" style="margin-top:12px">Фото видите вы и Алёна. Другие клиенты — нет.</p>' +
+    '</div>';
+  document.getElementById('uploadBtn').addEventListener('click', () => uploadPhotos(number));
+}
+
+/** Отправить выбранные фото к заказу. */
+async function uploadPhotos(number) {
+  const input = document.getElementById('photoInput');
+  const out = document.getElementById('uploadResult');
+  const btn = document.getElementById('uploadBtn');
+  if (!input.files || !input.files.length) {
+    out.innerHTML = '<div class="err">Выберите хотя бы одно фото.</div>';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Загружаю...';
+  try {
+    const fd = new FormData();
+    for (const f of input.files) fd.append('files', f);
+    const r = await fetch('/api/order/' + encodeURIComponent(number) + '/photos', {method:'POST', body: fd});
+    const d = await r.json();
+    if (d.ok) {
+      out.innerHTML = '<div class="ok" style="margin-top:0">Загружено фото: ' + d.saved +
+        (d.skipped ? '<br>Пропущено: ' + d.skipped : '') + '</div>';
+      input.value = '';
+    } else {
+      out.innerHTML = '<div class="err">' + (d.error || 'Не удалось загрузить') + '</div>';
+    }
+  } catch(e) {
+    out.innerHTML = '<div class="err">Сеть недоступна, попробуйте ещё раз.</div>';
+  }
+  btn.disabled = false; btn.textContent = 'Загрузить фото';
+}
+
 const form = document.getElementById('orderForm');
 const result = document.getElementById('result');
 const btn = document.getElementById('submitBtn');
@@ -93,8 +136,7 @@ form.addEventListener('submit', async (e)=>{
     const r = await fetch('/api/order', {method:'POST', body: fd});
     const data = await r.json();
     if (data.ok) {
-      result.innerHTML = '<div class="ok"><strong>Заявка принята!</strong><br>Номер: ' + data.number +
-        '<br>Свяжусь с вами в течение дня.</div>';
+      showUpload(data.number);
       form.reset();
     } else {
       result.innerHTML = '<div class="err">Не удалось отправить. Попробуйте ещё раз или напишите в Telegram.</div>';
