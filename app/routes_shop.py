@@ -111,12 +111,16 @@ async def api_upload(project_id: int, request: Request, file: UploadFile = File(
 
 @router.post("/api/order/{number}/photos")
 async def api_order_photos(number: str, request: Request, files: list[UploadFile] = File(...)):
-    """Фото к заказу. Гость загружает по номеру заказа, клиент — ещё и из своего списка.
+    """Фото к заказу. Только для владельца заказа или администратора.
 
-    Номер заказа знает только тот, кому он выдан на экране после отправки формы,
-    поэтому он и работает как ключ доступа для незалогиненного покупателя.
+    ВАЖНО: номер заказа НЕ является ключом доступа. Номера предсказуемы
+    (AA-261123-001, 002, ...), поэтому раньше любой мог подобрать номер и
+    загрузить файл в чужой заказ. Теперь нужна сессия и проверка владельца.
     """
+    # Сначала сессия: без входа user = None, и обращение к user["id"] роняло обработчик с 500.
     user = db.session_user(request.cookies.get("sid", ""))
+    if not user:
+        return JSONResponse({"ok": False, "error": "Нужно войти", "login": True}, status_code=401)
     with db.pool.connection() as conn:
         order = conn.execute("SELECT * FROM orders WHERE number = %s", (number.strip(),)).fetchone()
     if not order:

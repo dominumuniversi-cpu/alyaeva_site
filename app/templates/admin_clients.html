@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Клиенты — админка{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+<div style="padding:28px 0 12px">
+  <h1 style="margin-bottom:6px">Клиенты</h1>
+  <p class="muted" style="margin-top:0">У каждого клиента — свои заказы, проекты и фото. Нажмите на клиента, чтобы открыть его карточку.</p>
+</div>
+
+<form method="get" action="/admin/clients" style="margin-bottom:18px; display:flex; gap:10px; flex-wrap:wrap">
+  <input type="search" name="q" value="{{ q }}" placeholder="Имя, почта или телефон"
+         style="flex:1; min-width:220px; padding:11px 14px; border:1.5px solid var(--c-lilac); border-radius:10px; font-family:inherit">
+  <button class="btn" type="submit">Найти</button>
+  {% if q %}<a class="btn-ghost" href="/admin/clients" style="align-self:center">Сбросить</a>{% endif %}
+</form>
+
+{% if clients %}
+<div class="card">
+  <table>
+    <tr>
+      <th>Клиент</th><th>Телефон</th><th>Заказов</th><th>Сумма</th>
+      <th>Фото</th><th>Последний заказ</th>
+    </tr>
+    {% for c in clients %}
+    <tr style="cursor:pointer" onclick="location.href='/admin/client/{{ c.id }}'">
+      <td>
+        <strong>{{ c.full_name or 'Без имени' }}</strong><br>
+        <span class="muted">{{ c.email }}</span>
+      </td>
+      <td>{{ c.phone or '—' }}</td>
+      <td>{{ c.orders_count }}</td>
+      <td>{{ '%.0f'|format(c.total_rub) }} ₽</td>
+      <td>{{ c.files_count }}</td>
+      <td>{{ c.last_order_at.strftime('%d.%m.%Y') if c.last_order_at else '—' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<div class="card" style="background:var(--c-lilac)">
+  <h2 style="margin-top:0">{% if q %}Никого не нашлось{% else %}Клиентов пока нет{% endif %}</h2>
+  <p style="margin-bottom:0">{% if q %}Попробуйте другую часть имени, почты или телефона.{% else %}Как только кто-то зарегистрируется — появится здесь.{% endif %}</p>
+</div>
+{% endif %}
+{% endblock %}

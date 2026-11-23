@@ -25,6 +25,18 @@
     </nav>
   </div>
 </header>
+{% if user and user.role == 'admin' %}
+<nav class="admin-subnav">
+  <div class="wrap">
+    <a href="{{ admin_url }}" {% if '/admin/client' not in request.url.path and request.url.path == admin_url %}class="active"{% endif %}>Заказы</a>
+    <a href="/admin/clients" {% if request.url.path.startswith('/admin/client') %}class="active"{% endif %}>Клиенты</a>
+    <a href="/admin/photos" {% if request.url.path.startswith('/admin/photos') %}class="active"{% endif %}>Все фото</a>
+    <a href="{{ admin_url }}/inbox">Инбокс</a>
+    <a href="{{ admin_url }}/products">Товары</a>
+    <a href="{{ admin_url }}/settings">Настройки</a>
+  </div>
+</nav>
+{% endif %}
 <main class="wrap">
 {% block content %}{% endblock %}
 </main>

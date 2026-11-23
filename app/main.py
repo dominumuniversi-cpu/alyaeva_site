@@ -33,7 +33,9 @@ app = FastAPI(title="alyaeva.pro", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 import orders as orders_mod  # noqa: E402
-from routes_shop import router as shop_router, status_name  # noqa: E402
+from routes_shop import router as shop_router, status_name
+from admin_clients import router as admin_clients_router  # noqa: E402
+app.include_router(admin_clients_router)
 app.include_router(shop_router)
 
 
