@@ -359,17 +359,24 @@ from starlette.exceptions import HTTPException as _HTTPExc
 
 
 def _wants_json(request: Request) -> bool:
-    """Запрос от скрипта/бота, а не из браузера? Тогда отвечаем JSON."""
-    path = request.url.path
-    if path.startswith(("/api/", "/hooks/")):
-        return True
-    return "application/json" in (request.headers.get("accept") or "")
+    """Запрос от скрипта/бота, а не из браузера? Тогда отвечаем JSON.
+
+    Раньше всё под /api/ и /hooks/ безусловно отдавало JSON — и человек,
+    открывший адрес в браузере, видел {"detail":"Not Found"}.
+    Смотрим Accept: браузер просит text/html, fetch — */* или json.
+    """
+    accept = (request.headers.get("accept") or "").lower()
+    # Браузер присылает "text/html,..."; curl по умолчанию — "*/*"; fetch — часто "*/*".
+    # Значит страницу даём только тем, кто ЯВНО просит html.
+    return "text/html" not in accept
 
 
 @app.exception_handler(_HTTPExc)
 async def _http_error(request: Request, exc: _HTTPExc):
     """404 → страница «не найдено»; 403 → «сюда нельзя»; остальное — честный код."""
-    if _wants_json(request) or exc.status_code not in (403, 404, 405):
+    if _wants_json(request):
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+    if exc.status_code not in (403, 404, 405, 422):
         return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
     user = current_user(request)
     if exc.status_code == 403:
@@ -378,7 +385,11 @@ async def _http_error(request: Request, exc: _HTTPExc):
         resp.status_code = 403
         return resp
     if exc.status_code == 405:
-        return JSONResponse({"detail": exc.detail}, status_code=405)
+        # Адрес есть, но открыт не тем способом (например, ссылку на действие
+        # нажали, а обработчик ждёт POST). Человеку — страница, а не «Method Not Allowed».
+        resp = render(request, "404.html", user=user)
+        resp.status_code = 404
+        return resp
     resp = render(request, "404.html", user=user)
     resp.status_code = 404
     return resp

@@ -122,6 +122,14 @@ async def vk_hook(request: Request):
     return PlainTextResponse("ok")
 
 
+def _hook_landing(request: Request, channel: str):
+    """Страница «вы открыли служебный адрес» — одинаковая для всех каналов."""
+    user = db.session_user(request.cookies.get("sid", ""))
+    if not (user and user.get("role") == "admin"):
+        return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
+    return render(request, "hook_landing.html", user=user, channel=channel)
+
+
 @router.get("/hooks")
 @router.get("/hooks/")
 def hooks_root(request: Request):
@@ -137,9 +145,33 @@ def hooks_root(request: Request):
     return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
 
 
+@router.get("/hooks/telegram/{secret}")
+def telegram_get(secret: str, request: Request):
+    """Адрес вебхука открыли в браузере.
+
+    Сюда шлёт только Telegram методом POST. Если человек открыл адрес глазами —
+    показываем, что он на месте и что с ним делать, а не «Method Not Allowed».
+    """
+    return _hook_landing(request, "Telegram")
+
+
+@router.get("/hooks/vk")
+def vk_get(request: Request):
+    """Адрес вебхука VK открыли в браузере. Приём идёт только методом POST."""
+    return _hook_landing(request, "ВКонтакте")
+
+
 @router.get("/hooks/status")
-async def hooks_status():
-    """Готов ли приём: какие каналы настроены (без раскрытия секретов)."""
+async def hooks_status(request: Request):
+    """Готов ли приём: какие каналы настроены (без раскрытия секретов).
+
+    Открытый в браузере адрес показываем страницей, а не JSON —
+    правила общие для всех страниц сайта.
+    """
+    # */* приходит от скриптов и curl — им нужен JSON. Страница — только если
+    # браузер явно просит html.
+    if "text/html" in (request.headers.get("accept") or ""):
+        return _hook_landing(request, "мессенджеры")
     tg = bool(secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or "")))
     tg_hook = bool(secrets_helper.decrypt(str(db.get_setting("telegram.hook_secret", "") or "")))
     vk = bool(secrets_helper.decrypt(str(db.get_setting("vk.token", "") or "")))

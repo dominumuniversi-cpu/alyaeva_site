@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 
 import db
 import orders as shop
-from web_common import render, require_admin, require_user
+from web_common import render, require_admin, require_user, denied
 
 router = APIRouter()
 
@@ -182,7 +182,7 @@ def inbox_page(request: Request, admin_url: str) -> HTMLResponse:
 def api_threads(request: Request):
     """Список диалогов. ТОЛЬКО администратор: здесь переписка реальных клиентов."""
     if not require_admin(request):
-        return JSONResponse({"ok": False, "error": "Нет доступа"}, status_code=403)
+        return denied(request)
     return JSONResponse([
         {**t, "last_at": t["last_at"].isoformat() if t.get("last_at") else None,
          "created_at": t["created_at"].isoformat() if t.get("created_at") else None}
@@ -194,7 +194,7 @@ def api_threads(request: Request):
 def api_thread(thread_id: int, request: Request):
     """Сообщения диалога. ТОЛЬКО администратор."""
     if not require_admin(request):
-        return JSONResponse({"ok": False, "error": "Нет доступа"}, status_code=403)
+        return denied(request)
     msgs = shop.thread_messages(thread_id)
     return JSONResponse([
         {**m, "created_at": m["created_at"].isoformat() if m.get("created_at") else None}

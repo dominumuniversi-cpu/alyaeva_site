@@ -40,3 +40,28 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
     """Рендер шаблона с общим контекстом."""
     user = kw.pop("user", None) or current_user(request)
     return templates.TemplateResponse(request, name, {"user": user, "admin_url": ADMIN, **kw})
+
+
+def is_browser(request) -> bool:
+    """Пришёл человек из браузера или скрипт?
+
+    Браузер просит text/html. fetch и curl — */* или application/json.
+    """
+    accept = (request.headers.get("accept") or "").lower()
+    return "text/html" in accept
+
+
+def denied(request, message: str = "Нет доступа", status: int = 403):
+    """Отказ в доступе. Человеку — страница, скрипту — JSON.
+
+    Раньше отказы всегда уходили JSON'ом, и владелец, открывший адрес
+    в браузере, видел {"ok":false,"error":"Нет доступа"}.
+    """
+    from fastapi.responses import JSONResponse
+    if is_browser(request):
+        user = current_user(request)
+        resp = render(request, "403.html", user=user,
+                      who=(user.get("email") if user else None))
+        resp.status_code = status
+        return resp
+    return JSONResponse({"ok": False, "error": message}, status_code=status)

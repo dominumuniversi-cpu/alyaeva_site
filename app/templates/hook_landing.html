@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Служебный адрес — Алёна Аляева{% endblock %}
+{% block content %}
+<div class="card" style="margin-top:32px; padding:36px; max-width:680px">
+  <h1 style="margin-top:0">Это служебный адрес</h1>
+  <p style="font-size:17px; line-height:1.6">
+    По этому адресу {{ channel }} присылает сообщения нашему сайту. Открывать его в браузере не нужно —
+    и ничего секретного здесь тоже нет, поэтому на странице нечего показать.
+  </p>
+  <p class="muted">
+    Всё, что приходит из {{ channel }}, собирается в одном окне — вместе с заказами и сообщениями с сайта.
+  </p>
+  <p style="margin:26px 0 0">
+    <a class="btn" href="{{ admin_url }}/inbox">Открыть инбокс</a>
+    <a class="btn-ghost" href="{{ admin_url }}/settings"
+       style="margin-left:10px; display:inline-block; padding:12px 20px">Настройки интеграций</a>
+  </p>
+</div>
+{% endblock %}
