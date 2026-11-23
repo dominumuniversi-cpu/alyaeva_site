@@ -55,6 +55,12 @@ def login_page(request: Request):
     return render(request, "login.html", error="")
 
 
+@app.get("/order", response_class=HTMLResponse)
+def order_page(request: Request):
+    """Страница заказа: форма + загрузка фото. Цены подтягиваются из БД."""
+    return templates.TemplateResponse(request, "order.html", {"user": current_user(request)})
+
+
 @app.post("/login")
 def login(request: Request, email: str = Form(...), password: str = Form(...)):
     """Проверка логина и пароля, выдача cookie-сессии."""

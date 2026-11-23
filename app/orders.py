@@ -37,8 +37,8 @@ def create_order(user_id: int | None, name: str, phone: str, email: str, comment
     with db.pool.connection() as conn:
         order = conn.execute(
             """INSERT INTO orders (number, user_id, customer_name, customer_phone, customer_email,
-                                   comment, total_rub)
-               VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
+                                   comment, total_rub, consent_at)
+               VALUES (%s,%s,%s,%s,%s,%s,%s, now()) RETURNING *""",
             (number, user_id, name, phone, email, comment, total),
         ).fetchone()
         for it in items:

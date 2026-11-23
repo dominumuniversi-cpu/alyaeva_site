@@ -34,6 +34,7 @@ def api_order(
     comment: str = Form(""),
     product_id: int = Form(0),
     qty: int = Form(1),
+    consent: str = Form(""),
 ):
     """Оформить заказ. Ответ — JSON, без перезагрузки страницы."""
     user = db.session_user(request.cookies.get("sid", ""))
@@ -44,6 +45,8 @@ def api_order(
         if p:
             items.append({"product_id": p["id"], "title": p["title"],
                           "price_rub": float(p["price_rub"]), "qty": qty})
+    if consent not in ("on", "1", "true"):
+        return JSONResponse({"ok": False, "error": "Нужно согласие на обработку данных"}, status_code=400)
     order = shop.create_order(user["id"] if user else None, name, phone, email, comment, items)
     shop.log_message("site", "in", f"Новый заказ {order['number']} от {name}, {phone}. {comment}".strip(),
                      author=name)

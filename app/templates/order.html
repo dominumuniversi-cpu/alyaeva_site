@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Заказать книгу — Алёна Аляева</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  .hero { background: #F1ECFF; padding: 48px 0 40px; text-align: center; }
+  .hero h1 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 8px; }
+  .hero p { color: var(--body); max-width: 520px; margin: 0 auto; }
+  .steps { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 24px 0 0; }
+  .step { background:#fff; border-radius: 999px; padding: 8px 18px; font-size: 14px; color: var(--accent); font-weight: 700; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+  .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; font-size: 14px; }
+  .consent input { width: auto; margin-top: 3px; }
+  .ok { background: var(--mint); border-radius: var(--r-sm); padding: 20px 24px; margin-top: 20px; }
+  .err { background: #F5DAD8; color: #9B3A32; border-radius: var(--r-sm); padding: 16px 20px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="wrap">
+    <h1>Заказать книгу</h1>
+    <p>Оставьте контакты — свяжусь, обсудим сказку и покажу макет. Фото можно загрузить сразу.</p>
+    <div class="steps"><span class="step">1. Расскажите о ребёнке</span><span class="step">2. Согласуем макет</span><span class="step">3. Предоплата 50%</span><span class="step">4. Книга у вас</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <form class="card" id="orderForm" style="margin-top:-24px">
+    <div class="row">
+      <div>
+        <label>Как вас зовут</label>
+        <input type="text" name="name" required placeholder="Имя">
+      </div>
+      <div>
+        <label>Телефон</label>
+        <input type="tel" name="phone" required placeholder="+7 ...">
+      </div>
+    </div>
+    <label>E-mail <span class="hint" style="display:inline">(необязательно — для входа в кабинет)</span></label>
+    <input type="email" name="email" placeholder="you@example.ru">
+
+    <label>Что хотите заказать</label>
+    <select name="product_id" id="productSelect">
+      <option value="">— выберите —</option>
+    </select>
+
+    <label>Расскажите о ребёнке</label>
+    <textarea name="comment" rows="4" placeholder="Имя ребёнка, сколько лет, что любит"></textarea>
+
+    <div class="consent">
+      <input type="checkbox" id="consent" required>
+      <label for="consent" style="margin:0;font-weight:400">Согласен на обработку персональных данных</label>
+    </div>
+
+    <div style="margin-top:24px">
+      <button class="btn" type="submit" id="submitBtn">Отправить заявку</button>
+    </div>
+    <div id="result"></div>
+  </form>
+</div>
+
+<script>
+// цены подтягиваются из базы — правятся в админке, а не в HTML
+fetch('/api/products').then(r=>r.json()).then(list=>{
+  const sel = document.getElementById('productSelect');
+  list.forEach(p=>{
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = p.title + (p.price_rub ? ' — от ' + p.price_rub + ' ₽' : '');
+    sel.appendChild(o);
+  });
+});
+
+const form = document.getElementById('orderForm');
+const result = document.getElementById('result');
+const btn = document.getElementById('submitBtn');
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  result.innerHTML = '';
+  if (!document.getElementById('consent').checked) {
+    result.innerHTML = '<div class="err">Нужно согласие на обработку данных.</div>';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Отправляю...';
+  try {
+    const fd = new FormData(form);
+    const r = await fetch('/api/order', {method:'POST', body: fd});
+    const data = await r.json();
+    if (data.ok) {
+      result.innerHTML = '<div class="ok"><strong>Заявка принята!</strong><br>Номер: ' + data.number +
+        '<br>Свяжусь с вами в течение дня.</div>';
+      form.reset();
+    } else {
+      result.innerHTML = '<div class="err">Не удалось отправить. Попробуйте ещё раз или напишите в Telegram.</div>';
+    }
+  } catch(err) {
+    result.innerHTML = '<div class="err">Сеть недоступна. Попробуйте ещё раз.</div>';
+  }
+  btn.disabled = false; btn.textContent = 'Отправить заявку';
+});
+</script>
+</body>
+</html>
