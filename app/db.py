@@ -170,3 +170,36 @@ def drop_session(token: str) -> None:
     with pool.connection() as conn:
         conn.execute("DELETE FROM sessions WHERE token_hash = %s", (_hash_token(token),))
         conn.commit()
+
+
+def change_password(user_id: int, old_password: str, new_password: str) -> tuple[bool, str]:
+    """Сменить пароль со сверкой старого.
+
+    Возвращает (успех, сообщение). Старый пароль обязателен: иначе достаточно
+    увести чужую сессию, чтобы сменить пароль и запереть владельца.
+    """
+    if len(new_password or "") < 8:
+        return False, "Новый пароль — минимум 8 символов"
+    if new_password == old_password:
+        return False, "Новый пароль совпадает со старым"
+    with pool.connection() as conn:
+        row = conn.execute("SELECT password_hash FROM users WHERE id = %s", (user_id,)).fetchone()
+        if not row:
+            return False, "Пользователь не найден"
+        if not verify_password(old_password or "", row["password_hash"]):
+            return False, "Текущий пароль указан неверно"
+        conn.execute("UPDATE users SET password_hash = %s WHERE id = %s",
+                     (hash_password(new_password), user_id))
+        conn.commit()
+    return True, "Пароль изменён"
+
+
+def set_password(user_id: int, new_password: str) -> bool:
+    """Задать пароль без сверки старого — для первичной выдачи и восстановления доступа."""
+    if len(new_password or "") < 8:
+        return False
+    with pool.connection() as conn:
+        conn.execute("UPDATE users SET password_hash = %s WHERE id = %s",
+                     (hash_password(new_password), user_id))
+        conn.commit()
+    return True

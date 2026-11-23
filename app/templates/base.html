@@ -16,6 +16,7 @@
         <a href="/cabinet">Мои заказы</a>
         <a href="/order">Заказать</a>
         {% if user.role == 'admin' %}<a href="{{ admin_url }}">Админка</a>{% endif %}
+        <a href="/settings">Настройки</a>
         <a href="/logout">Выйти</a>
       {% else %}
         <a href="/">На сайт</a>

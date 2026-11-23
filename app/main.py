@@ -9,6 +9,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Form, Request
+from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -121,6 +122,26 @@ def logout(request: Request):
 
 
 # ---------------- Личный кабинет ----------------
+
+@app.get("/settings", response_class=HTMLResponse)
+def settings_page(request: Request):
+    """Настройки пользователя: смена пароля и данные аккаунта."""
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+    return render(request, "settings.html", user=user)
+
+
+@app.post("/api/password")
+def api_change_password(request: Request, old_password: str = Form(""),
+                        new_password: str = Form("")):
+    """Смена пароля. Ответ — JSON, без перезагрузки страницы."""
+    user = db.session_user(request.cookies.get("sid", ""))
+    if not user:
+        return JSONResponse({"ok": False, "error": "Нужно войти", "login": True}, status_code=401)
+    ok, message = db.change_password(user["id"], old_password, new_password)
+    return JSONResponse({"ok": ok, "error": None if ok else message})
+
 
 @app.get("/register", response_class=HTMLResponse)
 def register_page(request: Request, error: str = "", next: str = ""):
