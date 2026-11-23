@@ -112,7 +112,7 @@ def create_user(email: str, password: str, full_name: str = "", role: str = "cus
         row = conn.execute(
             """INSERT INTO users (email, password_hash, full_name, role, phone)
                VALUES (lower(%s), %s, %s, %s, %s) RETURNING id""",
-            (email, hash_password(password), full_name, role, phone or None),
+            (email, hash_password(password), full_name, role, (phone or "").strip() or None),
         ).fetchone()
         conn.commit()
     return row["id"]

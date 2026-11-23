@@ -108,6 +108,7 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
     return resp
 
 
+@app.get("/logout")
 @app.post("/logout")
 def logout(request: Request):
     """Выход: удалить сессию и cookie."""
