@@ -1,26 +1,19 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Заказать книгу — Алёна Аляева</title>
-<meta name="robots" content="noindex">
-<link rel="stylesheet" href="/static/app.css">
+{% extends "base.html" %}
+{% block title %}Заказать книгу — Алёна Аляева{% endblock %}
+{% block content %}
 <style>
-  .hero { background: #F1ECFF; padding: 48px 0 40px; text-align: center; }
-  .hero h1 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 8px; }
-  .hero p { color: var(--body); max-width: 520px; margin: 0 auto; }
-  .steps { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin: 24px 0 0; }
-  .step { background:#fff; border-radius: 999px; padding: 8px 18px; font-size: 14px; color: var(--accent); font-weight: 700; }
+  .hero { background: var(--c-lilac); border-radius: var(--radius); padding: 40px 24px 32px; text-align: center; margin-bottom: -24px; }
+  .hero h1 { font-size: clamp(26px, 4vw, 38px); margin-bottom: 8px; }
+  .hero p { color: var(--c-body); max-width: 520px; margin: 0 auto; }
+  .steps { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 22px 0 0; }
+  .step { background: #fff; border-radius: 999px; padding: 8px 18px; font-size: 14px; color: var(--c-accent); font-weight: 700; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
   .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; font-size: 14px; }
   .consent input { width: auto; margin-top: 3px; }
-  .ok { background: var(--mint); border-radius: var(--r-sm); padding: 20px 24px; margin-top: 20px; }
-  .err { background: #F5DAD8; color: #9B3A32; border-radius: var(--r-sm); padding: 16px 20px; margin-top: 16px; }
+  .ok { background: var(--c-mint); border-radius: var(--radius-sm); padding: 20px 24px; margin-top: 20px; }
+  .err { background: var(--c-peach); color: #8A3B23; border-radius: var(--radius-sm); padding: 16px 20px; margin-top: 16px; }
 </style>
-</head>
-<body>
 <div class="hero">
   <div class="wrap">
     <h1>Заказать книгу</h1>
@@ -147,5 +140,4 @@ form.addEventListener('submit', async (e)=>{
   btn.disabled = false; btn.textContent = 'Отправить заявку';
 });
 </script>
-</body>
-</html>
+{% endblock %}

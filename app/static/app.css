@@ -1,79 +1,166 @@
-/* Админка и кабинет — в стилистике сайта alyaeva.pro
-   Акцент #4B4690, тёмный #2A2650, тело #4A4678,
-   пастель #E6DFFA, скругления 28/32, Philosopher + Nunito */
-@font-face { font-family: 'Philosopher'; src: url('/static/fonts/philosopher.woff2') format('woff2'); font-display: swap; }
-@font-face { font-family: 'Nunito'; src: url('/static/fonts/nunito.woff2') format('woff2'); font-display: swap; }
+/* Шрифты берём с основного сайта — те же файлы, чтобы не дублировать 400 КБ.
+   Пути абсолютные: сайт отдаёт их по /assets/fonts/. */
+@font-face{font-family:'Nunito';font-style:normal;font-weight:400;font-display:swap;
+  src:url("/assets/fonts/nunito-cyrillic.woff2") format('woff2');
+  unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;}
+@font-face{font-family:'Nunito';font-style:normal;font-weight:700;font-display:swap;
+  src:url("/assets/fonts/nunito-cyrillic.woff2") format('woff2');
+  unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;}
+@font-face{font-family:'Philosopher';font-style:normal;font-weight:400;font-display:swap;
+  src:url("/assets/fonts/philosopher-cyrillic.woff2") format('woff2');
+  unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;}
 
-:root {
-  --accent: #4B4690;
-  --strong: #2A2650;
-  --body: #4A4678;
-  --lilac: #E6DFFA;
-  --cream: #FFF1C7;
-  --mint: #EAF7F4;
-  --r-lg: 32px;
-  --r-md: 28px;
-  --r-sm: 14px;
+/* Стили сайта Алёны Аляевой — приложение (вход, кабинет, админка).
+   Токены один в один как на главной (assets/style.css), чтобы страницы не выбивались. */
+
+:root{
+  --c-accent:#4B4690;
+  --c-strong:#2A2650;
+  --c-body:#4A4678;
+  --c-cream:#FFF1C7;
+  --c-peach:#FFEBE0;
+  --c-lilac:#E6DFFA;
+  --c-mint:#EAF7F4;
+  --radius:14px;
+  --radius-sm:10px;
+  --shadow:0 10px 30px rgba(42,38,80,.08);
 }
 
-* { box-sizing: border-box; }
-body { margin: 0; font-family: 'Nunito', system-ui, sans-serif; color: var(--body); background: #FDFBFF; }
-h1, h2, h3 { font-family: 'Philosopher', Georgia, serif; color: var(--strong); margin: 0 0 16px; }
-h1 { font-size: 32px; } h2 { font-size: 24px; }
+*{box-sizing:border-box}
 
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px;
-  padding: 18px 32px; background: var(--accent); color: #fff; flex-wrap: wrap; }
-.topbar .brand { font-family: 'Philosopher', serif; font-size: 22px; color: #fff; text-decoration: none; }
-.topbar nav { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-.topbar nav a { color: #EDEBFF; text-decoration: none; font-size: 15px; padding: 6px 0; border-bottom: 2px solid transparent; }
-.topbar nav a:hover { color: #fff; border-bottom-color: var(--cream); }
-.topbar .who { color: #CFC9F5; font-size: 14px; }
-.inline { display: inline; margin: 0; }
-.link, button.link { background: none; border: 0; color: #EDEBFF; cursor: pointer; font: inherit; padding: 6px 0; }
-.link:hover { color: #fff; }
+body{
+  margin:0;
+  font-family:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color:var(--c-body);
+  background:linear-gradient(180deg,#fff 0%,#FBF9FF 100%);
+  line-height:1.55;
+  min-height:100vh;
+}
 
-.wrap { max-width: 1120px; margin: 0 auto; padding: 32px; }
-.wide { max-width: 1400px; margin: 0 auto; padding: 32px; }
+h1,h2,h3{
+  font-family:'Philosopher','Nunito',serif;
+  color:var(--c-strong);
+  margin:0 0 8px;
+  line-height:1.2;
+}
+h1{font-size:32px}
+a{color:var(--c-accent)}
 
-.card { background: #fff; border-radius: var(--r-md); padding: 28px; margin-bottom: 24px;
-  box-shadow: 0 8px 32px rgba(75,70,144,.08); }
-.card-lilac { background: var(--lilac); }
-.card-cream { background: var(--cream); }
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
 
-table { width: 100%; border-collapse: collapse; font-size: 15px; }
-th { text-align: left; font-weight: 700; color: var(--strong); padding: 12px 14px;
-  border-bottom: 2px solid var(--lilac); white-space: nowrap; }
-td { padding: 12px 14px; border-bottom: 1px solid #F0EDF9; vertical-align: top; }
-tr:hover td { background: #FBFAFF; }
+/* Шапка приложения — та же логика, что на сайте */
+.topbar{
+  background:#fff;
+  border-bottom:1px solid var(--c-lilac);
+  padding:14px 0;
+  margin-bottom:28px;
+}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{font-family:'Philosopher',serif;font-size:20px;color:var(--c-strong);text-decoration:none}
+.nav{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.nav a{color:var(--c-body);text-decoration:none;font-weight:600}
+.nav a:hover{color:var(--c-accent)}
 
-.btn { display: inline-block; background: var(--accent); color: #fff; border: 0;
-  padding: 12px 26px; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer;
-  text-decoration: none; transition: transform .15s, box-shadow .15s; }
-.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(75,70,144,.25); }
-.btn-ghost { background: transparent; color: var(--accent); border: 2px solid var(--lilac); }
-.btn-sm { padding: 7px 16px; font-size: 14px; }
-.btn-danger { background: #B4443C; }
+/* Карточки */
+.card{
+  background:#fff;
+  border:1px solid var(--c-lilac);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+}
 
-input[type=text], input[type=email], input[type=password], input[type=tel],
-input[type=number], input[type=datetime-local], select, textarea {
-  width: 100%; padding: 12px 16px; border: 2px solid #E8E4F5; border-radius: var(--r-sm);
-  font: inherit; color: var(--strong); background: #fff; }
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
-label { display: block; font-weight: 700; color: var(--strong); margin: 16px 0 6px; font-size: 14px; }
-.hint { font-size: 13px; color: #8A86AD; margin-top: 4px; }
+/* Вход/регистрация — по центру, уютно */
+.auth-box{max-width:420px;margin:48px auto}
 
-.badge { display: inline-block; padding: 4px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; }
-.badge-new { background: var(--cream); color: #8A6D1F; }
-.badge-in_work { background: var(--lilac); color: var(--accent); }
-.badge-sent { background: #D6ECFF; color: #1D5FA8; }
-.badge-done { background: var(--mint); color: #1F7A63; }
-.badge-cancelled { background: #F5DAD8; color: #9B3A32; }
+/* Формы */
+label{display:block;font-weight:700;color:var(--c-strong);margin:16px 0 6px;font-size:15px}
+input[type=text],input[type=email],input[type=tel],input[type=password],textarea,select{
+  width:100%;
+  padding:12px 14px;
+  border:1.5px solid var(--c-lilac);
+  border-radius:var(--radius-sm);
+  font:inherit;
+  color:var(--c-strong);
+  background:#fff;
+  transition:border-color .15s, box-shadow .15s;
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;
+  border-color:var(--c-accent);
+  box-shadow:0 0 0 3px rgba(75,70,144,.12);
+}
+textarea{min-height:90px;resize:vertical}
 
-.auth-box { max-width: 440px; margin: 80px auto; }
-.errors { background: #F5DAD8; color: #9B3A32; padding: 14px 20px; border-radius: var(--r-sm);
-  margin-bottom: 20px; font-size: 14px; }
-.grid { display: grid; gap: 20px; }
-.grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
-.grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.muted { color: #8A86AD; font-size: 14px; }
-.stack > * + * { margin-top: 16px; }
+/* Кнопки */
+.btn{
+  display:inline-block;
+  padding:12px 24px;
+  border:none;
+  border-radius:999px;
+  background:var(--c-accent);
+  color:#fff;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+  text-decoration:none;
+  transition:background .15s, transform .1s;
+}
+.btn:hover{background:var(--c-strong)}
+.btn:active{transform:translateY(1px)}
+.btn-ghost{
+  background:transparent;
+  color:var(--c-accent);
+  border:1.5px solid var(--c-accent);
+}
+.btn-ghost:hover{background:var(--c-lilac);color:var(--c-strong)}
+.btn[disabled]{opacity:.55;cursor:default}
+
+/* Подписи, подсказки */
+.muted{color:var(--c-body);opacity:.75}
+.hint{font-size:14px;color:var(--c-body);opacity:.8;margin:6px 0 0}
+
+/* Статус заказа */
+.pill{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:999px;
+  background:var(--c-mint);
+  color:var(--c-strong);
+  font-size:13px;
+  font-weight:700;
+}
+
+/* Ошибки */
+.errors{
+  background:var(--c-peach);
+  border:1px solid #F0C9BC;
+  color:#8A3B23;
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  margin:16px 0 0;
+  font-size:14px;
+}
+.errors:empty{display:none}
+
+/* Предупреждение/успех */
+.notice{
+  background:var(--c-cream);
+  border:1px solid #EFDC9E;
+  color:#6B5A1F;
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  margin:16px 0;
+}
+
+/* Таблицы (админка) */
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radius);overflow:hidden}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--c-lilac)}
+th{background:var(--c-lilac);color:var(--c-strong);font-weight:700;font-size:14px}
+tr:last-child td{border-bottom:none}
+
+@media (max-width:600px){
+  h1{font-size:26px}
+  .card{padding:18px}
+  .auth-box{margin:24px auto}
+}

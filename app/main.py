@@ -49,11 +49,18 @@ def health():
 # ---------------- Вход / выход ----------------
 
 @app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request):
+def login_page(request: Request, error: str = ""):
     """Форма входа."""
-    if current_user(request):
-        return RedirectResponse("/", status_code=303)
-    return render(request, "login.html", error="")
+    user = current_user(request)
+    if user:
+        return RedirectResponse(ADMIN if user["role"] == "admin" else "/cabinet", status_code=303)
+    messages = {
+        "reg": "Не получилось зарегистрироваться: проверьте почту и пароль (минимум 8 символов).",
+        "exists": "Аккаунт с такой почтой уже есть — войдите.",
+        "1": "Неверная почта или пароль.",
+    }
+    return render(request, "login.html", user=None, error=messages.get(error, ""),
+                  admin_slug=ADMIN.strip("/"))
 
 
 @app.get("/order", response_class=HTMLResponse)
@@ -91,6 +98,14 @@ def logout(request: Request):
 
 
 # ---------------- Личный кабинет ----------------
+
+@app.get("/register", response_class=HTMLResponse)
+def register_page(request: Request, error: str = ""):
+    """Форма регистрации."""
+    if current_user(request):
+        return RedirectResponse("/cabinet", status_code=303)
+    return render(request, "register.html", user=None, error=error)
+
 
 @app.post("/register")
 def register(request: Request, email: str = Form(""), password: str = Form(""),

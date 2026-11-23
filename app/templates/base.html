@@ -3,29 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
 <title>{% block title %}Алёна Аляева{% endblock %}</title>
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-{% if user %}
 <header class="topbar">
-  <a class="brand" href="{{ admin_url if user.role == 'admin' else '/cabinet' }}">Алёна Аляева</a>
-  <nav>
-    {% if user.role == 'admin' %}
-      <a href="{{ admin_url }}">Заказы</a>
-      <a href="{{ admin_url }}/inbox">Сообщения</a>
-      <a href="{{ admin_url }}/products">Товары</a>
-      <a href="{{ admin_url }}/settings">Настройки</a>
-    {% else %}
-      <a href="/cabinet">Мои заказы</a>
-      <a href="/cabinet/projects">Мои фото</a>
-    {% endif %}
-    <span class="who">{{ user.full_name or user.email }}</span>
-    <form method="post" action="/logout" class="inline"><button class="link">Выйти</button></form>
-  </nav>
+  <div class="wrap">
+    <a class="brand" href="/">Алёна Аляева</a>
+    <nav class="nav">
+      {% if user %}
+        <a href="/cabinet">Мои заказы</a>
+        <a href="/order">Заказать</a>
+        {% if user.role == 'admin' %}<a href="{{ admin_url }}">Админка</a>{% endif %}
+        <a href="/logout">Выйти</a>
+      {% else %}
+        <a href="/">На сайт</a>
+        <a href="/login">Вход</a>
+      {% endif %}
+    </nav>
+  </div>
 </header>
-{% endif %}
-<main class="{% block main_class %}wrap{% endblock %}">
+<main class="wrap">
 {% block content %}{% endblock %}
 </main>
 </body>
