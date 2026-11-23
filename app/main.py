@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Form, Request
 from fastapi.responses import JSONResponse
+from urllib.parse import quote
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -50,7 +51,7 @@ def health():
 # ---------------- Вход / выход ----------------
 
 @app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request, error: str = "", next: str = "", reason: str = ""):
+def login_page(request: Request, error: str = "", next: str = "", reason: str = "", email: str = ""):
     """Форма входа. Хранит, куда человек шёл: после входа вернём его туда."""
     user = current_user(request)
     if user:
@@ -65,7 +66,7 @@ def login_page(request: Request, error: str = "", next: str = "", reason: str = 
         "1": "Неверная почта или пароль.",
     }
     return render(request, "login.html", user=None, error=messages.get(error, ""),
-                  next=_safe_next(next, ""), reason=reason)
+                  next=_safe_next(next, ""), reason=reason, email=email)
 
 
 def _safe_next(value: str, default: str) -> str:
@@ -93,9 +94,11 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
           next: str = Form("")):
     """Проверка логина и пароля, выдача cookie-сессии."""
     user = db.find_user_by_email(email.strip())
-    if not user or not db.verify_password(password, user["password_hash"]):
+    ok = bool(user) and db.verify_password(password, user["password_hash"])
+    _log_login(email, ok, request)
+    if not ok:
         return render(request, "login.html", error="Неверный e-mail или пароль", user=None,
-                      next=_safe_next(next, ""), reason="")
+                      next=_safe_next(next, ""), reason="", email=email.strip())
     token = db.create_session(
         user["id"],
         ua=request.headers.get("user-agent", ""),
@@ -119,6 +122,12 @@ def logout(request: Request):
     resp = RedirectResponse("/", status_code=303)
     resp.delete_cookie("sid")
     return resp
+
+
+def _log_login(email: str, ok: bool, request: Request) -> None:
+    """Отметка о попытке входа в логах. Пароль не пишем никогда — только факт."""
+    ip = request.client.host if request.client else ""
+    print(f"[login] {'ok' if ok else 'FAIL'} {email.strip().lower()} ip={ip}", flush=True)
 
 
 # ---------------- Личный кабинет ----------------
@@ -157,9 +166,16 @@ def register(request: Request, email: str = Form(""), password: str = Form(""),
     """Регистрация клиента. Гостевые заказы с тем же телефоном переходят к нему."""
     email = (email or "").strip().lower()
     if not email or len(password or "") < 8:
-        return RedirectResponse("/login?error=reg", status_code=303)
+        # Ошибка на ТОЙ ЖЕ странице: человек не должен заполнять форму заново.
+        return render(request, "register.html", user=None,
+                      error="Проверьте почту и пароль — пароль минимум 8 символов.",
+                      email=email, full_name=full_name.strip(), phone=phone.strip(),
+                      next=_safe_next(next, ""))
     if db.find_user_by_email(email):
-        return RedirectResponse("/login?error=exists", status_code=303)
+        return render(request, "register.html", user=None,
+                      error="Аккаунт с такой почтой уже есть. Войдите под ним — пароль тот, что вы задали при регистрации.",
+                      email=email, full_name=full_name.strip(), phone=phone.strip(),
+                      next=_safe_next(next, ""), exists=True)
     uid = db.create_user(email, password, full_name.strip(), "customer", phone.strip())
     # Заказы, оформленные гостем с этим телефоном, становились «ничьими» —
     # теперь у них есть владелец, и фото из guest/ попадают в его кабинет.

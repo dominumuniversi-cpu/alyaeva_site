@@ -4,18 +4,21 @@
 <div class="auth-box card">
   <h1>Регистрация</h1>
   <p class="muted">Заказы и фото будут в одном месте.</p>
+  {% if exists %}
+    <div class="hint" style="margin:8px 0 0">Войти под этой почтой: <a href="/login?email={{ email|urlencode }}">на страницу входа</a></div>
+  {% endif %}
   {% if error %}<div class="errors">{{ error }}</div>{% endif %}
   <form method="post" action="/register">
     <input type="hidden" name="next" value="{{ next }}">
     <label for="full_name">Как вас зовут</label>
-    <input id="full_name" type="text" name="full_name" autocomplete="name" placeholder="Анна Петрова">
+    <input id="full_name" type="text" name="full_name" autocomplete="name" placeholder="Анна Петрова" value="{{ full_name or '' }}">
 
     <label for="phone">Телефон</label>
-    <input id="phone" type="tel" name="phone" autocomplete="tel" placeholder="+7 902 000-00-00">
+    <input id="phone" type="tel" name="phone" autocomplete="tel" placeholder="+7 902 000-00-00" value="{{ phone or '' }}">
     <p class="hint">Если вы уже заказывали без аккаунта — укажите тот же номер, и заказ с фото найдётся сам.</p>
 
     <label for="email">E-mail</label>
-    <input id="email" type="email" name="email" required autocomplete="email">
+    <input id="email" type="email" name="email" required autocomplete="email" value="{{ email or '' }}">
 
     <label for="password">Пароль</label>
     <input id="password" type="password" name="password" required minlength="8" autocomplete="new-password">
