@@ -4,42 +4,51 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<meta name="theme-color" content="#4B4690">
 <title>{% block title %}Алёна Аляева{% endblock %}</title>
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="wrap">
-    <a class="brand" href="/">Алёна Аляева</a>
-    <nav class="nav">
-      {% if user %}
-        <a href="/cabinet">Мои заказы</a>
-        <a href="/order">Заказать</a>
-        {% if user.role == 'admin' %}<a href="{{ admin_url }}">Админка</a>{% endif %}
-        <a href="/settings">Настройки</a>
-        <a href="/logout">Выйти</a>
-      {% else %}
-        <a href="/">На сайт</a>
-        <a href="/login">Вход</a>
-      {% endif %}
-    </nav>
-  </div>
-</header>
+{% include "_header.html" %}
+
 {% if user and user.role == 'admin' %}
-<nav class="admin-subnav">
+<nav class="admin-subnav" aria-label="Админка">
   <div class="wrap">
-    <a href="{{ admin_url }}" {% if '/admin/client' not in request.url.path and request.url.path == admin_url %}class="active"{% endif %}>Заказы</a>
+    <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы</a>
     <a href="/admin/clients" {% if request.url.path.startswith('/admin/client') %}class="active"{% endif %}>Клиенты</a>
     <a href="/admin/photos" {% if request.url.path.startswith('/admin/photos') %}class="active"{% endif %}>Все фото</a>
-    <a href="{{ admin_url }}/inbox">Инбокс</a>
-    <a href="{{ admin_url }}/products">Товары</a>
-    <a href="{{ admin_url }}/hooks">Приём сообщений</a>
-    <a href="{{ admin_url }}/settings">Настройки</a>
+    <a href="{{ admin_url }}/inbox" {% if '/inbox' in request.url.path %}class="active"{% endif %}>Инбокс</a>
+    <a href="{{ admin_url }}/products" {% if '/products' in request.url.path %}class="active"{% endif %}>Товары</a>
+    <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Приём сообщений</a>
+    <a href="{{ admin_url }}/settings" {% if '/settings' in request.url.path and '/admin' in request.url.path %}class="active"{% endif %}>Настройки сайта</a>
   </div>
 </nav>
 {% endif %}
-<main class="wrap">
+
+<main class="wrap {% block main_class %}{% endblock %}">
 {% block content %}{% endblock %}
 </main>
+
+{% include "_footer.html" %}
+
+<script>
+/* Меню на телефоне: шапка остаётся прибитой, список раскрывается по кнопке. */
+(function () {
+  var b = document.querySelector('.burger');
+  var n = document.getElementById('mainnav');
+  if (!b || !n) return;
+  b.addEventListener('click', function () {
+    var open = n.classList.toggle('open');
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+})();
+/* Тень под шапкой появляется только когда страница прокручена — так шапка не «висит в воздухе». */
+(function () {
+  var h = document.getElementById('topbar');
+  if (!h) return;
+  var on = function () { h.classList.toggle('scrolled', window.scrollY > 8); };
+  on(); window.addEventListener('scroll', on, { passive: true });
+})();
+</script>
 </body>
 </html>

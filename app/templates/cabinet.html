@@ -1,51 +1,100 @@
 {% extends "base.html" %}
 {% block title %}Мои заказы — Алёна Аляева{% endblock %}
 {% block content %}
-<div style="padding:32px 0 64px">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px">
+{# Кабинет покупателя. Что берём у магазинов с похожим кабинетом:
+   1) сводка сверху — сразу видно, сколько заказов и сколько ждут действия;
+   2) «следующий шаг» — человек понимает, что делать ему, а не только где он;
+   3) последний заказ выделен, остальные — списком;
+   4) в карточке заказа — статус, дата, сумма, фото. #}
+{% set active = orders | selectattr('status', 'in', ['new','in_work','sent']) | list %}
+{% set done = orders | rejectattr('status', 'in', ['new','in_work','sent']) | list %}
+
+<div class="cab-head">
+  <div>
     <h1 style="margin:0">Мои заказы</h1>
-    <a class="btn btn-ghost" href="/order">Новый заказ</a>
+    <p class="hint" style="margin:6px 0 0">
+      {{ user.full_name or user.email or 'Здравствуйте' }} — здесь ваши книги и загруженные фото.
+    </p>
   </div>
-  <p class="hint">Здравствуйте, {{ user.full_name or user.phone }}. Здесь ваши книги и загруженные фото.</p>
+  <a class="btn" href="/order">Новый заказ</a>
+</div>
 
-  {% if not orders %}
-    <div class="card" style="margin-top:24px">
-      <p style="margin:0">Заказов пока нет. <a href="/order">Оформите первый</a> — и он появится здесь вместе с фото.</p>
-    </div>
-  {% endif %}
+{% if orders %}
+<div class="grid grid-3" style="margin-bottom:24px">
+  <div class="card card-cream" style="padding:18px 22px">
+    <div class="muted" style="font-size:13px;text-transform:uppercase;letter-spacing:.04em">Всего заказов</div>
+    <div class="stat">{{ orders|length }}</div>
+  </div>
+  <div class="card card-lilac" style="padding:18px 22px">
+    <div class="muted" style="font-size:13px;text-transform:uppercase;letter-spacing:.04em">В работе</div>
+    <div class="stat">{{ active|length }}</div>
+  </div>
+  <div class="card" style="padding:18px 22px;background:var(--c-mint);border-color:var(--c-mint)">
+    <div class="muted" style="font-size:13px;text-transform:uppercase;letter-spacing:.04em">Фотографий загружено</div>
+    <div class="stat">{{ photos_by_order.values() | map('length') | sum }}</div>
+  </div>
+</div>
+{% endif %}
 
-  {% for o in orders %}
-  <div class="card" style="margin-top:20px">
-    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
-      <a href="/cabinet/order/{{ o.id }}" style="font-size:18px;font-weight:800;color:var(--c-strong);text-decoration:none">
-        Заказ {{ o.number }}
-      </a>
-      <span class="pill">{{ status_name(o.status) }}</span>
-    </div>
-    <div class="hint" style="margin-top:4px">
-      {{ o.created_at.strftime('%d.%m.%Y') }}
-      {% if o.total_rub %} · {{ '%.0f'|format(o.total_rub) }} ₽{% endif %}
-    </div>
-    {% if o.comment %}<p style="margin:10px 0 0">{{ o.comment }}</p>{% endif %}
+{% if not orders %}
+  <div class="card">
+    <h2 style="margin-top:0">Заказов пока нет</h2>
+    <p class="muted">Оформите первый — он появится здесь вместе с фото. Мы согласуем макет, а потом книгу напечатают и привезут.</p>
+    <p style="margin:18px 0 0"><a class="btn" href="/order">Заказать книгу</a>
+      <a class="btn btn-ghost" href="/ceny" style="margin-left:10px">Стоимость</a></p>
+  </div>
+{% endif %}
 
-    {% set photos = photos_by_order.get(o.id, []) %}
-    {% if photos %}
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
-        {% for f in photos[:6] %}
-          <a href="/api/file/{{ f.id }}" target="_blank" rel="noopener"
-             style="display:block;width:92px;height:92px;border-radius:12px;overflow:hidden;background:var(--c-lilac)">
-            <img src="/api/file/{{ f.id }}" alt="{{ f.orig_name }}" loading="lazy"
-                 style="width:100%;height:100%;object-fit:cover">
-          </a>
-        {% endfor %}
-        <a href="/cabinet/order/{{ o.id }}" class="hint" style="margin-left:6px;font-weight:700">
-          {% if photos|length > 6 %}ещё {{ photos|length - 6 }} · {% endif %}все фото ({{ photos|length }}) →
-        </a>
+{% for o in orders %}
+{% set photos = photos_by_order.get(o.id, []) %}
+<div class="card order-card {% if loop.first %}order-first{% endif %}">
+  <div class="order-head">
+    <div>
+      <a href="/cabinet/order/{{ o.id }}" class="order-num">Заказ {{ o.number }}</a>
+      <div class="hint" style="margin-top:4px">
+        {{ o.created_at.strftime('%d.%m.%Y') }}
+        {% if o.total_rub %} · {{ '%.0f'|format(o.total_rub) }} ₽{% endif %}
+        {% if photos %} · {{ photos|length }} фото{% endif %}
       </div>
-    {% else %}
-      <p class="hint" style="margin-top:12px">Фото ещё не загружены. <a href="/order">Добавить фото к заказу</a></p>
+    </div>
+    <span class="pill pill-{{ o.status }}">{{ status_name(o.status) }}</span>
+  </div>
+
+  <div class="order-next">
+    {% if o.status == 'new' %}
+      Жду ваши фотографии и рассказ о ребёнке — можно добавить на странице заказа.
+    {% elif o.status == 'in_work' %}
+      Делаю макет. Покажу, когда будет готов, — правки обсудим в мессенджере.
+    {% elif o.status == 'sent' %}
+      Книга в пути. Остальные 50% — при получении.
+    {% elif o.status == 'done' %}
+      Книга у вас. Спасибо! Если что-то нужно — напишите мне.
+    {% elif o.status == 'cancelled' %}
+      Заказ отменён. Если это ошибка — напишите, восстановлю.
     {% endif %}
   </div>
-  {% endfor %}
+
+  {% if o.comment %}<p class="muted" style="margin:12px 0 0">Ваши пожелания: {{ o.comment }}</p>{% endif %}
+
+  {% if photos %}
+    <div class="order-photos">
+      {% for f in photos[:6] %}
+        <a href="/api/file/{{ f.id }}" target="_blank" rel="noopener" class="mini">
+          <img src="/api/file/{{ f.id }}" alt="{{ f.orig_name }}" loading="lazy">
+        </a>
+      {% endfor %}
+      <a href="/cabinet/order/{{ o.id }}" class="hint" style="font-weight:700">
+        {% if photos|length > 6 %}ещё {{ photos|length - 6 }} · {% endif %}все фото ({{ photos|length }}) →
+      </a>
+    </div>
+  {% else %}
+    <p class="hint" style="margin:12px 0 0">Фото ещё не загружены — <a href="/cabinet/order/{{ o.id }}">добавить</a>.</p>
+  {% endif %}
+
+  <div class="order-actions">
+    <a class="btn btn-ghost" href="/cabinet/order/{{ o.id }}">Открыть заказ</a>
+    <a class="btn btn-ghost" href="/cabinet/repeat/{{ o.id }}" style="margin-left:10px">Повторить заказ</a>
+  </div>
 </div>
+{% endfor %}
 {% endblock %}

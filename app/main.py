@@ -81,6 +81,21 @@ def _safe_next(value: str, default: str) -> str:
     return value
 
 
+@app.get("/ceny", response_class=HTMLResponse)
+def prices_page(request: Request):
+    """Публичная таблица цен — сюда ведёт кнопка «Узнать стоимость».
+
+    Берём те же товары, что и админка: цена правится в одном месте,
+    и на сайте, и в кабинете показывается одно и то же.
+    """
+    with db.pool.connection() as conn:
+        rows = conn.execute(
+            """SELECT title, description, price_rub, old_price
+               FROM products WHERE is_active ORDER BY sort_order, id"""
+        ).fetchall()
+    return render(request, "prices.html", products=rows)
+
+
 @app.get("/order", response_class=HTMLResponse)
 def order_page(request: Request):
     """Страница заказа. Заказывать могут только вошедшие — так заказ сразу привязан к клиенту.
@@ -90,7 +105,7 @@ def order_page(request: Request):
     user = current_user(request)
     if not user:
         return RedirectResponse("/login?next=/order&reason=order", status_code=303)
-    return templates.TemplateResponse(request, "order.html", {"user": user})
+    return render(request, "order.html", user=user)
 
 
 @app.post("/login")
@@ -241,6 +256,28 @@ def cabinet(request: Request):
                   photos_by_order=photos_by_order, status_name=status_name)
 
 
+@app.get("/cabinet/repeat/{order_id}")
+def cabinet_repeat(order_id: int, request: Request):
+    """Повторить заказ — ведём на форму с уже заполненными пожеланиями.
+
+    Магазины считают повтор заказа главным ускорителем второй покупки:
+    человек не набирает всё заново. Свои фото он загружает на странице заказа.
+    """
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+    with db.pool.connection() as conn:
+        row = conn.execute(
+            "SELECT id, comment FROM orders WHERE id = %s AND user_id = %s",
+            (order_id, user["id"]),
+        ).fetchone()
+    if not row:
+        return _deny(request)
+    from urllib.parse import quote
+    same = quote(row["comment"] or "")
+    return RedirectResponse(f"/order?repeat={order_id}&comment={same}", status_code=303)
+
+
 @app.get("/cabinet/order/{order_id}", response_class=HTMLResponse)
 def cabinet_order(order_id: int, request: Request):
     """Один заказ клиента: фото крупно и в полном размере.
@@ -358,31 +395,37 @@ def admin_settings(request: Request):
 @app.post(ADMIN + "/settings")
 def save_settings(
     request: Request,
-    telegram_token: str = Form(""),
-    telegram_proxy: str = Form(""),
-    telegram_chat: str = Form(""),
-    vk_token: str = Form(""),
     site_phone: str = Form(""),
     site_email: str = Form(""),
+    site_address: str = Form(""),
+    site_work_hours: str = Form(""),
+    site_instagram: str = Form(""),
+    site_vk: str = Form(""),
+    site_telegram: str = Form(""),
+    site_whatsapp: str = Form(""),
+    site_footer: str = Form(""),
 ):
-    """Сохранение интеграций. Пустое поле токена = не менять."""
+    """Настройки САЙТА: контакты, соцсети, подвал.
+
+    Мессенджеры здесь не настраиваются — только /admin/hooks,
+    чтобы одна настройка не лежала в двух местах.
+    """
     user = require_admin(request)
     if not user:
         return _deny(request)
-    import secrets_helper
-    if telegram_token.strip():
-        db.set_setting("telegram.token", secrets_helper.encrypt(telegram_token.strip()), user["id"])
-        # Секрет адреса вебхука: без него кто угодно мог бы слать нам «сообщения».
-        if not db.get_setting("telegram.hook_secret"):
-            import secrets as _secrets
-            db.set_setting("telegram.hook_secret",
-                           secrets_helper.encrypt(_secrets.token_urlsafe(32)), user["id"])
-    db.set_setting("telegram.proxy", telegram_proxy.strip(), user["id"])
-    db.set_setting("telegram.chat", telegram_chat.strip(), user["id"])
-    if vk_token.strip():
-        db.set_setting("vk.token", secrets_helper.encrypt(vk_token.strip()), user["id"])
-    db.set_setting("site.phone", site_phone.strip(), user["id"])
-    db.set_setting("site.email", site_email.strip(), user["id"])
+    pairs = {
+        "site.phone": site_phone,
+        "site.email": site_email,
+        "site.address": site_address,
+        "site.work_hours": site_work_hours,
+        "site.instagram": site_instagram,
+        "site.vk": site_vk,
+        "site.telegram": site_telegram,
+        "site.whatsapp": site_whatsapp,
+        "site.footer": site_footer,
+    }
+    for key, val in pairs.items():
+        db.set_setting(key, val.strip(), user["id"])
     return RedirectResponse(ADMIN + "/settings?saved=1", status_code=303)
 
 

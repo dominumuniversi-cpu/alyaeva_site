@@ -38,10 +38,36 @@ def require_admin(request: Request) -> dict | None:
     return user
 
 
+def site_links() -> dict:
+    """Публичные контакты и ссылки на мессенджеры — из настроек сайта.
+
+    Одна правда: ссылки правятся в /admin/settings, а не хардкодятся в шаблонах.
+    Раньше на главной они были вписаны руками, и изменить их можно было только в коде.
+    """
+    tg = str(db.get_setting("site.telegram", "") or "").strip()
+    vk = str(db.get_setting("site.vk", "") or "").strip()
+    wa = str(db.get_setting("site.whatsapp", "") or "").strip()
+    inst = str(db.get_setting("site.instagram", "") or "").strip()
+    return {
+        "tg_url": tg, "vk_url": vk, "wa_url": wa, "inst_url": inst,
+        "site_phone": str(db.get_setting("site.phone", "") or ""),
+        "site_email": str(db.get_setting("site.email", "") or ""),
+        "site_address": str(db.get_setting("site.address", "") or ""),
+        "site_hours": str(db.get_setting("site.work_hours", "") or ""),
+        "site_footer": str(db.get_setting("site.footer", "") or ""),
+    }
+
+
 def render(request: Request, name: str, **kw) -> HTMLResponse:
-    """Рендер шаблона с общим контекстом."""
+    """Рендер шаблона с общим контекстом.
+
+    Контакты и ссылки на мессенджеры идут в каждый шаблон: шапка и подвал
+    есть на всех страницах, дублировать их в каждом маршруте — лишнее.
+    """
     user = kw.pop("user", None) or current_user(request)
-    return templates.TemplateResponse(request, name, {"user": user, "admin_url": ADMIN, **kw})
+    links = kw.pop("links", None) or site_links()
+    return templates.TemplateResponse(request, name,
+                                      {"user": user, "admin_url": ADMIN, "links": links, **kw})
 
 
 def is_browser(request) -> bool:

@@ -1,29 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Заказать книгу — Алёна Аляева{% endblock %}
 {% block content %}
-<style>
-  .hero { background: var(--c-lilac); border-radius: var(--radius); padding: 40px 24px 32px; text-align: center; margin-bottom: -24px; }
-  .hero h1 { font-size: clamp(26px, 4vw, 38px); margin-bottom: 8px; }
-  .hero p { color: var(--c-body); max-width: 520px; margin: 0 auto; }
-  .steps { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 22px 0 0; }
-  .step { background: #fff; border-radius: 999px; padding: 8px 18px; font-size: 14px; color: var(--c-accent); font-weight: 700; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
-  .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; font-size: 14px; }
-  .consent input { width: auto; margin-top: 3px; }
-  .ok { background: var(--c-mint); border-radius: var(--radius-sm); padding: 20px 24px; margin-top: 20px; }
-  .err { background: var(--c-peach); color: #8A3B23; border-radius: var(--radius-sm); padding: 16px 20px; margin-top: 16px; }
-</style>
-<div class="hero">
-  <div class="wrap">
-    <h1>Заказать книгу</h1>
-    <p>Оставьте контакты — свяжусь, обсудим сказку и покажу макет. Фото можно загрузить сразу.</p>
-    <div class="steps"><span class="step">1. Расскажите о ребёнке</span><span class="step">2. Согласуем макет</span><span class="step">3. Предоплата 50%</span><span class="step">4. Книга у вас</span></div>
-  </div>
+<section class="ceny-hero">
+  <h1>{% if request.query_params.get("repeat") %}Повторить заказ{% else %}Заказать книгу{% endif %}</h1>
+  <p class="muted" style="margin:8px 0 0">Оставьте контакты — свяжусь, обсудим сказку и покажу макет. Фото можно загрузить сразу.</p>
+</section>
+
+{# Те же четыре шага, что в разделе «Как заказать книгу» на главной сайта. #}
+<div class="steps-cards">
+  <div class="step-card"><div class="n">1</div><h3>Расскажите о ребёнке</h3>
+    <p class="muted">Пришлите короткий рассказ: как его зовут, что он любит и что ему интересно.</p></div>
+  <div class="step-card"><div class="n">2</div><h3>Согласуем макет</h3>
+    <p class="muted">Покажу макет и обсудим правки в любом удобном мессенджере или во ВКонтакте.</p></div>
+  <div class="step-card"><div class="n">3</div><h3>Предоплата 50%</h3>
+    <p class="muted">Первая половина оплачивается после того, как макет согласован.</p></div>
+  <div class="step-card"><div class="n">4</div><h3>Книга у вас</h3>
+    <p class="muted">Изготовление занимает от 2–3 недель. Доставлю в любой город России, остальные 50% — при получении.</p></div>
 </div>
 
 <div class="wrap">
-  <form class="card" id="orderForm" style="margin-top:-24px">
+  <form class="card" id="orderForm">
     <div class="row">
       <div>
         <label>Как вас зовут</label>
@@ -43,7 +39,12 @@
     </select>
 
     <label>Расскажите о ребёнке</label>
-    <textarea name="comment" rows="4" placeholder="Имя ребёнка, сколько лет, что любит"></textarea>
+    <textarea name="comment" rows="4" placeholder="Имя ребёнка, сколько лет, что любит">{{ request.query_params.get('comment', '') }}</textarea>
+    {% if request.query_params.get('repeat') %}
+      <div class="hint" style="background:var(--c-mint);padding:10px 14px;border-radius:12px">
+        Пожелания подставлены из прошлого заказа — поправьте, если что-то изменилось.
+      </div>
+    {% endif %}
 
     <div class="consent">
       <input type="checkbox" id="consent" required>
