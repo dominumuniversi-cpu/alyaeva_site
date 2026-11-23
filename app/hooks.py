@@ -12,7 +12,7 @@ import hmac
 import json
 import logging
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 
 import db
@@ -151,12 +151,50 @@ def hooks_root(request: Request):
     user = db.session_user(request.cookies.get("sid", ""))
     if not (user and user.get("role") == "admin"):
         return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
-    tg = bool(secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or "")))
-    vk = bool(secrets_helper.decrypt(str(db.get_setting("vk.token", "") or "")))
+    return render(request, "hooks_help.html", user=user, **_hook_state(request))
+
+
+def _hook_state(request) -> dict:
+    """Состояние каналов для страницы приёма. Секреты — только маской."""
+    tg_raw = secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or ""))
+    vk_raw = secrets_helper.decrypt(str(db.get_setting("vk.token", "") or ""))
     hook_secret = secrets_helper.decrypt(str(db.get_setting("telegram.hook_secret", "") or ""))
     site = str(db.get_setting("site.url", "") or "https://alyaeva.pro").rstrip("/")
-    return render(request, "hooks_help.html", user=user, tg_ready=tg, vk_ready=vk,
-                  hook_secret=hook_secret, site_url=site)
+    return {
+        "settings": {k: v for k, v in db.all_settings("telegram.").items()},
+        "tg_ready": bool(tg_raw), "vk_ready": bool(vk_raw),
+        "tg_token_mask": _mask(tg_raw), "vk_token_mask": _mask(vk_raw),
+        "hook_secret": hook_secret, "site_url": site,
+        "saved": request.query_params.get("saved") == "1",
+    }
+
+
+def _mask(secret: str) -> str:
+    """Показать факт наличия ключа, не показывая ключ."""
+    if not secret:
+        return "не задан"
+    return "задан ···· " + secret[-4:] if len(secret) > 4 else "задан"
+
+
+@router.post("/admin/hooks")
+def hooks_save(request: Request, telegram_token: str = Form(""), telegram_proxy: str = Form(""),
+               telegram_chat: str = Form(""), vk_token: str = Form("")):
+    """Сохранение подключения мессенджеров. Пустое поле токена — не менять."""
+    user = db.session_user(request.cookies.get("sid", ""))
+    if not (user and user.get("role") == "admin"):
+        return RedirectResponse("/login?next=" + quote("/admin/hooks"), status_code=303)
+    if telegram_token.strip():
+        db.set_setting("telegram.token", secrets_helper.encrypt(telegram_token.strip()), user["id"])
+        # Секрет адреса вебхука: без него кто угодно мог бы слать нам «сообщения».
+        if not db.get_setting("telegram.hook_secret"):
+            import secrets as _secrets
+            db.set_setting("telegram.hook_secret",
+                           secrets_helper.encrypt(_secrets.token_urlsafe(32)), user["id"])
+    db.set_setting("telegram.proxy", telegram_proxy.strip(), user["id"])
+    db.set_setting("telegram.chat", telegram_chat.strip(), user["id"])
+    if vk_token.strip():
+        db.set_setting("vk.token", secrets_helper.encrypt(vk_token.strip()), user["id"])
+    return RedirectResponse("/admin/hooks?saved=1", status_code=303)
 
 
 @router.get("/hooks/telegram/{secret}")

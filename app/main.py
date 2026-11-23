@@ -343,19 +343,16 @@ def admin_products(request: Request):
 
 @app.get(ADMIN + "/settings", response_class=HTMLResponse)
 def admin_settings(request: Request):
-    """Настройки интеграций: Telegram, VK. Токены — зашифрованы в БД."""
+    """Настройки САЙТА: контакты и текст подвала.
+
+    Мессенджеры здесь не настраиваются — они на /admin/hooks.
+    """
     user = require_admin(request)
     if not user:
         return _deny(request)
-    import secrets_helper
-    s = db.all_settings("telegram.") | db.all_settings("vk.") | db.all_settings("site.")
-    return render(
-        request, "admin_settings.html", user=user, settings=s,
-        tg_token_mask=secrets_helper.mask(secrets_helper.decrypt(str(s.get("telegram.token", "")))),
-        vk_token_mask=secrets_helper.mask(secrets_helper.decrypt(str(s.get("vk.token", "")))),
-        tg_hook_secret=secrets_helper.decrypt(str(s.get("telegram.hook_secret", "") or "")),
-        tg_hook_ready=bool(secrets_helper.decrypt(str(s.get("telegram.token", "") or ""))),
-    )
+    s = db.all_settings("site.")
+    return render(request, "admin_settings.html", user=user, settings=s,
+                  saved=request.query_params.get("saved") == "1")
 
 
 @app.post(ADMIN + "/settings")

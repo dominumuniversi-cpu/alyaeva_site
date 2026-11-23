@@ -1,40 +1,89 @@
 {% extends "base.html" %}
 {% block title %}Приём сообщений — Алёна Аляева{% endblock %}
+{% block main_class %}wide{% endblock %}
 {% block content %}
-{# Одна страница про приём сообщений: состояние каналов и что делать. #}
-<div class="card" style="margin-top:32px; padding:32px">
-  <h1 style="margin-top:0">Приём сообщений из мессенджеров</h1>
-  <p class="muted">
-    Это служебный адрес. Сюда мессенджеры присылают сообщения — открывать его в браузере не нужно.
-    Всё, что придёт, вы увидите в <a href="{{ admin_url }}/inbox">инбоксе</a>.
-  </p>
-  <table style="margin-top:20px">
-    <tr><th>Канал</th><th>Состояние</th></tr>
+{# ЕДИНСТВЕННОЕ место, где настраиваются мессенджеры. В «Настройках сайта» их нет. #}
+<h1>Приём сообщений</h1>
+<p class="muted" style="margin-top:-4px">
+  Здесь подключаются мессенджеры. Всё, что оттуда придёт, собирается в
+  <a href="{{ admin_url }}/inbox">инбоксе</a> — вместе с заказами и сообщениями с сайта.
+</p>
+
+{% if saved %}
+<div class="card card-cream" style="padding:14px 22px; margin-bottom:18px">Сохранено.</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:20px">
+  <h2 style="margin-top:0">Как это работает</h2>
+  <table>
+    <tr><th>Канал</th><th>Состояние</th><th>Что нужно</th></tr>
     <tr>
       <td><strong>Telegram</strong></td>
-      <td>{% if tg_ready %}<span style="color:#2e7d5a">подключён</span>{% else %}токен не задан — <a href="{{ admin_url }}/settings">настроить</a>{% endif %}</td>
+      <td>{% if tg_ready %}<span class="ok">подключён</span>{% else %}<span class="err">не подключён</span>{% endif %}</td>
+      <td class="muted">токен бота от @BotFather</td>
     </tr>
     <tr>
       <td><strong>ВКонтакте</strong></td>
-      <td>{% if vk_ready %}<span style="color:#2e7d5a">подключён</span>{% else %}токен не задан — <a href="{{ admin_url }}/settings">настроить</a>{% endif %}</td>
+      <td>{% if vk_ready %}<span class="ok">подключён</span>{% else %}<span class="err">не подключён</span>{% endif %}</td>
+      <td class="muted">токен сообщества</td>
     </tr>
     <tr>
       <td><strong>Сайт</strong></td>
-      <td><span style="color:#2e7d5a">работает</span> — заказы и сообщения с формы попадают в инбокс</td>
+      <td><span class="ok">работает</span></td>
+      <td class="muted">заказы и сообщения с формы</td>
     </tr>
   </table>
-  {% if hook_secret %}
-  <div style="margin-top:22px">
-    <div style="font-weight:700; color:var(--c-strong); margin-bottom:6px">Адрес для Telegram</div>
-    <code style="display:block; background:var(--c-mint); padding:12px 14px; border-radius:8px; word-break:break-all; font-size:14px">
-      {{ site_url }}/hooks/telegram/{{ hook_secret }}
-    </code>
-    <p class="hint" style="margin-top:8px">Отдайте этот адрес боту — сообщения начнут приходить в инбокс.</p>
-  </div>
-  {% endif %}
+</div>
 
-  <p style="margin:24px 0 0">
-    <a class="btn" href="{{ admin_url }}/inbox">Открыть инбокс</a>
-  </p>
+<div class="grid grid-2">
+  <div class="card">
+    <h2 style="margin-top:0">Подключение</h2>
+    <form method="post" action="{{ admin_url }}/hooks">
+      <h3 style="margin:0 0 8px">Telegram</h3>
+      <label>Токен бота</label>
+      <input type="text" name="telegram_token" placeholder="{{ tg_token_mask }}" autocomplete="off">
+      <div class="hint">Сейчас: {{ tg_token_mask }}. Пустое поле — не менять.</div>
+
+      <label>Прокси</label>
+      <input type="text" name="telegram_proxy" value="{{ settings.get('telegram.proxy','') }}"
+             placeholder="http://host.docker.internal:10809">
+      <div class="hint">API Telegram заблокирован провайдером — прокси обязателен.</div>
+
+      <label>Чат для уведомлений</label>
+      <input type="text" name="telegram_chat" value="{{ settings.get('telegram.chat','') }}"
+             placeholder="@username или ID">
+
+      <h3 style="margin:28px 0 8px">ВКонтакте</h3>
+      <label>Токен сообщества</label>
+      <input type="text" name="vk_token" placeholder="{{ vk_token_mask }}" autocomplete="off">
+      <div class="hint">Сейчас: {{ vk_token_mask }}. Пустое поле — не менять.</div>
+
+      <div style="margin-top:26px"><button class="btn">Сохранить</button></div>
+    </form>
+  </div>
+
+  <div class="card card-lilac">
+    <h2 style="margin-top:0">Адрес для Telegram</h2>
+    {% if hook_secret %}
+      <p style="margin-top:0">Отдайте этот адрес боту — сообщения начнут приходить в инбокс.</p>
+      <code style="display:block; background:#fff; padding:12px 14px; border-radius:8px; word-break:break-all; font-size:13px">
+        {{ site_url }}/hooks/telegram/{{ hook_secret }}
+      </code>
+      <p class="hint" style="margin-top:10px">
+        Или подтвердите подключение одной командой в браузере:
+        <code>api.telegram.org/bot&lt;токен&gt;/setWebhook?url=&lt;адрес выше&gt;</code>
+      </p>
+    {% else %}
+      <p style="margin-top:0">Вставьте токен бота в поле слева и сохраните — здесь появится адрес, который нужно отдать Telegram.</p>
+    {% endif %}
+
+    <h2 style="margin-top:26px">Безопасность</h2>
+    <p>Токены хранятся <strong>зашифрованными</strong> и не попадают в файлы конфигурации.</p>
+    <p>Изменения пишутся в журнал аудита — видно, кто и когда менял настройки.</p>
+
+    <p style="margin:24px 0 0">
+      <a class="btn" href="{{ admin_url }}/inbox">Открыть инбокс</a>
+    </p>
+  </div>
 </div>
 {% endblock %}
