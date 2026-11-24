@@ -845,3 +845,10 @@ body{
   .foot-soc{gap:12px}
 }
 
+/* ---------- ОПЛАТА (#122, 24.11.2026) ---------- */
+/* Флажок «включить способ» — крупная строка: его нажимают на телефоне. */
+.pay-on{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-size:16px;margin-bottom:6px}
+.pay-on input{width:20px;height:20px;accent-color:var(--c-accent);flex:0 0 auto}
+.pay-warn{margin:8px 0 0;padding:8px 12px;border-radius:12px;background:var(--c-peach);color:#8A3B2A;font-size:14px}
+.pay-account{font-family:'Nunito',monospace;letter-spacing:.5px;word-break:break-all}
+.card-green{background:var(--c-mint)}

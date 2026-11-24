@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Оплата — админка{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+{# Одна тема — одна страница: способы оплаты живут только здесь (#122, слово владельца 24.11). #}
+<h1>Оплата</h1>
+<p class="muted mt-neg">
+  Три способа принимать деньги. Каждый включается своим флажком. Пока ни один не включён и не
+  заполнен — на сайте нет ни страницы оплаты, ни ссылок на неё.
+</p>
+
+{% if saved %}
+<div class="card card-cream card-pad-sm mb-18">Сохранено.</div>
+{% endif %}
+
+{% if not pay_ready %}
+<div class="card card-pad-sm mb-18">
+  <b>Оплата на сайте выключена.</b> Покупатель видит только «обсудим способ оплаты в переписке».
+</div>
+{% else %}
+<div class="card card-green card-pad-sm mb-18">
+  Оплата на сайте включена: {% for b in pay_ready %}{{ pay_state[b].title }}{% if not loop.last %}, {% endif %}{% endfor %}.
+  Страница <a href="/oplata">/oplata</a> открыта, ссылки стоят в «Стоимость», «Заказать» и кабинете.
+</div>
+{% endif %}
+
+<form method="post" action="{{ admin_url }}/pay" id="f_pay">
+{% include "_csrf_field.html" %}
+
+{# ---------- Блок 1: счёт в банке ---------- #}
+<div class="card mb-18">
+  <label class="pay-on">
+    <input type="checkbox" name="pay_bank_on" value="1" {% if pay_state.bank.on %}checked{% endif %}>
+    <span><b>1. Счёт в банке</b> — перевод по реквизитам или СБП</span>
+  </label>
+  <p class="muted tight">Самый быстрый способ: вы открываете счёт самозанятого в банке и вписываете реквизиты сюда.</p>
+  <div class="grid grid-2">
+    <div>
+      <label for="f_bank_recipient">Получатель</label>
+      <input id="f_bank_recipient" name="pay_bank_recipient" value="{{ settings['pay.bank.recipient'] or '' }}" placeholder="Аляева Алёна">
+    </div>
+    <div>
+      <label for="f_bank_account">Номер счёта</label>
+      <input id="f_bank_account" name="pay_bank_account" value="{{ settings['pay.bank.account'] or '' }}" inputmode="numeric">
+    </div>
+    <div>
+      <label for="f_bank_bank_name">Банк</label>
+      <input id="f_bank_bank_name" name="pay_bank_bank_name" value="{{ settings['pay.bank.bank_name'] or '' }}">
+    </div>
+    <div>
+      <label for="f_bank_sbp">Телефон для СБП</label>
+      <input id="f_bank_sbp" name="pay_bank_sbp_phone" value="{{ settings['pay.bank.sbp_phone'] or '' }}" inputmode="tel">
+    </div>
+  </div>
+  <label for="f_bank_note">Пояснение покупателю</label>
+  <textarea id="f_bank_note" name="pay_bank_note" rows="2" placeholder="Например: в назначении платежа укажите номер заказа">{{ settings['pay.bank.note'] or '' }}</textarea>
+  {% if pay_state.bank.on and pay_state.bank.missing %}
+  <p class="pay-warn">Не хватает: {{ pay_state.bank.missing|join(', ') }} — пока оплата не показывается.</p>
+  {% endif %}
+</div>
+
+{# ---------- Блок 2: ссылка на оплату ---------- #}
+<div class="card mb-18">
+  <label class="pay-on">
+    <input type="checkbox" name="pay_link_on" value="1" {% if pay_state.link.on %}checked{% endif %}>
+    <span><b>2. Ссылка на оплату</b> — счёт из приложения банка</span>
+  </label>
+  <p class="muted tight">Вы выставляете счёт в банке и вставляете сюда ссылку. Подходит, когда сумма у каждого заказа своя.</p>
+  <label for="f_link_url">Ссылка на оплату</label>
+  <input id="f_link_url" name="pay_link_url" value="{{ settings['pay.link.url'] or '' }}" placeholder="https://">
+  <label for="f_link_note">Пояснение покупателю</label>
+  <textarea id="f_link_note" name="pay_link_note" rows="2">{{ settings['pay.link.note'] or '' }}</textarea>
+  {% if pay_state.link.on and pay_state.link.missing %}
+  <p class="pay-warn">Не хватает: {{ pay_state.link.missing|join(', ') }} — пока оплата не показывается.</p>
+  {% endif %}
+</div>
+
+{# ---------- Блок 3: ЮKassa ---------- #}
+<div class="card mb-18">
+  <label class="pay-on">
+    <input type="checkbox" name="pay_yukassa_on" value="1" {% if pay_state.yukassa.on %}checked{% endif %}>
+    <span><b>3. ЮKassa</b> — оплата картой прямо на сайте</span>
+  </label>
+  <p class="muted tight">
+    Ключи — в личном кабинете ЮKassa: shopId в разделе «Магазин», секретный ключ в «Интеграция → Ключи API».
+    Ключ хранится зашифрованным, в списке видно только последние 4 знака.
+  </p>
+  <div class="grid grid-2">
+    <div>
+      <label for="f_yk_shop">shopId</label>
+      <input id="f_yk_shop" name="pay_yukassa_shop_id" value="{{ settings['pay.yukassa.shop_id'] or '' }}" inputmode="numeric">
+    </div>
+    <div>
+      <label for="f_yk_secret">Секретный ключ</label>
+      <input id="f_yk_secret" name="pay_yukassa_secret" value="" autocomplete="off"
+             placeholder="{{ yukassa_mask }}">
+    </div>
+  </div>
+  <p class="hint">Пустое поле ключа — «не менять». Вписали новый — он заменит прежний.</p>
+  <label for="f_yk_note">Пояснение покупателю</label>
+  <textarea id="f_yk_note" name="pay_yukassa_note" rows="2">{{ settings['pay.yukassa.note'] or '' }}</textarea>
+  <p class="hint">Адрес для уведомлений (вставить в кабинете ЮKassa): <code>{{ yukassa_webhook }}</code></p>
+  {% if pay_state.yukassa.on and pay_state.yukassa.missing %}
+  <p class="pay-warn">Не хватает: {{ pay_state.yukassa.missing|join(', ') }} — пока оплата не показывается.</p>
+  {% endif %}
+</div>
+
+<button class="btn" type="submit">Сохранить</button>
+</form>
+{% endblock %}
