@@ -575,6 +575,12 @@ body{position:relative}
 .stat-accent .stat-num,.stat-accent .stat-label{color:#fff}
 .stat-num{display:block;font-family:Philosopher,Georgia,serif;font-size:30px;font-weight:700;color:var(--c-strong)}
 .stat-label{display:block;font-size:13.5px;color:var(--c-body);margin-top:4px}
+/* Заголовок таблицы держится при прокрутке: в заказах и товарах строк много,
+   и без него человек не помнит, что за колонка перед ним. */
+.tbl thead th{position:sticky;top:0;z-index:2;background:#FBF9FF;
+  box-shadow:inset 0 -1px 0 var(--c-lilac)}
+/* Цифры в колонках цен и сумм — по правому краю: так они сравниваются глазом. */
+.tbl .num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .tbl{width:100%;border-collapse:collapse;margin:8px 0 24px;background:#fff;border-radius:12px;overflow:hidden}
 .tbl th,.tbl td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-lilac);font-size:15px}
 .tbl th{background:var(--c-lilac);font-weight:700;color:var(--c-strong)}
