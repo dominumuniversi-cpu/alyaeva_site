@@ -154,13 +154,22 @@ tr:last-child td{border-bottom:none}
   background: var(--c-lilac);
   border-bottom: 1px solid rgba(75, 70, 144, .12);
 }
+/* РАСКЛАДКА МЕНЮ — правило (24.11.2026, задача #221):
+   1. широкий экран — все пункты В ОДНУ строку, одной высоты;
+   2. не влезает — переносим целиком: строки выровнены по центру, высота одинаковая;
+   3. телефон — один столбец: пункты друг под другом, каждый во всю ширину;
+   4. значок новых заказов не выше строки (24 px), иначе «Заказы» выше остальных. */
 .admin-subnav .wrap {
   display: flex;
+  align-items: center;
   gap: 6px;
   flex-wrap: wrap;
   padding: 8px 20px;
 }
 .admin-subnav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
   padding: 7px 14px;
   border-radius: 999px;
   font-size: 14px;
@@ -534,7 +543,7 @@ body{position:relative}
 
 /* ---------- Значок новых заказов в подменю админки ---------- */
 .admin-subnav a{position:relative}
-.badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;line-height:1;padding:0 6px;
   margin-left:7px;border-radius:999px;background:#D9534F;color:#fff;font-size:12px;font-weight:800;vertical-align:middle}
 
 /* ---------- Лента событий заказа ---------- */
@@ -792,3 +801,17 @@ body{
 .save-msg-ok { color: #2f7d57; opacity: 1; }
 .save-msg-bad { color: #b03a2e; opacity: 1; }
 .btn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+@media (max-width:600px){
+  /* Меню админки на телефоне — столбец: строки по ширине экрана, палец попадает целиком. */
+  .admin-subnav .wrap{flex-direction:column;align-items:stretch;gap:4px;padding:8px 16px}
+  .admin-subnav a{width:100%;justify-content:space-between;min-height:44px}
+  .admin-subnav .badge{margin-left:0}
+}
+
+/* Правило 2 доводим: пока пункты «почти» влезают, последний уезжает один — это и выглядит рвано.
+   На узком планшете делим ровно на две строки по четыре, а не «сколько получится». */
+@media (max-width:900px) and (min-width:601px){
+  .admin-subnav .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .admin-subnav a{justify-content:center;text-align:center}
+}
