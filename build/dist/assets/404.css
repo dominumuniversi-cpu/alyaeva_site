@@ -1,0 +1,40 @@
+/* Страница 404: стили вынесены из разметки (задача #190).
+   Раньше 42 правила стояли прямо в тегах — правка любого отступа требовала
+   лезть в десяток мест файла. Теперь разметка читается, вид не изменился:
+   значения перенесены один в один. */
+.hdr{position:sticky;top:0;z-index:100;padding:10px 0;background:rgba(230,223,250,.92);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid rgba(75,70,144,.10)}
+.hdr-in{max-width:1120px;margin:0 auto;padding:0 20px;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 24px}
+.logo{font-family:'Philosopher',Georgia,serif;font-size:24px;font-weight:700;text-decoration:none;padding:8px 0}
+.nav{display:flex;flex-wrap:wrap;gap:0 20px;font-size:15px;font-weight:700;justify-content:center}
+.nav-a{text-decoration:none;padding:8px 0}
+.nav-cta{text-decoration:none;padding:12px 0;color:#4B4690;font-weight:700}
+.nav-login{text-decoration:none;padding:8px 16px;margin:4px 0;border:1.5px solid #4B4690;border-radius:999px;color:#4B4690}
+.soc{display:flex;align-items:center;gap:10px;margin-left:4px}
+.soc-a{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:#4B4690;text-decoration:none}
+.err-main{min-height:58vh;display:flex;align-items:center;justify-content:center;padding:56px 20px;text-align:center}
+.err-in{max-width:640px}
+.err-code{font-family:Philosopher,Georgia,serif;font-size:92px;line-height:1;color:#E6DFFA;font-weight:700}
+.err-title{font-family:Philosopher,Georgia,serif;font-size:clamp(26px,4vw,34px);color:#2A2650;margin:12px 0 8px}
+.err-lead{font-size:18px;color:#4A4678;margin:0 0 26px}
+.err-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-solid{display:inline-block;padding:14px 28px;border-radius:999px;background:#4B4690;color:#fff;text-decoration:none;font-weight:700}
+.btn-outline{display:inline-block;padding:14px 28px;border-radius:999px;background:#fff;border:1.5px solid #4B4690;color:#4B4690;text-decoration:none;font-weight:700}
+.ftr{position:relative;overflow:hidden;background:#4B4690;color:#FFFFFF;padding:56px 0 32px}
+.ftr-star-1{position:absolute;top:28px;right:7%;opacity:.35}
+.ftr-star-2{position:absolute;top:150px;right:22%;opacity:.3}
+.ftr-in{position:relative;max-width:1120px;margin:0 auto;padding:0 20px;box-sizing:border-box}
+.ftr-h{font-family:'Philosopher',Georgia,serif;font-size:clamp(34px,5.5vw,54px);line-height:1.1;font-weight:700;margin:0 0 16px}
+.ftr-lead{margin:0 0 40px;color:#ECE8FA;max-width:600px}
+.ftr-actions{display:flex;flex-wrap:wrap;gap:16px}
+.ftr-btn-cream,.ftr-btn-mint,.ftr-btn-white,.ftr-btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 30px;border-radius:999px;font-weight:800;font-size:17px;box-sizing:border-box;text-decoration:none}
+.ftr-btn-cream{background:#FFE7A0;color:#2A2650}
+.ftr-btn-mint{background:#C8EEE9;color:#2A2650}
+.ftr-btn-white{background:#FFFFFF;color:#2A2650}
+.ftr-btn-outline{border:2px solid #FFFFFF;color:#FFFFFF}
+.ftr-tel{margin:32px 0 0;color:#ECE8FA}
+.ftr-tel-a{color:#FFFFFF;font-weight:800}
+.ftr-link-row{margin:24px 0 0}
+.ftr-link{color:#FFE7A0;font-weight:800}
+.ftr-bottom{margin-top:56px;padding-top:24px;border-top:1px solid #7570B8;font-size:15px;color:#ECE8FA}
+.ftr-copy{margin-bottom:10px}
+.ftr-policy{color:#ECE8FA;text-decoration:underline}
