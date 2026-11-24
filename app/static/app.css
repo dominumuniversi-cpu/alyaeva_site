@@ -291,6 +291,8 @@ body{position:relative}
 }
 .nav a:hover,.nav a.on{background:var(--c-lilac);color:var(--c-strong)}
 .nav a.nav-out{border:1.5px solid var(--c-lilac)}
+/* Кнопка «Вход» в один ряд с пунктами: та же высота, рамка вместо заливки. */
+.nav a[href="/login"]{border:1.5px solid var(--c-accent);color:var(--c-accent)}
 .nav a.nav-out:hover{border-color:var(--c-accent);background:transparent;color:var(--c-accent)}
 .nav-icons{display:inline-flex;gap:6px;align-items:center;padding:0 6px;border-left:1px solid var(--c-lilac);margin-left:4px}
 
