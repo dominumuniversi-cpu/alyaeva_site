@@ -4,6 +4,16 @@
 <section class="ceny-hero">
   <h1>{% if request.query_params.get("repeat") %}Повторить заказ{% else %}Заказать книгу{% endif %}</h1>
   <p class="muted mt-8">Оставьте контакты — свяжусь, обсудим сказку и покажу макет. Фото можно загрузить сразу.</p>
+{# Удобнее спросить сразу? Ссылки те же, что в шапке и подвале сайта — берутся из настроек, не вписаны руками. #}
+<div class="order-help">
+  <span class="order-help-label">Не готовы заполнять форму — спросите в мессенджере</span>
+  <div class="order-help-row">
+    {% if links.tg_url %}<a class="help-link" href="{{ links.tg_url }}" target="_blank" rel="noopener">Telegram</a>{% endif %}
+    {% if links.vk_url %}<a class="help-link" href="{{ links.vk_url }}" target="_blank" rel="noopener">ВКонтакте</a>{% endif %}
+    {% if links.wa_url %}<a class="help-link" href="{{ links.wa_url }}" target="_blank" rel="noopener">WhatsApp</a>{% endif %}
+    {% if links.site_phone %}<a class="help-link" href="tel:{{ links.site_phone }}">{{ links.site_phone }}</a>{% endif %}
+  </div>
+</div>
 </section>
 
 {# Те же четыре шага, что в разделе «Как заказать книгу» на главной сайта. #}
@@ -74,7 +84,7 @@ fetch('/api/products').then(r=>r.json()).then(list=>{
     /* Цена 0 = «по запросу» теми же словами, что в таблице на /ceny.
        Услуга (видео, коллажи, реставрация) цену по запросу заказывать не мешает —
        человек выбирает её и пишет пожелания, а не идёт в мессенджер. */
-    o.textContent = p.title + (p.price_rub ? ' — от ' + Math.round(p.price_rub).toLocaleString('ru-RU') + '\u00a0₽' : ' — по запросу');
+    o.textContent = p.title + (p.price_rub ? ' — ' + Math.round(p.price_rub).toLocaleString('ru-RU') + '\u00a0₽' : ' — по запросу');
     if (!p.price_rub) o.dataset.free = '1';
     sel.appendChild(o);
   });
