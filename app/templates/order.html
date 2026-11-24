@@ -8,7 +8,7 @@
 
 {# Те же четыре шага, что в разделе «Как заказать книгу» на главной сайта. #}
 <div class="steps-cards">
-  <div class="step-card"><div class="n">1</div><h3>Расскажите о ребёнке</h3>
+  <div class="step-card"><div class="n">1</div><h3>Расскажите о семье</h3>
     <p class="muted">Пришлите короткий рассказ: как его зовут, что он любит и что ему интересно.</p></div>
   <div class="step-card"><div class="n">2</div><h3>Согласуем макет</h3>
     <p class="muted">Покажу макет и обсудим правки в любом удобном мессенджере или во ВКонтакте.</p></div>
@@ -22,25 +22,27 @@
   <form class="card" id="orderForm">
     <div class="row">
       <div>
-        <label>Как вас зовут</label>
-        <input type="text" name="name" required placeholder="Имя" autocomplete="name">
+        <label for="fname">Как вас зовут</label>
+        <input type="text" name="name" id="fname" required placeholder="Имя" autocomplete="name">
       </div>
       <div>
-        <label>Телефон</label>
-        <input type="tel" name="phone" required placeholder="+7 902 000-00-00" autocomplete="tel" inputmode="tel">
+        <label for="fphone">Телефон</label>
+        <input type="tel" name="phone" id="fphone" required placeholder="+7 902 000-00-00" autocomplete="tel" inputmode="tel">
       </div>
     </div>
-    <label>E-mail <span class="hint" style="display:inline">(необязательно — для входа в кабинет)</span></label>
-    <input type="email" name="email" placeholder="you@example.ru" autocomplete="email" inputmode="email">
+    <label for="femail">E-mail</label>
+    <p class="hint" style="margin:0 0 6px">Необязательно — нужен, чтобы присылать уведомления о заказе.</p>
+    <input type="email" name="email" id="femail" placeholder="you@example.ru" autocomplete="email" inputmode="email">
 
-    <label>Что хотите заказать</label>
+    <label for="productSelect">Что хотите заказать</label>
+    <p class="hint" style="margin:0 0 6px">Не уверены, что подойдёт — выберите «Пока не знаю», обсудим вместе.</p>
     <select name="product_id" id="productSelect" autocomplete="off">
       <option value="">— выберите —</option>
     </select>
     <p class="hint" id="productHint" style="display:none;margin:6px 0 0">Цена по запросу — назову после того, как посмотрю фотографии.</p>
 
-    <label>Расскажите о ребёнке</label>
-    <textarea name="comment" rows="4" placeholder="Имя ребёнка, сколько лет, что любит">{{ request.query_params.get('comment', '') }}</textarea>
+    <label for="fcomment">Расскажите о ребёнке</label>
+    <textarea name="comment" id="fcomment" rows="4" placeholder="Имя ребёнка, сколько лет, что любит">{{ request.query_params.get('comment', '') }}</textarea>
     {% if request.query_params.get('repeat') %}
       <div class="hint" style="background:var(--c-mint);padding:10px 14px;border-radius:12px">
         Пожелания подставлены из прошлого заказа — поправьте, если что-то изменилось.
