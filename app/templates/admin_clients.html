@@ -29,7 +29,7 @@
       </td>
       <td data-label="Телефон">{% if c.phone %}<a href="tel:{{ c.phone|replace(' ','')|replace('-','')|replace('(','')|replace(')','') }}">{{ c.phone }}</a>{% else %}—{% endif %}</td>
       <td data-label="Заказов">{{ c.orders_count }}</td>
-      <td data-label="Сумма">{{ '%.0f'|format(c.total_rub) }} ₽</td>
+      <td data-label="Сумма">{{ c.total_rub|rub }}</td>
       <td data-label="Фото">{{ c.files_count }}</td>
       <td data-label="Последний заказ">{{ c.last_order_at.strftime('%d.%m.%Y') if c.last_order_at else '—' }}</td>
     </tr>

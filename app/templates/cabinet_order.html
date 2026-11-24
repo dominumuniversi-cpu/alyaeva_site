@@ -11,7 +11,7 @@
       <h1 style="margin:0">Заказ {{ order.number }}</h1>
       <p class="hint" style="margin:6px 0 0">
         {{ order.created_at.strftime('%d.%m.%Y') }}
-        {% if order.total_rub %} · {{ '%.0f'|format(order.total_rub) }} ₽{% endif %}
+        {% if order.total_rub %} · {{ order.total_rub|rub }}{% endif %}
       </p>
     </div>
     <span class="pill">{{ status_name(order.status) }}</span>
