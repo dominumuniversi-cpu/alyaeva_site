@@ -51,10 +51,30 @@ def rub(value, dash: bool = True) -> str:
     return f"{text}\u00a0₽"
 
 
+def rub_from(value, dash: bool = True) -> str:
+    """Цена «от»: 2900 → «от 2 900 ₽».
+
+    Почему везде «от»: объём и наполнение книги известны только после разговора
+    (задача #97). Точная цифра на витрине обещала бы цену, которую потом придётся поднимать.
+    «От» — не украшение, а честная граница.
+    """
+    text = rub(value, dash=dash)
+    if text.startswith("от") or text in ("—", ""):
+        return text
+    return f"от\u00a0{text}"
+
+
+def rub_range(value) -> str:
+    """Вилка калькулятора: «от 2 500 ₽». Пустое значение остаётся пустым."""
+    return rub_from(value, dash=False)
+
+
 templates.env.filters["rub"] = rub
+templates.env.filters["rub_from"] = rub_from
 templates.env.filters["tel"] = tel
 # Главная рендерится отдельным движком — те же фильтры, иначе телефон выйдет как в базе.
 pages.env.filters["rub"] = rub
+pages.env.filters["rub_from"] = rub_from
 pages.env.filters["tel"] = tel
 
 
