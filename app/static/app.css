@@ -271,7 +271,7 @@ input::placeholder,textarea::placeholder{color:rgba(74,70,120,.55)}
   input:not([type="checkbox"]):not([type="radio"]),select,textarea{font-size:16px;padding:12px 14px}
 }
 .consent { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; }
-.consent input { width: auto; margin-top: 4px; }
+.consent input { width: 22px; height: 22px; flex: 0 0 auto; margin-top: 2px; }
 .err, .errors { color: #a3283a; }
 
 /* ---- Фотографии в кабинете и у админа ---- */
@@ -852,3 +852,9 @@ body{
 .pay-warn{margin:8px 0 0;padding:8px 12px;border-radius:12px;background:var(--c-peach);color:#8A3B2A;font-size:14px}
 .pay-account{font-family:'Nunito',monospace;letter-spacing:.5px;word-break:break-all}
 .card-green{background:var(--c-mint)}
+
+/* ---------- ФЛАЖКИ В АДМИНКЕ (#263) ---------- */
+/* Мелкий чекбокс 13×16 на телефоне не попасть пальцем: увеличиваем и даём отступ от соседей. */
+input[type="checkbox"]{width:22px;height:22px;accent-color:var(--c-accent);vertical-align:middle}
+label > input[type="checkbox"]{margin:0 8px 0 0}
+@media (max-width:600px){ input[type="checkbox"]{width:24px;height:24px} }
