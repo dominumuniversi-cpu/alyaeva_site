@@ -21,6 +21,17 @@
     {{ order_progress(order.status, stages, stage_names) }}
   </div>
 
+  {# Оплата картой: кнопка есть, только если ЮKassa настроена и заказ ещё не оплачен (#122).
+     Деньги идут на счёт владельца; статус «Оплачен» ставит уведомление ЮKassa, а не клик. #}
+  {% if can_pay %}
+  <div class="card card-mint card-pad mt-18">
+    <b>Заказ принят, к оплате {{ order.total_rub|rub }}</b>
+    <p class="muted tight">Оплата картой. Заказ станет «Оплачен» сразу после того, как банк подтвердит платёж.</p>
+    <button class="btn" type="button" id="payBtn" data-order="{{ order.id }}">Оплатить картой</button>
+    <p class="hint" id="payNote" hidden></p>
+  </div>
+  {% endif %}
+
   <h2 class="h2-gap">История заказа</h2>
   {{ order_events(events, status_names) }}
 

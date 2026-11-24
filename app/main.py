@@ -41,6 +41,7 @@ app = FastAPI(title="alyaeva.pro", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 import orders as orders_mod  # noqa: E402
+import yukassa  # noqa: E402
 from order_status import STATUS_ORDER, STAGE_NAMES, STATUS_NAMES, ACTIVE_STATUSES, next_step
 from routes_shop import router as shop_router, status_name
 from admin_clients import router as admin_clients_router
@@ -451,8 +452,10 @@ def cabinet_order(order_id: int, request: Request):
                WHERE order_id = %s ORDER BY created_at, id""",
             (order_id,),
         ).fetchall()
+    # Кнопка оплаты — только если оплата картой настроена и заказ ещё не оплачен.
+    can_pay = bool(yukassa.enabled() and row["status"] != "paid" and (row["total_rub"] or 0) > 0)
     return render(request, "cabinet_order.html", user=user, order=row, events=events,
-                  status_names=STATUS_NAMES,
+                  status_names=STATUS_NAMES, can_pay=can_pay,
                   photos=photos, status_name=status_name,
                   stages=STATUS_ORDER, stage_names=STAGE_NAMES)
 
@@ -657,6 +660,36 @@ def save_pay(
     if wants_json:
         return JSONResponse({"ok": True, "saved": "оплата", "ready": payments.ready()})
     return RedirectResponse(ADMIN + "/pay?saved=1", status_code=303)
+
+@app.post("/hooks/yukassa")
+async def yukassa_hook(request: Request):
+    """Уведомление ЮKassa. Отвечаем 200 всегда, иначе сервис будет повторять бесконечно."""
+    raw = await request.body()
+    payload = yukassa.parse(raw)
+    if not payload:
+        return JSONResponse({"ok": False}, status_code=400)
+    code, note = yukassa.handle_notification(payload)
+    return JSONResponse({"ok": code == 200, "note": note}, status_code=code)
+
+
+@app.post("/api/pay/{order_id}")
+def api_pay(order_id: int, request: Request):
+    """Создать платёж по заказу и вернуть ссылку. Только для своего заказа."""
+    user = current_user(request)
+    if not user:
+        return JSONResponse({"ok": False, "error": "Нужно войти", "login": True}, status_code=401)
+    if not yukassa.enabled():
+        return JSONResponse({"ok": False, "error": "Оплата картой не настроена"}, status_code=400)
+    with db.pool.connection() as conn:
+        order = conn.execute(
+            "SELECT * FROM orders WHERE id = %s AND user_id = %s", (order_id, user["id"])
+        ).fetchone()
+    if not order:
+        return JSONResponse({"ok": False, "error": "Заказ не найден"}, status_code=404)
+    if order["status"] == "paid":
+        return JSONResponse({"ok": False, "error": "Заказ уже оплачен"}, status_code=400)
+    res = yukassa.create_payment(dict(order))
+    return JSONResponse(res, status_code=200 if res.get("ok") else 502)
 
 # ---------------- Страницы ошибок ----------------
 # Раньше несуществующий путь приложения отдавал голый {"detail":"Not Found"} —
