@@ -272,6 +272,23 @@ body{position:relative}
 @media (max-width:600px){ .b1,.b2,.b3{opacity:.28} }
 
 /* ШАПКА: прибита к верху и не уезжает при прокрутке. */
+/* Кнопка «наверх» — кружок в цветах сайта. Прибита к окну, а не к шапке:
+   на телефоне шапка уже занята бургером, а кружок нужен там, где лежит палец. */
+.to-top{
+  position:fixed;right:20px;bottom:24px;z-index:45;
+  width:52px;height:52px;border-radius:50%;
+  display:grid;place-items:center;text-decoration:none;
+  color:#fff;background:var(--c-accent);
+  box-shadow:0 10px 24px rgba(42,38,80,.28);
+  opacity:0;visibility:hidden;transform:translateY(12px);
+  transition:opacity .18s ease,transform .18s ease,visibility .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.to-top.on{opacity:1;visibility:visible;transform:none}
+.to-top:hover,.to-top:focus-visible{background:var(--c-strong)}
+.to-top:focus-visible{outline:3px solid var(--c-cream);outline-offset:3px}
+@media (max-width:600px){ .to-top{right:14px;bottom:16px;width:48px;height:48px} }
+@media (prefers-reduced-motion: reduce){ .to-top{transition:none} }
 .topbar{
   position:sticky;top:0;z-index:50;
   background:rgba(255,255,255,.94);

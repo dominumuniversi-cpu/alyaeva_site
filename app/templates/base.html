@@ -8,7 +8,7 @@
 <title>{% block title %}Алёна Аляева{% endblock %}</title>
 <link rel="stylesheet" href="/static/app.css">
 </head>
-<body>
+<body id="top">
 {% include "_header.html" %}
 
 {% if user and user.role == 'admin' %}
@@ -50,6 +50,20 @@
   n.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
   window.addEventListener('resize', function () { if (window.innerWidth > 820) set(false); });
+
+  /* Кнопка «наверх»: наверху страницы она не нужна и мешает — показываем после прокрутки.
+     Плавность отключаем тем, кому движение мешает (настройка системы). */
+  var tt = document.getElementById('toTop');
+  if (tt) {
+    var showTop = function () { tt.classList.toggle('on', window.scrollY > 400); };
+    window.addEventListener('scroll', showTop, { passive: true });
+    showTop();
+    tt.addEventListener('click', function (e) {
+      var quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: quiet ? 'auto' : 'smooth' });
+    });
+  }
 })();
 /* Тень под шапкой появляется только когда страница прокручена — так шапка не «висит в воздухе». */
 (function () {

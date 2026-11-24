@@ -17,3 +17,20 @@
   /* Значки в подвале: на телефоне палец, а не курсор — целиться крупнее. */
   footer a[aria-label]{width:52px !important; height:52px !important}
 }
+
+/* Кнопка «наверх» — тот же кружок, что в приложении: цвета сайта #4B4690 / #2A2650. */
+.to-top{
+  position:fixed;right:20px;bottom:24px;z-index:90;
+  width:52px;height:52px;border-radius:50%;
+  display:grid;place-items:center;text-decoration:none;
+  color:#fff;background:#4B4690;
+  box-shadow:0 10px 24px rgba(42,38,80,.28);
+  opacity:0;visibility:hidden;transform:translateY(12px);
+  transition:opacity .18s ease,transform .18s ease,visibility .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.to-top.on{opacity:1;visibility:visible;transform:none}
+.to-top:hover,.to-top:focus-visible{background:#2A2650}
+.to-top:focus-visible{outline:3px solid #FFF1C7;outline-offset:3px}
+@media (max-width:600px){ .to-top{right:14px;bottom:16px;width:48px;height:48px} }
+@media (prefers-reduced-motion: reduce){ .to-top{transition:none} }
