@@ -16,22 +16,22 @@
 
 {% if clients %}
 <div class="card">
-  <table>
+  <table class="tbl-cards" data-labels="1">
     <tr>
       <th>Клиент</th><th>Телефон</th><th>Заказов</th><th>Сумма</th>
       <th>Фото</th><th>Последний заказ</th>
     </tr>
     {% for c in clients %}
-    <tr style="cursor:pointer" onclick="location.href='/admin/client/{{ c.id }}'">
-      <td>
-        <strong>{{ c.full_name or 'Без имени' }}</strong><br>
-        <span class="muted">{{ c.email }}</span>
+    <tr>
+      <td data-label="Клиент">
+        <a href="/admin/client/{{ c.id }}" style="font-weight:800;color:var(--c-accent)">{{ c.full_name or 'Без имени' }}</a><br>
+        <a class="muted" href="mailto:{{ c.email }}">{{ c.email }}</a>
       </td>
-      <td>{{ c.phone or '—' }}</td>
-      <td>{{ c.orders_count }}</td>
-      <td>{{ '%.0f'|format(c.total_rub) }} ₽</td>
-      <td>{{ c.files_count }}</td>
-      <td>{{ c.last_order_at.strftime('%d.%m.%Y') if c.last_order_at else '—' }}</td>
+      <td data-label="Телефон">{% if c.phone %}<a href="tel:{{ c.phone|replace(' ','')|replace('-','')|replace('(','')|replace(')','') }}">{{ c.phone }}</a>{% else %}—{% endif %}</td>
+      <td data-label="Заказов">{{ c.orders_count }}</td>
+      <td data-label="Сумма">{{ '%.0f'|format(c.total_rub) }} ₽</td>
+      <td data-label="Фото">{{ c.files_count }}</td>
+      <td data-label="Последний заказ">{{ c.last_order_at.strftime('%d.%m.%Y') if c.last_order_at else '—' }}</td>
     </tr>
     {% endfor %}
   </table>

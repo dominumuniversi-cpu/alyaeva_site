@@ -11,15 +11,15 @@
 <div class="card" style="margin-top:18px">
   <h2 style="font-size:20px; margin-top:0">Заказы ({{ orders|length }})</h2>
   {% if orders %}
-  <table>
+  <table class="tbl-cards" data-labels="1">
     <tr><th>№</th><th>Дата</th><th>Сумма</th><th>Проектов</th><th>Статус</th></tr>
     {% for o in orders %}
     <tr>
-      <td><strong>{{ o.number }}</strong></td>
-      <td>{{ o.created_at.strftime('%d.%m.%Y') }}</td>
-      <td>{{ '%.0f'|format(o.total_rub) }} ₽</td>
-      <td>{{ o.projects }}</td>
-      <td>
+      <td data-label="№"><strong>{{ o.number }}</strong></td>
+      <td data-label="Дата">{{ o.created_at.strftime('%d.%m.%Y') }}</td>
+      <td data-label="Сумма">{{ '%.0f'|format(o.total_rub) }} ₽</td>
+      <td data-label="Проектов">{{ o.projects }}</td>
+      <td data-label="Статус">
         <select class="order-status" data-order="{{ o.id }}"
                 style="padding:6px 10px; border:1.5px solid var(--c-lilac); border-radius:8px; font-family:inherit; background:#fff">
           {% for code, label in statuses.items() %}
@@ -38,14 +38,14 @@
 <div class="card" style="margin-top:18px">
   <h2 style="font-size:20px; margin-top:0">Проекты — папки клиента ({{ projects|length }})</h2>
   {% if projects %}
-  <table>
+  <table class="tbl-cards" data-labels="1">
     <tr><th>Проект</th><th>Заказ</th><th>Фото</th><th>Создан</th></tr>
     {% for p in projects %}
     <tr>
-      <td><strong>{{ p.title }}</strong></td>
-      <td>{{ p.order_number or '—' }}</td>
-      <td>{{ p.files }}</td>
-      <td>{{ p.created_at.strftime('%d.%m.%Y') }}</td>
+      <td data-label="Проект"><strong>{{ p.title }}</strong></td>
+      <td data-label="Заказ">{{ p.order_number or '—' }}</td>
+      <td data-label="Фото">{{ p.files }}</td>
+      <td data-label="Создан">{{ p.created_at.strftime('%d.%m.%Y') }}</td>
     </tr>
     {% endfor %}
   </table>
