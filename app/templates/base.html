@@ -16,6 +16,11 @@
 {% include "_header.html" %}
 
 {% if user and user.role == 'admin' %}
+{# Меню админки. Разметка одна на все пункты — но «Заказы» отличался не тегом, а содержимым:
+   внутрь ссылки вложен счётчик <span class="badge">. Из-за него только у этого пункта есть
+   второй ребёнок, и в строке inline-flex он садится по базовой линии текста иначе, чем
+   пустая строка у соседей (владелец: «Заказы не в линии», 24.11.2026).
+   Счётчик оставлен, но выровнен средствами CSS (.admin-subnav .badge) — см. static/app.css. #}
 <nav class="admin-subnav" aria-label="Админка">
   <div class="wrap">
     <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы{% if counts and counts.new_orders %}<span class="badge">{{ counts.new_orders }}</span>{% endif %}</a>
