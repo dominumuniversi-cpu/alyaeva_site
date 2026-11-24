@@ -98,3 +98,111 @@
 .lp-p{margin:0;color:#4A4678}
 .lp-list{margin:0;padding-left:22px;color:#4A4678;font-size:18px}
 .lp-note{margin:24px 0 0}
+
+/* Главная страница — задача #190, шаг 4 (последний).
+   Правила перенесены из разметки один в один, имя класса на каждый набор.
+   Общие для сайта (.hdr, .nav, .ftr …) уже описаны выше и здесь не повторяются. */
+.hm-body{background:#FFFFFF;color:#2A2650;font-family:'Nunito', system-ui, sans-serif;font-size:18px;line-height:1.6}
+.hm-hero{position:relative;overflow:hidden;background:#E6DFFA}
+.hm-blob-a{position:absolute;top:-90px;right:-70px;width:340px;height:340px;border-radius:50%;background:#FFFFFF;opacity:0.5}
+.hm-blob-b{position:absolute;bottom:30px;left:-60px;width:180px;height:180px;border-radius:50%;background:#FFD3DA;opacity:0.7}
+.hm-blob-c{position:absolute;top:46%;right:38%;width:70px;height:70px;border-radius:50%;background:#FFE7A0;opacity:0.8}
+.hm-hero-in{position:relative;padding:32px 0 72px}
+.hm-hero-row{max-width:1120px;margin:0 auto;padding:0 20px;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:48px}
+.hm-hero-text{flex:1 1 440px;min-width:0}
+.hm-badge{display:inline-flex;align-items:center;gap:8px;background:#FFE7A0;border-radius:999px;padding:6px 18px;font-size:15px;font-weight:800;margin-bottom:24px}
+.hm-h1{font-family:'Philosopher', Georgia, serif;font-size:clamp(38px, 6.5vw, 64px);line-height:1.08;font-weight:700;margin:0 0 24px}
+.hm-lead{font-size:20px;color:#4A4678;margin:0 0 32px;max-width:540px}
+.hm-actions{display:flex;flex-wrap:wrap;gap:16px}
+.hm-btn-solid{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 30px;border-radius:999px;background:#4B4690;color:#FFFFFF;font-weight:800;font-size:17px;text-decoration:none;box-sizing:border-box}
+.hm-btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 30px;border-radius:999px;border:2px solid #4B4690;color:#2A2650;font-weight:800;font-size:17px;text-decoration:none;box-sizing:border-box}
+.hm-hero-photo{flex:1 1 320px;min-width:0;display:flex;justify-content:center}
+.hm-photo-round{width:100%;max-width:460px;aspect-ratio:1 / 1;object-fit:cover;border-radius:50%;border:8px solid #FFFFFF;box-sizing:border-box;display:block}
+.hm-strip{background:#E6DFFA;line-height:0}
+.hm-strip-img{display:block;width:100%;height:48px}
+.hm-topline{background:#FFF1C7;padding:28px 0}
+.hm-topline-row{max-width:1120px;margin:0 auto;padding:0 20px;box-sizing:border-box;display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px 40px}
+.hm-name{font-family:'Philosopher', Georgia, serif;font-size:32px;font-weight:700;line-height:1.2}
+.hm-topline-label{font-size:16px;font-weight:700;color:#4A4678}
+.hm-topline-strip{background:#FFF1C7;line-height:0}
+.hm-sec-peach{position:relative;overflow:hidden;padding:56px 0 80px;background:#FFEBE0}
+.hm-star-a{position:absolute;top:24px;right:6%}
+.hm-star-b{position:absolute;bottom:120px;left:3%}
+.hm-blob-d{position:absolute;top:40%;left:-80px;width:200px;height:200px;border-radius:50%;background:#FFFFFF;opacity:0.55}
+.hm-wrap{position:relative;max-width:1120px;margin:0 auto;padding:0 20px;box-sizing:border-box}
+.hm-row{display:flex;flex-wrap:wrap;align-items:center;gap:48px}
+.hm-col-340{flex:1 1 340px;min-width:0}
+.hm-img-square{width:100%;aspect-ratio:1 / 1;object-fit:cover;border-radius:32px;display:block;border:6px solid #FFFFFF;box-sizing:border-box}
+.hm-col-380{flex:1 1 380px;min-width:0}
+.hm-h2{font-family:'Philosopher', Georgia, serif;font-size:clamp(32px, 5vw, 46px);line-height:1.12;font-weight:700;margin:0 0 16px}
+.hm-h2-lead{margin:0 0 24px;font-size:19px}
+.hm-actions-sm{display:flex;flex-wrap:wrap;gap:12px}
+.hm-tag-peach{background:#FFD3DA;border-radius:999px;padding:8px 18px;font-weight:800;font-size:16px}
+.hm-tag-mint{background:#C8EEE9;border-radius:999px;padding:8px 18px;font-weight:800;font-size:16px}
+.hm-tag-cream{background:#FFE7A0;border-radius:999px;padding:8px 18px;font-weight:800;font-size:16px}
+.hm-tag-lilac{background:#DCD3F7;border-radius:999px;padding:8px 18px;font-weight:800;font-size:16px}
+.hm-after-56{margin-top:56px}
+.hm-img-wide{width:100%;height:auto;border-radius:32px;display:block;border:6px solid #FFFFFF;box-sizing:border-box}
+.hm-note-muted{margin:16px 0 24px;font-size:16px;color:#4A4678}
+.hm-strip-peach{background:#FFEBE0;line-height:0}
+.hm-sec-lilac{position:relative;overflow:hidden;padding:56px 0 80px;background:#E6DFFA}
+.hm-blob-e{position:absolute;top:-80px;left:-60px;width:240px;height:240px;border-radius:50%;background:#FFFFFF;opacity:0.5}
+.hm-blob-f{position:absolute;bottom:-50px;right:8%;width:160px;height:160px;border-radius:50%;background:#FFD3DA;opacity:0.6}
+.hm-wrap-rel{position:relative;max-width:1120px;margin:0 auto;padding:0 20px;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:48px}
+.hm-filter-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:28px}
+.hm-col-420{flex:1 1 420px;min-width:0}
+.hm-img-43{width:100%;aspect-ratio:4 / 3;border-radius:32px;border:6px solid #FFFFFF;box-sizing:border-box;background:#2A2650;display:block}
+.hm-sec-mint{padding:56px 0 80px;background-color:#EAF7F4;background-image:radial-gradient(#C6E8E2 2.5px, transparent 2.5px);background-size:30px 30px}
+.hm-wrap-box{max-width:1120px;margin:0 auto;padding:0 20px;box-sizing:border-box}
+.hm-h2-md{font-family:'Philosopher', Georgia, serif;font-size:clamp(32px, 5vw, 46px);line-height:1.12;font-weight:700;margin:0 0 12px}
+.hm-sec-lead{margin:0 0 40px;color:#4A4678;max-width:640px}
+.hm-row-20{display:flex;flex-wrap:wrap;gap:20px}
+.hm-card-peach{flex:1 1 220px;min-width:0;background:#FFD3DA;border-radius:28px;padding:28px;box-sizing:border-box}
+.hm-card-h{font-family:'Philosopher', Georgia, serif;font-size:26px;line-height:1.2;margin:0 0 10px}
+.hm-card-p{margin:0;font-size:17px}
+.hm-card-white{flex:1 1 220px;min-width:0;background:#FFFFFF;border-radius:28px;padding:28px;box-sizing:border-box}
+.hm-card-cream{flex:1 1 220px;min-width:0;background:#FFE7A0;border-radius:28px;padding:28px;box-sizing:border-box}
+.hm-card-lilac{flex:1 1 220px;min-width:0;background:#DCD3F7;border-radius:28px;padding:28px;box-sizing:border-box}
+.hm-card-coral{flex:1 1 220px;min-width:0;background:#FFDCC8;border-radius:28px;padding:28px;box-sizing:border-box}
+.hm-strip-mint{background:#EAF7F4;line-height:0}
+.hm-sec-fawn{position:relative;overflow:hidden;padding:56px 0 80px;background:#F1ECFF}
+.hm-blob-g{position:absolute;top:-70px;right:-50px;width:260px;height:260px;border-radius:50%;background:#FFD3DA;opacity:0.45}
+.hm-blob-h{position:absolute;bottom:-60px;left:5%;width:180px;height:180px;border-radius:50%;background:#FFE7A0;opacity:0.6}
+.hm-h2-lg{font-family:'Philosopher', Georgia, serif;font-size:clamp(32px, 5vw, 46px);line-height:1.12;font-weight:700;margin:0 0 40px}
+.hm-row-24{display:flex;flex-wrap:wrap;gap:24px}
+.hm-step-card{flex:1 1 240px;min-width:0;background:#FFFFFF;border-radius:28px;padding:28px;box-sizing:border-box}
+.hm-step-num-peach{width:56px;height:56px;border-radius:999px;background:#FFD3DA;font-family:'Philosopher', Georgia, serif;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.hm-step-h{font-family:'Philosopher', Georgia, serif;font-size:24px;line-height:1.2;margin:16px 0 8px}
+.hm-step-p{margin:0;color:#4A4678}
+.hm-step-num-mint{width:56px;height:56px;border-radius:999px;background:#C8EEE9;font-family:'Philosopher', Georgia, serif;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.hm-step-num-cream{width:56px;height:56px;border-radius:999px;background:#FFE7A0;font-family:'Philosopher', Georgia, serif;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.hm-step-num-lilac{width:56px;height:56px;border-radius:999px;background:#DCD3F7;font-family:'Philosopher', Georgia, serif;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.hm-strip-fawn{background:#F1ECFF;line-height:0}
+.hm-cta{padding:0 0 56px;background:#FFF1C7}
+.hm-cta-row{max-width:1100px;margin:0 auto;padding:28px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px}
+.hm-cta-text{max-width:560px}
+.hm-cta-h{font-family:Philosopher,serif;font-size:26px;line-height:1.25;color:#2A2650}
+.hm-cta-p{margin:8px 0 0;color:#4A4678;font-size:16px}
+.hm-cta-actions{display:flex;flex-wrap:wrap;gap:10px}
+.hm-cta-btn-solid{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#4B4690;color:#fff;border-radius:999px;text-decoration:none;font-weight:800}
+.hm-cta-btn-white{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#fff;color:#2A2650;border:1.5px solid #4B4690;border-radius:999px;text-decoration:none;font-weight:800}
+.hm-sec-pad{padding:40px 0 80px}
+.hm-pink-card{background:#FFD3DA;border-radius:40px;padding:48px;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:40px}
+.hm-col-320{flex:1 1 320px;min-width:0}
+.hm-h2-sm{font-family:'Philosopher', Georgia, serif;font-size:clamp(32px, 5vw, 46px);line-height:1.12;font-weight:700;margin:0 0 8px}
+.hm-big{font-family:'Philosopher', Georgia, serif;font-size:clamp(48px, 8vw, 76px);line-height:1.05;font-weight:700;margin:0 0 16px}
+.hm-mb-28{margin:0 0 28px}
+.hm-col-stack{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.hm-mini-card{background:#FFFFFF;border-radius:22px;padding:20px 24px}
+.hm-mini-label{font-size:15px;color:#4A4678}
+.hm-mini-value{font-weight:800}
+.hm-sec-cream{padding:56px 0 80px;background:#FFF1C7}
+.hm-h2-smb{font-family:'Philosopher', Georgia, serif;font-size:clamp(32px, 5vw, 46px);line-height:1.12;font-weight:700;margin:0 0 32px}
+.hm-faq-item{background:#FFFFFF;border-radius:22px;padding:16px 24px;margin-bottom:12px}
+.hm-faq-q{font-weight:800;font-size:18px;cursor:pointer;color:#2A2650}
+.hm-faq-a{margin:12px 0 0;color:#4A4678}
+.hm-strip-white{background:#FFFFFF;line-height:0}
+
+/* Кнопки связи в блоке «Связаться» на главной: на узком экране в столбик на всю ширину,
+   иначе «ВКонтакте» не влезает. Перенесено со страницы (<style>) — задача #190. */
+@media (max-width:520px){#svyaz .soc-cta{flex:1 1 100%;justify-content:center;padding:13px 18px}}
