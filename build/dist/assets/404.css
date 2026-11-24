@@ -206,3 +206,32 @@
 /* Кнопки связи в блоке «Связаться» на главной: на узком экране в столбик на всю ширину,
    иначе «ВКонтакте» не влезает. Перенесено со страницы (<style>) — задача #190. */
 @media (max-width:520px){#svyaz .soc-cta{flex:1 1 100%;justify-content:center;padding:13px 18px}}
+
+/* Главная на телефоне (375–600 пикс.) — задача #47, замер по ширинам.
+   Блоки на flex с основой 440/380/340 пикс. переносятся, но сохраняют отступы
+   под широкий экран; круглые подложки (340–460 пикс.) абсолютно спозиционированы
+   и могли давать горизонтальную прокрутку. Здесь: подложки не лезут за экран,
+   круглое фото упирается в ширину экрана, отступы секций меньше. */
+@media (max-width:600px){
+  .hm-hero{padding:16px 0 40px}
+  .hm-hero-row,.hm-row,.hm-row-20,.hm-row-24,.hm-cta-row{gap:20px}
+  .hm-hero-photo,.hm-col-340,.hm-col-380,.hm-col-420,.hm-col-320,.hm-col-stack,.hm-hero-text{flex:1 1 100%}
+  .hm-photo-round{max-width:min(460px,100%)}
+  .hm-h1{font-size:clamp(30px,9vw,40px)}
+  .hm-big{font-size:clamp(38px,13vw,56px)}
+  .hm-blob-a,.hm-blob-e,.hm-blob-g,.hm-blob-d{width:200px;height:200px;top:-40px;right:-40px}
+  .hm-blob-b,.hm-blob-c,.hm-blob-f,.hm-blob-h{width:120px;height:120px;bottom:-30px;left:-30px}
+  .hm-card-peach,.hm-card-white,.hm-card-cream,.hm-card-lilac,.hm-card-coral,.hm-step-card{flex:1 1 100%;padding:22px}
+  .hm-tag-peach,.hm-tag-mint,.hm-tag-cream,.hm-tag-lilac{padding:7px 14px;font-size:15px}
+  .hm-sec-peach,.hm-sec-lilac,.hm-sec-mint,.hm-sec-fawn,.hm-sec-cream,.hm-sec-pad{padding:40px 0 52px}
+  .hm-cta{padding:28px}
+  /* Кнопки в этой плашке — .soc-cta; правило для них уже есть (#svyaz .soc-cta на ≤520px). */
+  .hm-img-square,.hm-img-wide,.hm-img-43{border-width:4px;border-radius:22px}
+  .ftr-h{font-size:clamp(28px,7vw,36px)}
+  .ftr-btn-call,.ftr-btn-outline-lg{flex:1 1 100%;justify-content:center}
+}
+@media (max-width:380px){
+  .hm-wrap,.hm-wrap-rel,.hm-wrap-box,.hm-cta-row{padding-left:14px;padding-right:14px}
+  .hm-h1{font-size:28px}
+  .hm-strip-img{height:38px}
+}
