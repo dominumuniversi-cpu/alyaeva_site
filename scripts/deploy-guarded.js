@@ -30,6 +30,8 @@ const NET_DB = 'sc-stand-main_net';
 const PROD = 'alyaeva-web';
 const LOCK = path.join(os.tmpdir(), 'alyaeva-deploy.lock');
 
+/* Постоянный адрес сайта: на него смотрит nginx, а не на имя контейнера. */
+const APP_NAME = 'alyaeva-app';
 const PROD_NEW_NAME = 'alyaeva-web-old';
 let candidateName = null;
 
@@ -106,10 +108,6 @@ function startContainer(name, image, alias) {
   return r;
 }
 
-/** Снять алиас с контейнера, не убивая его. */
-function detachAlias(name) {
-  return docker(['network', 'disconnect', NET, name]);
-}
 
 /** Убрать кандидата и замок. */
 function cleanup() {
@@ -162,6 +160,7 @@ async function main() {
     console.error(docker(['logs', '--tail', '20', candidateName]).out);
     throw new Error('Кандидат не прошёл healthcheck');
   }
+  /* Кандидат уже в обеих сетях: startContainer подключает NET и NET_DB при запуске. */
   const ip = containerIp(candidateName);
   if (!ip) throw new Error('Не удалось определить IP кандидата');
   console.log('   healthcheck пройден, IP ' + ip);
@@ -169,14 +168,18 @@ async function main() {
   console.log('3. Проверка страниц кандидата...');
   if (!(await checkPages(ip))) throw new Error('Страницы кандидата не отвечают');
 
-  console.log('4. Переключение (окно — доли секунды, пока имя занято)...');
-  /* Имя контейнера в сети освобождает только ОСТАНОВКА — снятие алиаса его не отдаёт.
-     Порядок: остановить прод → убрать его под запасное имя → занять имя прода кандидатом → запустить.
-     Старый контейнер не удаляем до проверки нового: он и есть откат. `docker rename` применяется
-     ТОЛЬКО к уже остановленному, поэтому зомби с --restart unless-stopped не появится. */
-  docker(['rm', '-f', PROD_NEW_NAME]);
-  const stopOld = docker(['stop', PROD]);
-  if (!stopOld.ok) throw new Error('Не удалось остановить прод: ' + stopOld.out.slice(0, 200));
+  console.log('4. Переключение постоянного адреса alyaeva-app на новый контейнер...');
+  /* Почему не rename: пока имя alyaeva-web ни на кого не указывает, nginx кэширует отказ
+     на десятки секунд и отдаёт 502 ещё несколько минут после того, как прод поднялся.
+     Поэтому сайт смотрит на ПОСТОЯННЫЙ адрес alyaeva-app, а переключение — это одна пара
+     команд connect/disconnect: адрес всегда принадлежит живому контейнеру. */
+  const swap = docker(['network', 'connect', '--alias', APP_NAME, NET, candidateName]);
+  if (!swap.ok && !/already exists|already connected/i.test(swap.out)) {
+    throw new Error('Новый адрес не встал на кандидата: ' + swap.out.slice(0, 200));
+  }
+  /* Кандидат готов и обслуживает запросы. Останавливаем старый и снимаем с него ОБА имени:
+     iначе в сети останутся два владельца alyaeva-app и nginx будет кидать запросы на мёртвый. */
+  docker(['stop', PROD]);
   const aside = docker(['rename', PROD, PROD_NEW_NAME]);
   if (!aside.ok) {
     docker(['start', PROD]);
@@ -189,11 +192,6 @@ async function main() {
     throw new Error('Не удалось занять имя прода: ' + promote.out.slice(0, 200));
   }
   candidateName = null;
-  /* `docker stop` снимает контейнер с сетей, и `start` их НЕ возвращает: без явного connect
-     сетевое имя alyaeva-web не резолвится, nginx получает 113 и отдаёт 502.
-     Порядок важен: сначала start, затем connect — иначе старт снова снимет сеть. */
-  const started = docker(['start', PROD]);
-  if (!started.ok) throw new Error('Новый прод не запустился: ' + started.out.slice(0, 200));
   for (const net of [NET, NET_DB]) {
     const attach = docker(['network', 'connect', net, PROD]);
     if (!attach.ok && !/already exists|already connected/i.test(attach.out)) {
@@ -220,11 +218,11 @@ async function main() {
      Поэтому ждём до 30 секунд, а не падаем с первого 502. */
   const checkExternal = () => docker(['run', '--rm', 'curlimages/curl:latest', '-s', '--max-time', '15', '-o', '/dev/null',
     '-w', '%{http_code}', '-H', 'X-DSH-Check: 1', 'https://alyaeva.pro/login'], 60000).out;
-  /* nginx кэширует IP апстрима (по умолчанию 30 с, но рвётся не строго по часам).
-     Ждём до 90 секунд: переключение меняет IP контейнера, и старый IP мёртв. */
   let external = '';
+  const t0 = Date.now();
   for (let i = 0; i < 30; i += 1) {
     external = checkExternal();
+    console.log('   т+' + Math.round((Date.now() - t0) / 1000) + ' с → ' + (external || 'нет ответа'));
     if (external === '200') break;
     await new Promise((res) => setTimeout(res, 3000));
   }
