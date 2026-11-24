@@ -43,6 +43,7 @@
           <figcaption>
             <span class="photo-name" title="{{ f.orig_name }}">{{ f.orig_name }}</span>
             <a class="photo-dl" href="/api/file/{{ f.id }}" download>Скачать</a>
+            <button type="button" class="photo-del" data-id="{{ f.id }}" title="Удалить фото с сервера">Удалить</button>
           </figcaption>
         </figure>
       {% endfor %}
@@ -148,5 +149,27 @@
   document.getElementById('pick').addEventListener('change', e => send(e.target.files));
   document.getElementById('shoot').addEventListener('change', e => send(e.target.files));
 })();
+</script>
+<script>
+/* Удаление фото: политика обещает «удалю по просьбе» — человеку не надо писать и ждать. */
+document.querySelectorAll('.photo-del').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    if (!confirm('Удалить фото с сервера? Восстановить не получится.')) return;
+    var id = btn.getAttribute('data-id');
+    btn.disabled = true; btn.textContent = 'Удаляю...';
+    fetch('/api/file/' + id + '/delete', {method:'POST'})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.ok) {
+          var fig = btn.closest('figure');
+          if (fig) fig.remove();
+        } else {
+          btn.disabled = false; btn.textContent = 'Удалить';
+          alert(d.error === 'forbidden' ? 'Это не ваше фото.' : 'Не удалось удалить.');
+        }
+      })
+      .catch(function(){ btn.disabled = false; btn.textContent = 'Удалить'; alert('Сеть недоступна.'); });
+  });
+});
 </script>
 {% endblock %}
