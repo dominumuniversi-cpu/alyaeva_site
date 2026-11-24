@@ -10,6 +10,7 @@ from fastapi.templating import Jinja2Templates
 
 import db
 from config import config
+from order_status import next_step, NEW_STATUS
 
 templates = Jinja2Templates(directory="templates")
 # Админка живёт по /admin — нормальный, читаемый адрес.
@@ -66,8 +67,10 @@ def admin_counts() -> dict:
     """
     try:
         with db.pool.connection() as conn:
+            # Статус «только что пришёл» — из словаря, а не литералом:
+            # иначе переименование статуса тихо оставит счётчик на нуле.
             row = conn.execute(
-                "SELECT count(*) AS new_orders FROM orders WHERE status = 'new'"
+                "SELECT count(*) AS new_orders FROM orders WHERE status = %s", (NEW_STATUS,)
             ).fetchone()
         return {"new_orders": row["new_orders"]}
     except Exception:
@@ -94,6 +97,9 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
                         analytics.source_from_referer(request.headers.get("referer", "")))
     except Exception:
         pass
+    # «Что дальше» по заказу — тем же словарём, что и статусы. Иначе в шаблоне
+    # снова появится список из пяти старых статусов (так уже было).
+    kw.setdefault("next_step", next_step)
     # Счётчик непрочитанных нужен шапке на каждой странице кабинета.
     unread = kw.pop("unread", 0)
     if user and not unread:

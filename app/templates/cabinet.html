@@ -40,7 +40,7 @@
 </div>
 
 {# Заказ без фото висит — изготовление не начнётся. Плашка бросается в глаза, а не теряется в тексте. #}
-{% set no_photos = orders | rejectattr('status', 'in', ['done','cancelled']) | selectattr('id', 'in', photos_need) | list %}
+{% set no_photos = orders | selectattr('status', 'in', active_statuses) | selectattr('id', 'in', photos_need) | list %}
 {% if no_photos %}
 <div class="need-photos">
   <div>
@@ -87,19 +87,7 @@
 
   {{ order_progress(o.status, stages, stage_names) }}
 
-  <div class="order-next">
-    {% if o.status == 'new' %}
-      Жду ваши фотографии и рассказ о ребёнке — можно добавить на странице заказа.
-    {% elif o.status == 'in_work' %}
-      Делаю макет. Покажу, когда будет готов, — правки обсудим в мессенджере.
-    {% elif o.status == 'sent' %}
-      Книга в пути. Остальные 50% — при получении.
-    {% elif o.status == 'done' %}
-      Книга у вас. Спасибо! Если что-то нужно — напишите мне.
-    {% elif o.status == 'cancelled' %}
-      Заказ отменён. Если это ошибка — напишите, восстановлю.
-    {% endif %}
-  </div>
+  <div class="order-next">{{ next_step(o.status) }}</div>
 
   {% if o.comment %}<p class="muted" style="margin:12px 0 0">Ваши пожелания: {{ o.comment }}</p>{% endif %}
 
