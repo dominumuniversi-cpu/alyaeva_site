@@ -4,12 +4,14 @@
  *
  * Главный принцип: старый контейнер работает, пока новый не доказал, что жив.
  *
- * Схема (без окна простоя):
+ * Схема (окно простоя — доли секунды, пока имя контейнера свободно):
  *   1. Проверить, что прод отвечает и .env читается — заранее.
- *   2. Поднять кандидата под уникальным именем; проверить его по IP.
- *   3. Переключение: снять сетевой алиас со старого, поднять новый под именем prod.
- *   4. Healthcheck нового. Не прошёл — старый возвращается в сеть.
- *   5. Только после успеха удалить старый.
+ *   2. Поднять кандидата под временным именем; проверить его состояние и страницы по IP.
+ *   3. Переключение: остановить старый, отвести его под `alyaeva-web-old`, занять имя кандидатом,
+ *      подключить к сети прокси (при старте она не возвращается сама) и запустить.
+ *   4. Дождаться, пока сайт оживёт снаружи по https (nginx минуту держит старый IP апстрима),
+ *      и только после этого удалить старый контейнер.
+ *   5. Не прошло — старый возвращается под своим именем и запускается.
  *
  * Запуск: node scripts/deploy-guarded.js <image>
  */
@@ -121,8 +123,20 @@ process.on('SIGTERM', () => { cleanup(); process.exit(143); });
 async function main() {
   const image = process.argv[2];
   if (fs.existsSync(LOCK)) {
-    console.error('Деплой уже идёт (замок ' + LOCK + ').');
-    process.exit(3);
+    /* Замок от прерванного прогона блокирует все следующие деплои навсегда.
+       Держателя проверяем по pid: процесс мёртв — замок висячий, снимаем сами. */
+    let holder = 0;
+    try { holder = Number(fs.readFileSync(LOCK, 'utf8').trim()); } catch (e) { holder = 0; }
+    let alive = false;
+    if (holder > 0) {
+      try { process.kill(holder, 0); alive = true; } catch (e) { alive = false; }
+    }
+    if (alive) {
+      console.error('Деплой уже идёт (pid ' + holder + ', замок ' + LOCK + ').');
+      process.exit(3);
+    }
+    console.log('Снимаю висячий замок от прерванного прогона (pid ' + holder + ').');
+    try { fs.unlinkSync(LOCK); } catch (e) { /* уже нет */ }
   }
   if (!image) {
     console.error('Укажите образ: node scripts/deploy-guarded.js <image>');
@@ -177,19 +191,49 @@ async function main() {
   candidateName = null;
   const started = docker(['start', PROD]);
   if (!started.ok) throw new Error('Новый прод не запустился: ' + started.out.slice(0, 200));
+  /* Контейнер, отведённый в сторону, теряет сеть прокси — при `start` она НЕ возвращается.
+     Без неё nginx отдаёт 502 (connect: Host is unreachable). Подключаем явно и ждём IP. */
+  const attach = docker(['network', 'connect', NET, PROD]);
+  if (!attach.ok && !/already exists|already connected/i.test(attach.out)) {
+    throw new Error('Не удалось подключить прод к сети прокси: ' + attach.out.slice(0, 200));
+  }
+  for (let i = 0; i < 10; i += 1) {
+    const nets = docker(['inspect', PROD, '--format', '{{json .NetworkSettings.Networks}}']);
+    let ip = '';
+    try { ip = (JSON.parse(nets.out || '{}')[NET] || {}).IPAddress || ''; } catch (e) { ip = ''; }
+    if (ip) break;
+    await new Promise((res) => setTimeout(res, 1000));
+  }
   if (!(await waitHealthy(PROD))) {
     throw new Error('Новый прод не отвечает после переключения');
   }
   console.log('5. Живая проверка сайта...');
+  /* 301 от прокси — норма: он всегда уводит http на https. Живой ответ — это 200 либо 301,
+     а не только 200. Проверка «=== 200» уже роняла деплой на здоровом сайте (24.11). */
+  const okLive = (code) => code === '200' || code === '301' || code === '302' || code === '303';
   let live = '';
   for (let i = 0; i < 6; i += 1) {
     live = docker(['run', '--rm', '--network', NET, 'curlimages/curl:latest', '-s', '--max-time', '10',
       '-o', '/dev/null', '-w', '%{http_code}', '-H', 'Host: alyaeva.pro', 'http://proxy/login'], 40000).out;
-    if (live === '200') break;
+    if (okLive(live)) break;
     await new Promise((res) => setTimeout(res, 3000));
   }
-  if (live !== '200') throw new Error('Приложение не отвечает через прокси после деплоя');
-  console.log('   через прокси /login -> 200');
+  if (!okLive(live)) throw new Error('Приложение не отвечает через прокси после деплоя (код ' + (live || 'нет ответа') + ')');
+  /* Настоящая проверка работы — снаружи по https. Но сразу после переключения контейнер может
+     ещё не получить IP в сети приложения: docker подключает его с задержкой в секунды.
+     Поэтому ждём до 30 секунд, а не падаем с первого 502. */
+  const checkExternal = () => docker(['run', '--rm', 'curlimages/curl:latest', '-s', '--max-time', '15', '-o', '/dev/null',
+    '-w', '%{http_code}', '-H', 'X-DSH-Check: 1', 'https://alyaeva.pro/login'], 60000).out;
+  /* nginx кэширует IP апстрима (по умолчанию 30 с, но рвётся не строго по часам).
+     Ждём до 90 секунд: переключение меняет IP контейнера, и старый IP мёртв. */
+  let external = '';
+  for (let i = 0; i < 30; i += 1) {
+    external = checkExternal();
+    if (external === '200') break;
+    await new Promise((res) => setTimeout(res, 3000));
+  }
+  if (external !== '200') throw new Error('Снаружи по https /login отвечает ' + (external || 'нет ответа'));
+  console.log('   через прокси ' + live + ', снаружи по https 200');
 
   console.log('5а. Новый жив — убираю старый контейнер.');
   docker(['rm', '-f', PROD_NEW_NAME]);
@@ -219,5 +263,5 @@ main().catch((e) => {
   const code = docker(['run', '--rm', '--network', NET, 'curlimages/curl:latest', '-s', '--max-time', '10',
     '-o', '/dev/null', '-w', '%{http_code}', '-H', 'Host: alyaeva.pro', 'http://proxy/login'], 40000).out;
   console.error('   проверка после восстановления: /login -> ' + (code || 'нет ответа'));
-  process.exit(code === '200' ? 0 : 1);
+  process.exit(code === '200' || code === '301' ? 0 : 1);
 });
