@@ -194,6 +194,10 @@ def hooks_save(request: Request, telegram_token: str = Form(""), telegram_proxy:
     db.set_setting("telegram.chat", telegram_chat.strip(), user["id"])
     if vk_token.strip():
         db.set_setting("vk.token", secrets_helper.encrypt(vk_token.strip()), user["id"])
+    # Ответ без перезагрузки: форма шлёт Accept: application/json и показывает плашку на месте (#217).
+    wants_json = "application/json" in (request.headers.get("accept") or "")
+    if wants_json:
+        return JSONResponse({"ok": True, "saved": "подключение мессенджеров"})
     return RedirectResponse("/admin/hooks?saved=1", status_code=303)
 
 
