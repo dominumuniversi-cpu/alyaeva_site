@@ -589,3 +589,20 @@ a.list-card:active{transform:translateY(1px)}
 }
 .steps li b{display:block;margin-bottom:4px}
 .steps li span{display:block;font-weight:400;color:var(--c-body);font-size:15px;line-height:1.5}
+
+/* ---------- ФОН КАБИНЕТА: тёплая основа и мягкие пятна, как на главной ---------- */
+body{
+  background:
+    radial-gradient(1100px 600px at 12% -8%, #FFF6E4 0%, rgba(255,246,228,0) 60%),
+    radial-gradient(900px 520px at 92% 4%, #EFEAFE 0%, rgba(239,234,254,0) 62%),
+    #FFFDF9;
+  background-attachment:fixed;
+}
+/* Статусы заказа — цвета сайта. Классы: pill-<status> из order_status.py. */
+.pill{background:var(--c-lilac);color:var(--c-strong);border:1px solid rgba(75,70,144,.18)}
+.pill-new{background:var(--c-cream);color:#7A5A00}
+.pill-in_work,.pill-layout{background:var(--c-peach);color:#8A4A22}
+.pill-paid{background:var(--c-lilac);color:var(--c-strong)}
+.pill-printing,.pill-shipped{background:#E7EEFF;color:#2B4A8A}
+.pill-done{background:var(--c-mint);color:#1F6B5B}
+.pill-cancelled{background:#F2F2F5;color:#6B6B7B}
