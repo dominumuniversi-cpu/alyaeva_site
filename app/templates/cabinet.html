@@ -7,8 +7,11 @@
    2) «следующий шаг» — человек понимает, что делать ему, а не только где он;
    3) последний заказ выделен, остальные — списком;
    4) в карточке заказа — статус, дата, сумма, фото. #}
-{% set active = orders | selectattr('status', 'in', ['new','in_work','sent']) | list %}
-{% set done = orders | rejectattr('status', 'in', ['new','in_work','sent']) | list %}
+{# Активные и завершённые — по тому же словарю, что и всё остальное. #{''}
+   Раньше здесь был список из трёх статусов: заказ на этапе «Макет» или «В печати»
+   уезжал в «завершённые», и покупатель не видел, что работа над его книгой идёт. #}
+{% set active = orders | selectattr('status', 'in', active_statuses) | list %}
+{% set done = orders | rejectattr('status', 'in', active_statuses) | list %}
 
 <div class="cab-head">
   <div>
