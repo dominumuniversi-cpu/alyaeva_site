@@ -37,6 +37,7 @@
     <select name="product_id" id="productSelect" autocomplete="off">
       <option value="">— выберите —</option>
     </select>
+    <p class="hint" id="productHint" style="display:none;margin:6px 0 0">Цена по запросу — назову после того, как посмотрю фотографии.</p>
 
     <label>Расскажите о ребёнке</label>
     <textarea name="comment" rows="4" placeholder="Имя ребёнка, сколько лет, что любит">{{ request.query_params.get('comment', '') }}</textarea>
@@ -68,9 +69,22 @@ fetch('/api/products').then(r=>r.json()).then(list=>{
   list.forEach(p=>{
     const o = document.createElement('option');
     o.value = p.id;
-    o.textContent = p.title + (p.price_rub ? ' — от ' + p.price_rub + ' ₽' : '');
+    /* Цена 0 = «по запросу» теми же словами, что в таблице на /ceny.
+       Услуга (видео, коллажи, реставрация) цену по запросу заказывать не мешает —
+       человек выбирает её и пишет пожелания, а не идёт в мессенджер. */
+    o.textContent = p.title + (p.price_rub ? ' — от ' + Math.round(p.price_rub) + ' ₽' : ' — по запросу');
+    if (!p.price_rub) o.dataset.free = '1';
     sel.appendChild(o);
   });
+  /* Подсказка про цену «по запросу»: человек не должен думать, что цену скрыли. */
+  var selHint = document.getElementById('productHint');
+  var syncHint = function(){
+    var chosen = sel.options[sel.selectedIndex];
+    var free = chosen && chosen.dataset && chosen.dataset.free === '1';
+    if (selHint) selHint.style.display = free ? 'block' : 'none';
+  };
+  sel.addEventListener('change', syncHint);
+  syncHint();
 });
 
 /** Показать блок загрузки фото после того, как заказ создан. */
