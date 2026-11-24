@@ -902,7 +902,9 @@ body{
   .foot-col p a{display:flex;align-items:center;min-height:44px}
   .foot-in{gap:14px}
   .foot-h{margin-bottom:4px}
-  .nav-login{min-height:44px;padding:10px 16px}
+  /* Все пункты шапки — 44 px и одной высоты (25.11.2026): «Войти» не должно оказаться
+     единственной кнопкой другой высоты. */
+  .header nav > a, .nav > a, .nav > .nav-a, .nav > .nav-login{min-height:44px}
   .soc{width:44px;height:44px}
   .foot-soc{gap:12px}
 }
