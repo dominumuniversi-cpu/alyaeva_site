@@ -29,16 +29,13 @@
 
 ## Память
 
-Контекст и уроки — в kaeru (инициатива `npc`). Перед крупной задачей искать там:
-`mcp__kaeru__search(text=..., initiatives=['npc','sc','dsh'])` — поле ответа `data.hits`.
-
-Похожие задачи уже решались в проекте NPC (`E:\!Develop\Vernadsky\NPC`):
-шлюз сообщений `app/telegram_hub/`, прокси Telegram через админку `app/telegram_gateway.py`.
+Контекст и уроки — в kaeru (инициатива `alyaeva`). Перед крупной задачей искать там:
+`mcp__kaeru__search(text=..., initiatives=['alyaeva'])` — поле ответа `data.hits`.
 
 ## Ближайшая цель
 
 Система заказов + личный кабинет + единый инбокс (VK+TG) + контент-завод.
-Решения: оплата без онлайн-кассы; статус физлицо + политика ПДн обязательна; настройки интеграций — в админке.
+Решения: онлайн-оплата — по выбору владельца, три блока в админке (#122); статус физлицо + политика ПДн обязательна; настройки интеграций — в админке.
 
 ## СПРАШИВАТЬ KAERU ДО РАБОТЫ (23.11.2026)
 
@@ -151,7 +148,7 @@
 |---|---|
 | Главная (прод) | `E:\DockerData\alyaeva\html\index.html` |
 | Исходник (источник правды) | `build/dist/index.html` в репозитории — с 24.11.2026 в git |
-| Ещё статические страницы | `404.html`, `maintenance.html`, `fotokniga-ekaterinburg/index.html` — тот же принцип |
+| Ещё статические страницы | `404.html`, `maintenance.html` — тот же принцип (лендинг уже в приложении) |
 | Шапка на всех четырёх | правила для узкого экрана — в одном файле `assets/header.css`, подключён у каждой |
 | Стили | вёрстка **инлайном** (207 `style=`, 3 `class=` у главной); `assets/style.css` = только `@font-face` |
 
@@ -175,7 +172,7 @@
 
 **Слил PR — разложи статику:** `node scripts\deploy-site.js --apply`. Приложение обновляется сборкой образа, а главная — копированием, и о ней легко забыть (24.11.2026: счётчик не доехал до прода).
 
-**Ссылки мессенджеров:** настройки в `/admin/settings` переписывают их в главной (`app/sync_links.py`).
+**Ссылки мессенджеров:** главная и лендинг — шаблоны приложения (`app/pages/web/`), берут адреса из настроек `/admin/settings`.
 Работает, только если контейнер запущен с `-v E:/DockerData/alyaeva/html:/srv/site` и `SITE_INDEX=/srv/site/index.html` —
 не забыть при ручном деплое.
 
@@ -448,9 +445,9 @@ docker run --rm --network npc-proxy-net -v E:/!Develop/sites/alyaeva:/w:ro \
 
 - Новая страница статики подключает `style.css`, `header.css` и `404.css` — и берёт общие
   классы шапки и подвала, а не копию разметки со стилями.
-- Никаких `style="…"` и `<style>` в `build/dist`. Проверка одной командой (ждём `0 0` четыре раза):
+- Никаких `style="…"` и `<style>` в `build/dist`. Проверка одной командой (ждём `0 0` дважды):
 
-      node -e "const fs=require('fs');for(const f of ['index.html','404.html','maintenance.html','fotokniga-ekaterinburg/index.html']){const t=fs.readFileSync('build/dist/'+f,'utf8');console.log(f,(t.match(/ style=\"/g)||[]).length,(t.match(/<style/g)||[]).length)}"
+      node -e "const fs=require('fs');for(const f of ['404.html','maintenance.html']){const t=fs.readFileSync('build/dist/'+f,'utf8');console.log(f,(t.match(/ style=\"/g)||[]).length,(t.match(/<style/g)||[]).length)}"
 - Меняешь общий блок (шапку, подвал) — он один на все страницы, правка видна везде.
 - После правки статики: `node scripts\deploy-site.js` (сверка) → `--apply` → `check-live.js`.
 - **Сверка «ничего не потерялось»:** снять страницу с прода до правки и после, срезать теги

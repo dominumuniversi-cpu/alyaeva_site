@@ -77,7 +77,7 @@
 | 2 | **`.credentials.yaml`** | `C:\Users\dima\AppData\Local\DeepSeekHarness\dsh-home\.credentials.yaml` |
 | 3 | **Переменные окружения** процесса DSH | `[Environment]::GetEnvironmentVariables()` |
 | 4 | **`.env` проекта** | `E:\DockerData\<проект>\.env` |
-| 5 | **`secrets\` проекта** | `E:\!Develop\Vernadsky\NPC\secrets\*` (там же github.md) |
+| 5 | **файлы в `E:\DockerData\alyaeva\`** | `.gh_token`, `.env` (креды БД) |
 | 6 | **Настройки приложения в БД** | таблица `app_settings` (шифртекст `enc:...`), ключ шифрования — `SECRET_KEY` из `.env` |
 
 **Чего НЕ делать:**
