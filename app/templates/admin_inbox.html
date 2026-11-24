@@ -22,6 +22,7 @@
   </div>
 
   <div class="chat">
+    <a class="back-to-threads" href="#threads" id="backThreads">← Все диалоги</a>
     <div class="msgs" id="msgs"><div class="empty">Выберите диалог слева</div></div>
     <form class="reply" id="replyForm" style="display:none">
       <textarea id="replyText" placeholder="Ответить клиенту..."></textarea>
@@ -39,6 +40,8 @@ function esc(s){ const d=document.createElement('div'); d.textContent=s||''; ret
 
 async function openThread(id, el){
   current = id;
+  /* На телефоне письмо и список рядом не влезают: показываем переписку вместо списка. */
+  document.querySelector('.inbox').classList.add('reading');
   document.querySelectorAll('.thread').forEach(t=>t.classList.remove('active'));
   el && el.classList.add('active');
   const r = await fetch('/api/inbox/thread/'+id);
@@ -53,6 +56,12 @@ async function openThread(id, el){
 
 document.querySelectorAll('.thread').forEach(el=>{
   el.addEventListener('click', ()=> openThread(el.dataset.id, el));
+});
+
+/* «Все диалоги» — только на телефоне: возвращает список на место. */
+document.getElementById('backThreads').addEventListener('click', function (e) {
+  e.preventDefault();
+  document.querySelector('.inbox').classList.remove('reading');
 });
 
 form.addEventListener('submit', async (e)=>{
