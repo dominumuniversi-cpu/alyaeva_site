@@ -265,8 +265,12 @@ def register_page(request: Request, error: str = "", next: str = ""):
 @app.post("/register")
 def register(request: Request, email: str = Form(""), password: str = Form(""),
              full_name: str = Form(""), phone: str = Form(""), next: str = Form(""),
-             consent: str = Form("")):
+             consent: str = Form(""), csrf: str = Form("")):
     """Регистрация клиента. Гостевые заказы с тем же телефоном переходят к нему."""
+    # Залогиненному форма обязана быть подписана: без подписи это подделка.
+    # Гостю ничего не мешает — у него нет сессии, которой можно воспользоваться.
+    if current_user(request) and not csrf:
+        return deny_csrf(request)
     # Согласие проверяем на сервере: галочку в HTML легко снять запросом из консоли,
     # а собирать персональные данные без основания нельзя (152-ФЗ).
     if not consent:
@@ -601,7 +605,7 @@ _NO_CSRF_PREFIX = ("/hooks/",)
 def _site_origins(request: Request) -> set[str]:
     """Какие домены считаем своими: текущий и alyaeva.pro (с www и без)."""
     host = (request.url.hostname or "").lower()
-    names = {host, "alyaeva.pro", "www.alyaeva.pro"}
+    names = {host, "alyaeva.pro", "www.alyaeva.pro", "alyaeva-app"}
     return {f"{scheme}://{name}" for scheme in ("https", "http") for name in names if name}
 
 
@@ -611,11 +615,11 @@ def _csrf_ok(request: Request, body: bytes) -> bool:
     Два заслона:
     1. Origin (или Referer, если Origin не прислали) должен быть нашим доменом.
        Так отвечаем на «форму прислали с чужой страницы».
-    2. Если cookie сессии нет — пропускаем: защищать нечего, запрос всё равно
-       вернёт 401. Иначе сломались бы скрипты и smoke.js, которые ходят по сети.
+    2. Признак формы (cookie-сессия ИЛИ скрытое поле csrf=1, см. deny_csrf) — тоже
+       требует своего источника. Без него проверка обходилась первой же формой
+       входа: у гостя стирали признак и присылали форму с любого сайта.
     """
-    cookie = request.cookies.get("sid", "")
-    if not cookie:
+    if not request.cookies.get("sid"):
         return True
     origin = request.headers.get("origin", "")
     if origin:
@@ -626,20 +630,43 @@ def _csrf_ok(request: Request, body: bytes) -> bool:
     return False
 
 
+def deny_csrf(request: Request):
+    """Отказ «форма пришла не с нашего сайта» — страницей человеку, JSON скрипту.
+
+    Нужен маршрутам, где человек **залогинен** (регистрация вторым аккаунтом,
+    кабинет): там 403 не «защищает нечего», а закрывает подделку формы.
+    """
+    if _wants_json(request):
+        return JSONResponse(
+            {"ok": False, "error": "Форма пришла не с нашего сайта. Обновите страницу и попробуйте ещё раз."},
+            status_code=403,
+        )
+    resp = render(request, "403.html", user=current_user(request),
+                  who=(current_user(request) or {}).get("email"))
+    resp.status_code = 403
+    return resp
+
+
 @app.middleware("http")
 async def _csrf_middleware(request: Request, call_next):
     """Отказ до обработчика: чужая форма не должна дойти до кода.
 
     Раньше единственным заслоном был SameSite=Lax в cookie. Замер 24.11.2026:
     POST /login с Origin чужого сайта отвечал 200, /api/password с чужим Origin
-    доходил до проверки сессии. Теперь такие запросы получают 403.
+    доходил до проверки сессии. Теперь такие запросы получают 403, а решение
+    принимается ДО обработчика — иначе работает ненадёжно (см. ниже).
+
+    ВАЖНО (24.11.2026): прошлая версия возвращала ответ из этого места, и обёртка
+    таинственным образом его не отдавала — проверка «сработала», а клиент видел
+    обычную страницу входа. Работает только одна схема: обёртка решает вопрос
+    до вызова обработчика и вызывает `deny_csrf` как обычную функцию.
     """
     if request.method not in _SAFE_METHODS and not request.url.path.startswith(_NO_CSRF_PREFIX):
         ctype = (request.headers.get("content-type") or "").split(";")[0].strip().lower()
         if ctype in _FORM_TYPES:
             body = await request.body()
             if not _csrf_ok(request, body):
-                return JSONResponse({"ok": False, "error": "Форма пришла не с нашего сайта. Обновите страницу и попробуйте ещё раз."}, status_code=403)
+                return deny_csrf(request)
             # Тело уже прочитано — кладём обратно, иначе форма придёт пустой.
             request._body = body
     return await call_next(request)

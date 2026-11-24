@@ -41,6 +41,7 @@
   <div class="card">
     <h2 style="margin-top:0">Подключение</h2>
     <form method="post" action="{{ admin_url }}/hooks">
+    {% include "_csrf_field.html" %}
       <h3 style="margin:0 0 8px">Telegram</h3>
       <label>Токен бота</label>
       <input type="text" name="telegram_token" placeholder="{{ tg_token_mask }}" autocomplete="off">

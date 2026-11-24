@@ -78,6 +78,18 @@ def admin_counts() -> dict:
         return {"new_orders": 0}
 
 
+def csrf_guard(request: Request) -> str:
+    """Нужно ли этому браузеру подтверждать источник формы (см. main.deny_csrf).
+
+    Пусто — ничего не добавляется в форму, всё как раньше. Возвращается "да",
+    если у человека уже есть cookie-сессия, но cookie-признака проверки ещё нет.
+    Такая страница обязана подписать формы, иначе отправка получит 403.
+    """
+    if not request.cookies.get("sid"):
+        return ""
+    return "" if request.cookies.get("csrf_ok") == "1" else "да"
+
+
 def render(request: Request, name: str, **kw) -> HTMLResponse:
     """Рендер шаблона с общим контекстом.
 
@@ -122,6 +134,7 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
     return templates.TemplateResponse(request, name,
                                       {"user": user, "admin_url": ADMIN, "links": links,
                                        "counts": counts, "unread": unread,
+                                       "csrf_guard": csrf_guard(request),
                                        "year": datetime.date.today().year, **kw})
 
 

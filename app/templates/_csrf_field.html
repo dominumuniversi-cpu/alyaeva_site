@@ -1,0 +1,2 @@
+{# Скрытое поле для форм: нужно, когда браузеру с сессией ещё не выдали cookie-признак (см. web_common.csrf_guard). #}
+{% if csrf_guard %}<input type="hidden" name="csrf" value="1">{% endif %}

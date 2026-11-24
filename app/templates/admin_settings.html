@@ -16,6 +16,7 @@
   <div class="card">
     <h2 style="margin-top:0">Контакты</h2>
     <form method="post" action="{{ admin_url }}/settings">
+    {% include "_csrf_field.html" %}
       <label for="f_site_phone">Телефон</label>
       <input id="f_site_phone" type="text" name="site_phone" value="{{ settings.get('site.phone','') }}"
              placeholder="+7 900 000-00-00">
