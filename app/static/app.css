@@ -564,23 +564,30 @@ a.list-card:active{transform:translateY(1px)}
 }
 
 @media (max-width:700px){
-  /* Админские таблицы с data-label разворачиваются в карточки: на телефоне
-     таблица в 7 колонок не читается вообще. Где подписей нет — остаётся прокрутка. */
-  .card > .tbl-cards[data-labels="1"]{display:block;overflow:visible;white-space:normal;margin:0}
-  .card > .tbl-cards[data-labels="1"] tr:first-child{display:none}
-  .card > .tbl-cards[data-labels="1"] tr{
+  /* Таблицы с data-label разворачиваются в карточки: на телефоне таблица в 7 колонок
+     не читается вообще. Где подписей нет — остаётся прокрутка (правило в начале файла). */
+  .tbl-cards[data-labels="1"]{display:block;overflow:visible;white-space:normal;margin:0}
+  .tbl-cards[data-labels="1"] tr:first-child{display:none}
+  .tbl-cards[data-labels="1"] tr{
     display:block;border:1px solid var(--c-lilac);border-radius:var(--radius-sm);
     padding:12px 14px;margin-bottom:12px;background:#fff;
   }
-  .card > .tbl-cards[data-labels="1"] td{
+  .tbl-cards[data-labels="1"] td{
     display:flex;justify-content:space-between;gap:14px;
     border:0;padding:6px 0;font-size:14px;text-align:right;
   }
-  .card > .tbl-cards[data-labels="1"] td::before{
+  .tbl-cards[data-labels="1"] td::before{
     content:attr(data-label);
     font-weight:700;color:var(--c-strong);text-align:left;flex:0 0 auto;
   }
-  .card > .tbl-cards[data-labels="1"] td:not([data-label])::before{content:""}
+  .tbl-cards[data-labels="1"] td:not([data-label])::before{content:""}
+  /* Таблица цен — главная таблица сайта: прокручивать её на телефоне нельзя. */
+  .price-table[data-labels="1"]{border-collapse:separate;border-spacing:0}
+  .price-table[data-labels="1"] thead{display:none}
+  .price-table[data-labels="1"], .price-table[data-labels="1"] tbody{display:block;width:100%}
+  .price-table[data-labels="1"] tr{display:block;border-bottom:0}
+  .price-table[data-labels="1"] td{border-bottom:0;padding:4px 0}
+  .price-table[data-labels="1"] td[colspan]{text-align:center}
 }
 
 /* Кнопка удаления фото: рядом со «Скачать», но менее заметная — удаление не главное действие. */

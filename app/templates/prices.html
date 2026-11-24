@@ -32,16 +32,16 @@
 </div>
 
 <div class="card">
-  <table class="price-table">
+  <table class="price-table tbl-cards" data-labels="1">
     <thead>
       <tr><th>Что делаем</th><th>Что входит</th><th class="num">Цена</th></tr>
     </thead>
     <tbody>
     {% for p in products %}
       <tr>
-        <td><strong>{{ p.title }}</strong></td>
-        <td class="muted">{{ p.description or '—' }}</td>
-        <td class="num">
+        <td data-label="Что делаем"><strong>{{ p.title }}</strong></td>
+        <td data-label="Что входит" class="muted">{{ p.description or '—' }}</td>
+        <td data-label="Цена" class="num">
           {% if p.price_rub and p.price_rub > 0 %}
             {% if p.old_price %}<s class="old">{{ p.old_price|round|int }}&nbsp;₽</s> {% endif %}
             <strong>от {{ p.price_rub|round|int }}&nbsp;₽</strong>

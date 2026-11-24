@@ -7,22 +7,22 @@
 Цена 0 значит «по запросу»: так и увидит клиент.</p>
 {% if products %}
 <div class="card">
-  <table>
+  <table class="tbl-cards" data-labels="1">
     <tr><th>Название</th><th>Цена, ₽</th><th>Старая, ₽</th><th>Показывать</th><th></th></tr>
     {% for p in products %}
     <tr data-row="{{ p.id }}">
-      <td><strong>{{ p.title }}</strong><br><span class="muted">{{ p.slug }}</span></td>
-      <td>
+      <td data-label="Название"><strong>{{ p.title }}</strong><br><span class="muted">{{ p.slug }}</span></td>
+      <td data-label="Цена, ₽">
         <input class="price-in" type="number" min="0" max="10000000" step="1"
                name="price_rub" value="{% if p.price_rub and p.price_rub > 0 %}{{ '%.0f'|format(p.price_rub) }}{% else %}0{% endif %}"
                aria-label="Цена товара {{ p.title }}">
       </td>
-      <td>
+      <td data-label="Старая, ₽">
         <input class="price-in" type="number" min="0" step="1" name="old_price"
                value="{% if p.old_price %}{{ '%.0f'|format(p.old_price) }}{% endif %}"
                placeholder="—" aria-label="Старая цена {{ p.title }}">
       </td>
-      <td>
+      <td data-label="Показывать">
         <input type="checkbox" name="is_active" {% if p.is_active %}checked{% endif %}
                aria-label="Показывать товар {{ p.title }}">
       </td>
