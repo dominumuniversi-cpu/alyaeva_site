@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
+{# По умолчанию — «не индексировать»: кабинет и админка в поиске не нужны.
+   Публичная страница снимает запрет блоком robots и добавляет описание и карточку для соцсетей. #}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block meta %}{% endblock %}
 <meta name="theme-color" content="#4B4690">
 <title>{% block title %}Алёна Аляева{% endblock %}</title>
 <link rel="stylesheet" href="/static/app.css">
