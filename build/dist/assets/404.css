@@ -71,3 +71,30 @@
 .ftr-soc-a:hover,.ftr-soc-a:focus-visible{transform:translateY(-2px)}
 @media (prefers-reduced-motion:reduce){.ftr-soc-a{transition:none}}
 .ftr-bottom-row{padding-top:24px;border-top:1px solid #7570B8;font-size:15px;color:#ECE8FA;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+
+/* Лендинг «Фотокнига в Екатеринбурге» — задача #190, шаг 3.
+   Свои блоки страницы; шапка, значки и подвал — общие правила выше. */
+.lp-body{background:#FFFFFF;color:#2A2650;font-family:'Nunito',system-ui,sans-serif;font-size:18px;line-height:1.6}
+.lp-hero{background:#EAF7F4;position:relative;overflow:hidden;padding:24px 0 64px}
+.lp-wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.lp-crumbs{font-size:15px;color:#4A4678;margin-bottom:32px}
+.lp-link{color:#4B4690}
+.lp-h1{font-family:'Philosopher',Georgia,serif;font-size:clamp(34px,6vw,56px);line-height:1.1;font-weight:700;margin:0 0 20px}
+.lp-lead{font-size:20px;color:#4A4678;max-width:640px;margin:0 0 28px}
+.lp-actions{display:flex;flex-wrap:wrap;gap:12px}
+.lp-btn-solid,.lp-btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 30px;border-radius:999px;font-weight:800;font-size:17px;text-decoration:none}
+.lp-btn-solid{background:#4B4690;color:#fff}
+.lp-btn-outline{border:2px solid #4B4690;color:#4B4690}
+.lp-sec{padding:56px 0 80px}
+.lp-sec-lilac{background:#F1ECFF;padding:56px 0 80px}
+.lp-h2{font-family:'Philosopher',Georgia,serif;font-size:clamp(28px,4.5vw,42px);font-weight:700;margin:0 0 24px}
+.lp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.lp-card-cream,.lp-card-lilac,.lp-card-peach,.lp-card-mint{border-radius:28px;padding:24px}
+.lp-card-cream{background:#FFF1C7}
+.lp-card-lilac{background:#E6DFFA}
+.lp-card-peach{background:#FFEBE0}
+.lp-card-mint{background:#C8EEE9}
+.lp-h3{font-family:'Philosopher',Georgia,serif;font-size:24px;margin:0 0 8px}
+.lp-p{margin:0;color:#4A4678}
+.lp-list{margin:0;padding-left:22px;color:#4A4678;font-size:18px}
+.lp-note{margin:24px 0 0}
