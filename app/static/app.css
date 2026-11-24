@@ -330,12 +330,18 @@ body{position:relative}
 }
 .topbar.scrolled{box-shadow:0 6px 22px rgba(42,38,80,.10)}
 .topbar-in{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.brand{font-family:'Philosopher',serif;font-size:22px;font-weight:700;color:var(--c-strong);text-decoration:none;white-space:nowrap}
+.brand{font-family:'Philosopher',serif;font-size:22px;font-weight:700;color:var(--c-strong);text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;min-height:44px}
 .brand:hover{color:var(--c-accent)}
 .nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto}
 .nav a{
   color:var(--c-body);text-decoration:none;font-weight:700;font-size:15px;
   padding:9px 12px;border-radius:999px;transition:background .15s,color .15s;white-space:nowrap;
+}
+/* 901–1400: восемь пунктов (администратор) должны стоять в ОДНУ строку (#254).
+   Горизонтальные отступы чуть плотнее, высота — та же 44 px, палец не страдает. */
+@media (min-width:901px){
+  .nav{gap:4px;flex-wrap:nowrap}
+  .nav a{padding:9px 9px;font-size:14.5px}
 }
 .nav a:hover,.nav a.on{background:var(--c-lilac);color:var(--c-strong)}
 .nav a.nav-out{border:1.5px solid var(--c-lilac)}
@@ -812,8 +818,18 @@ body{
 /* Правило 2 доводим: пока пункты «почти» влезают, последний уезжает один — это и выглядит рвано.
    На узком планшете делим ровно на две строки по четыре, а не «сколько получится». */
 @media (max-width:900px) and (min-width:601px){
+  /* 900 включительно: сетку «4 + 4» держим и на самом краю, иначе восьмой пункт уезжает третьей строкой (#254). */
   .admin-subnav .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
   .admin-subnav a{justify-content:center;text-align:center}
+  /* Шапка сайта на планшете: два ровных ряда по четыре, а не «сколько влезло» (#221).
+     Бургер и выезжающая панель остаются для телефона (600 и уже). */
+  .topbar .burger{display:none}
+  .nav{display:flex;flex-direction:row;flex-wrap:wrap;position:static;background:none;box-shadow:none;padding:0;width:auto}
+  .nav::before{content:none}
+  .nav{gap:6px;justify-content:flex-end;flex:1 1 auto;margin-left:auto}
+  .nav > a{flex:0 0 calc(25% - 6px);display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 10px;text-align:center;white-space:normal}
+  /* Блок значков — тоже в сетку, иначе он один уезжает на третью строку (#254, замер на ровно 900). */
+  .nav > .nav-icons{flex:0 0 calc(25% - 6px);justify-content:center;min-height:44px}
 }
 
 /* ---------- ЦЕЛИ ПАЛЬЦА (24.11.2026, задача #223) ---------- */
