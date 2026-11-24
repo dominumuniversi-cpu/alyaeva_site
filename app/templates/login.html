@@ -4,7 +4,7 @@
 <div class="auth-box card">
   {% if reason == 'order' %}
     <h1>Войдите, чтобы заказать</h1>
-    <p class="muted">Заказ сохранится в вашем кабинете вместе с фотографиями.</p>
+    <p class="muted">Аккаунт нужен, чтобы заказ и ваши фотографии хранились у вас в кабинете — создать его можно за минуту, и вернуться к заказу вы сможете с любого устройства.</p>
   {% else %}
     <h1>Вход</h1>
     <p class="muted">Личный кабинет или админка</p>
@@ -13,7 +13,7 @@
     <div class="errors">{{ error }}</div>
     {% if hint %}<p class="muted" style="margin-top:-8px">{{ hint }}</p>{% endif %}
     <p class="muted" style="font-size:14px">
-      Нет аккаунта? <a href="/register">Зарегистрируйтесь</a> —
+      Нет аккаунта? <a href="/register{% if next and next != '/' %}?next={{ next|urlencode }}{% endif %}">Зарегистрируйтесь</a> —
       а если регистрировались, но не пускает, напишите нам: восстановим доступ.
     </p>
   {% endif %}
