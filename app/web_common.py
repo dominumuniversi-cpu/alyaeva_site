@@ -12,7 +12,9 @@ import db
 from config import config
 
 templates = Jinja2Templates(directory="templates")
-ADMIN = "/" + config.ADMIN_SLUG if config.ADMIN_SLUG else "/admin"
+# Админка живёт по /admin — нормальный, читаемый адрес.
+# Раньше был секретный слаг /6b03c5256535e9ab5a: владелец набирал его руками и путался.
+ADMIN = "/admin"
 
 
 def current_user(request: Request) -> dict | None:
@@ -36,7 +38,88 @@ def require_admin(request: Request) -> dict | None:
     return user
 
 
+def site_links() -> dict:
+    """Публичные контакты и ссылки на мессенджеры — из настроек сайта.
+
+    Одна правда: ссылки правятся в /admin/settings, а не хардкодятся в шаблонах.
+    Раньше на главной они были вписаны руками, и изменить их можно было только в коде.
+    """
+    tg = str(db.get_setting("site.telegram", "") or "").strip()
+    vk = str(db.get_setting("site.vk", "") or "").strip()
+    wa = str(db.get_setting("site.whatsapp", "") or "").strip()
+    inst = str(db.get_setting("site.instagram", "") or "").strip()
+    return {
+        "tg_url": tg, "vk_url": vk, "wa_url": wa, "inst_url": inst,
+        "site_phone": str(db.get_setting("site.phone", "") or ""),
+        "site_email": str(db.get_setting("site.email", "") or ""),
+        "site_address": str(db.get_setting("site.address", "") or ""),
+        "site_hours": str(db.get_setting("site.work_hours", "") or ""),
+        "site_footer": str(db.get_setting("site.footer", "") or ""),
+    }
+
+
+def admin_counts() -> dict:
+    """Сколько ждёт внимания администратора.
+
+    Считается один раз на страницу. Нужно, чтобы Алена, войдя в админку,
+    сразу видела, есть ли новые заказы — без обхода всех разделов.
+    """
+    try:
+        with db.pool.connection() as conn:
+            row = conn.execute(
+                "SELECT count(*) AS new_orders FROM orders WHERE status = 'new'"
+            ).fetchone()
+        return {"new_orders": row["new_orders"]}
+    except Exception:
+        # Счётчик — украшение, а не смысл страницы: если запрос не удался, страница всё равно рисуется.
+        return {"new_orders": 0}
+
+
 def render(request: Request, name: str, **kw) -> HTMLResponse:
-    """Рендер шаблона с общим контекстом."""
+    """Рендер шаблона с общим контекстом.
+
+    Контакты и ссылки на мессенджеры идут в каждый шаблон: шапка и подвал
+    есть на всех страницах, дублировать их в каждом маршруте — лишнее.
+    """
     user = kw.pop("user", None) or current_user(request)
-    return templates.TemplateResponse(request, name, {"user": user, "admin_url": ADMIN, **kw})
+    links = kw.pop("links", None) or site_links()
+    counts = kw.pop("counts", None)
+    if counts is None:
+        counts = admin_counts() if (user and user.get("role") == "admin") else {}
+    # Просмотр считаем здесь, а не в каждом маршруте: одна точка — один счётчик.
+    # Тяжёлые страницы (админка, кабинет) в общую статистику не идут: там сидят свои.
+    try:
+        import analytics
+        analytics.track("view", request.url.path,
+                        analytics.source_from_referer(request.headers.get("referer", "")))
+    except Exception:
+        pass
+    import datetime
+    return templates.TemplateResponse(request, name,
+                                      {"user": user, "admin_url": ADMIN, "links": links,
+                                       "counts": counts, "year": datetime.date.today().year, **kw})
+
+
+def is_browser(request) -> bool:
+    """Пришёл человек из браузера или скрипт?
+
+    Браузер просит text/html. fetch и curl — */* или application/json.
+    """
+    accept = (request.headers.get("accept") or "").lower()
+    return "text/html" in accept
+
+
+def denied(request, message: str = "Нет доступа", status: int = 403):
+    """Отказ в доступе. Человеку — страница, скрипту — JSON.
+
+    Раньше отказы всегда уходили JSON'ом, и владелец, открывший адрес
+    в браузере, видел {"ok":false,"error":"Нет доступа"}.
+    """
+    from fastapi.responses import JSONResponse
+    if is_browser(request):
+        user = current_user(request)
+        resp = render(request, "403.html", user=user,
+                      who=(user.get("email") if user else None))
+        resp.status_code = status
+        return resp
+    return JSONResponse({"ok": False, "error": message}, status_code=status)

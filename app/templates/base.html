@@ -3,30 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#4B4690">
 <title>{% block title %}Алёна Аляева{% endblock %}</title>
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-{% if user %}
-<header class="topbar">
-  <a class="brand" href="{{ admin_url if user.role == 'admin' else '/cabinet' }}">Алёна Аляева</a>
-  <nav>
-    {% if user.role == 'admin' %}
-      <a href="{{ admin_url }}">Заказы</a>
-      <a href="{{ admin_url }}/inbox">Сообщения</a>
-      <a href="{{ admin_url }}/products">Товары</a>
-      <a href="{{ admin_url }}/settings">Настройки</a>
-    {% else %}
-      <a href="/cabinet">Мои заказы</a>
-      <a href="/cabinet/projects">Мои фото</a>
-    {% endif %}
-    <span class="who">{{ user.full_name or user.email }}</span>
-    <form method="post" action="/logout" class="inline"><button class="link">Выйти</button></form>
-  </nav>
-</header>
+{% include "_header.html" %}
+
+{% if user and user.role == 'admin' %}
+<nav class="admin-subnav" aria-label="Админка">
+  <div class="wrap">
+    <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы{% if counts and counts.new_orders %}<span class="badge">{{ counts.new_orders }}</span>{% endif %}</a>
+    <a href="/admin/clients" {% if request.url.path.startswith('/admin/client') %}class="active"{% endif %}>Клиенты</a>
+    <a href="/admin/photos" {% if request.url.path.startswith('/admin/photos') %}class="active"{% endif %}>Все фото</a>
+    <a href="{{ admin_url }}/inbox" {% if '/inbox' in request.url.path %}class="active"{% endif %}>Инбокс</a>
+    <a href="{{ admin_url }}/products" {% if '/products' in request.url.path %}class="active"{% endif %}>Товары</a>
+    <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Приём сообщений</a>
+    <a href="{{ admin_url }}/stats" {% if '/stats' in request.url.path %}class="active"{% endif %}>Статистика</a>
+    <a href="{{ admin_url }}/settings" {% if '/settings' in request.url.path and '/admin' in request.url.path %}class="active"{% endif %}>Настройки сайта</a>
+  </div>
+</nav>
 {% endif %}
-<main class="{% block main_class %}wrap{% endblock %}">
+
+<main class="wrap {% block main_class %}{% endblock %}">
 {% block content %}{% endblock %}
 </main>
+
+{% include "_footer.html" %}
+
+<script>
+/* Меню на телефоне: шапка остаётся прибитой, список раскрывается по кнопке. */
+(function () {
+  var b = document.querySelector('.burger');
+  var n = document.getElementById('mainnav');
+  if (!b || !n) return;
+  b.addEventListener('click', function () {
+    var open = n.classList.toggle('open');
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+})();
+/* Тень под шапкой появляется только когда страница прокручена — так шапка не «висит в воздухе». */
+(function () {
+  var h = document.getElementById('topbar');
+  if (!h) return;
+  var on = function () { h.classList.toggle('scrolled', window.scrollY > 8); };
+  on(); window.addEventListener('scroll', on, { passive: true });
+})();
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

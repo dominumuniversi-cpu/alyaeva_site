@@ -1,48 +1,84 @@
 {% extends "base.html" %}
-{% block title %}Настройки — админка{% endblock %}
+{% block title %}Настройки сайта — админка{% endblock %}
 {% block main_class %}wide{% endblock %}
 {% block content %}
-<h1>Настройки интеграций</h1>
-{% if request.query_params.get('saved') %}
-<div class="card card-cream" style="padding:16px 24px">Сохранено.</div>
+{# Настройки САЙТА. Мессенджеры — на /admin/hooks, здесь их нет намеренно. #}
+<h1>Настройки сайта</h1>
+<p class="muted" style="margin-top:-4px">
+  Контакты и подвал. Всё, что вы здесь измените, видно покупателям на страницах сайта.
+</p>
+
+{% if saved %}
+<div class="card card-cream" style="padding:14px 22px; margin-bottom:18px">Сохранено.</div>
 {% endif %}
 
 <div class="grid grid-2">
   <div class="card">
-    <h2>Telegram</h2>
+    <h2 style="margin-top:0">Контакты</h2>
     <form method="post" action="{{ admin_url }}/settings">
-      <label>Токен бота</label>
-      <input type="text" name="telegram_token" placeholder="{{ tg_token_mask }}" autocomplete="off">
-      <div class="hint">Сейчас: {{ tg_token_mask }}. Пустое поле — не менять.</div>
-
-      <label>Прокси</label>
-      <input type="text" name="telegram_proxy" value="{{ settings.get('telegram.proxy','') }}"
-             placeholder="http://host.docker.internal:10809">
-      <div class="hint">API Telegram заблокирован провайдером. Прокси обязателен.</div>
-
-      <label>Чат для уведомлений</label>
-      <input type="text" name="telegram_chat" value="{{ settings.get('telegram.chat','') }}" placeholder="@username или ID">
-
-      <h2 style="margin-top:32px">ВКонтакте</h2>
-      <label>Токен сообщества</label>
-      <input type="text" name="vk_token" placeholder="{{ vk_token_mask }}" autocomplete="off">
-      <div class="hint">Сейчас: {{ vk_token_mask }}. Пустое поле — не менять.</div>
-
-      <h2 style="margin-top:32px">Контакты сайта</h2>
       <label>Телефон</label>
-      <input type="text" name="site_phone" value="{{ settings.get('site.phone','') }}">
-      <label>E-mail</label>
-      <input type="text" name="site_email" value="{{ settings.get('site.email','') }}">
+      <input type="text" name="site_phone" value="{{ settings.get('site.phone','') }}"
+             placeholder="+7 900 000-00-00">
 
-      <div style="margin-top:28px"><button class="btn">Сохранить</button></div>
+      <label>E-mail</label>
+      <input type="text" name="site_email" value="{{ settings.get('site.email','') }}"
+             placeholder="alena@alyaeva.pro">
+
+      <label>Адрес</label>
+      <input type="text" name="site_address" value="{{ settings.get('site.address','') }}"
+             placeholder="Екатеринбург">
+      <div class="hint">Город или адрес мастерской — покажем в подвале.</div>
+
+      <label>Часы работы</label>
+      <input type="text" name="site_work_hours" value="{{ settings.get('site.work_hours','') }}"
+             placeholder="пн–пт, 10:00–19:00">
+
+      <h2 style="margin-top:30px">Соцсети</h2>
+      <label>Instagram</label>
+      <input type="text" name="site_instagram" value="{{ settings.get('site.instagram','') }}"
+             placeholder="https://instagram.com/...">
+
+      <label>ВКонтакте</label>
+      <input type="text" name="site_vk" value="{{ settings.get('site.vk','') }}"
+             placeholder="https://vk.com/...">
+
+      <label>Telegram</label>
+      <input type="text" name="site_telegram" value="{{ settings.get('site.telegram','') }}"
+             placeholder="https://t.me/...">
+
+      <label>WhatsApp</label>
+      <input type="text" name="site_whatsapp" value="{{ settings.get('site.whatsapp','') }}"
+             placeholder="https://wa.me/79000000000">
+      <div class="hint">Это ваши публичные ссылки. Подключение бота — на странице «Приём сообщений».</div>
+
+      <h2 style="margin-top:30px">Подвал</h2>
+    <label>Название оператора (кто отвечает за данные)
+      <input name="site_operator_name" value="{{ settings.get('site.operator_name','') }}" placeholder="ИП Аляева Алёна Сергеевна">
+    </label>
+    <label>Реквизиты (ИНН / ОГРНИП)
+      <input name="site_operator_requisites" value="{{ settings.get('site.operator_requisites','') }}" placeholder="ИНН 660000000000, ОГРНИП 000000000000000">
+    </label>
+    <label>Сколько месяцев храним фото после заказа
+      <input name="site_keep_photo_months" value="{{ settings.get('site.keep_photo_months','') }}" placeholder="12">
+    </label>
+
+      <label>Текст в подвале</label>
+      <textarea name="site_footer" rows="4"
+                placeholder="Именные книги ручной работы. Екатеринбург.">{{ settings.get('site.footer','') }}</textarea>
+
+      <div style="margin-top:26px"><button class="btn">Сохранить</button></div>
     </form>
   </div>
 
   <div class="card card-lilac">
-    <h2>Как это работает</h2>
-    <p>Токены хранятся в базе <strong>зашифрованными</strong> и никогда не попадают в файлы конфигурации.</p>
-    <p>Изменения пишутся в журнал аудита — видно, кто и когда менял настройки.</p>
-    <p class="muted" style="margin-top:20px">Проблемы с доступом к API Telegram решаются через прокси: укажите его здесь, и бот пойдёт через него.</p>
+    <h2 style="margin-top:0">Что здесь, а что нет</h2>
+    <p><strong>Здесь</strong> — всё про сам сайт: телефон, почта, адрес, соцсети, текст подвала.</p>
+    <p><strong>Не здесь</strong> — подключение мессенджеров. Оно на отдельной странице
+      <a href="{{ admin_url }}/hooks">Приём сообщений</a>, чтобы одна и та же настройка
+      не лежала в двух местах.</p>
+    <p class="muted" style="margin-top:20px">
+      Все изменения пишутся в журнал аудита — видно, кто и когда их сделал.
+    </p>
   </div>
 </div>
 {% endblock %}

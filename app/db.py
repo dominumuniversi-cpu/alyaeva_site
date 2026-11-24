@@ -101,15 +101,30 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def create_user(email: str, password: str, full_name: str = "", role: str = "customer") -> int:
-    """Создать пользователя, вернуть id."""
+class DuplicateEmail(Exception):
+    """Почта уже занята. Своё исключение — чтобы страница показала текст, а не 500."""
+
+
+def create_user(email: str, password: str, full_name: str = "", role: str = "customer",
+                phone: str = "") -> int:
+    """Создать пользователя, вернуть id.
+
+    Телефон важен не меньше пароля: по нему гостевые заказы (оформленные без аккаунта)
+    привязываются к клиенту — вместе с загруженными фото.
+    """
     with pool.connection() as conn:
-        row = conn.execute(
-            """INSERT INTO users (email, password_hash, full_name, role)
-               VALUES (lower(%s), %s, %s, %s) RETURNING id""",
-            (email, hash_password(password), full_name, role),
-        ).fetchone()
-        conn.commit()
+        try:
+            row = conn.execute(
+                """INSERT INTO users (email, password_hash, full_name, role, phone)
+                   VALUES (lower(btrim(%s)), %s, %s, %s, %s) RETURNING id""",
+                (email, hash_password(password), full_name, role, (phone or "").strip() or None),
+            ).fetchone()
+            conn.commit()
+        except psycopg.errors.UniqueViolation:
+            # Между проверкой find_user_by_email и вставкой мог проскочить второй запрос
+            # (двойной клик по кнопке). На такой случай — честный отказ, а не 500.
+            conn.rollback()
+            raise DuplicateEmail(email) from None
     return row["id"]
 
 
@@ -117,7 +132,7 @@ def find_user_by_email(email: str) -> dict | None:
     """Найти пользователя по email."""
     with pool.connection() as conn:
         return conn.execute(
-            "SELECT * FROM users WHERE lower(email) = lower(%s) AND is_active", (email,)
+            "SELECT * FROM users WHERE lower(btrim(email)) = lower(btrim(%s)) AND is_active", (email,)
         ).fetchone()
 
 
@@ -165,3 +180,36 @@ def drop_session(token: str) -> None:
     with pool.connection() as conn:
         conn.execute("DELETE FROM sessions WHERE token_hash = %s", (_hash_token(token),))
         conn.commit()
+
+
+def change_password(user_id: int, old_password: str, new_password: str) -> tuple[bool, str]:
+    """Сменить пароль со сверкой старого.
+
+    Возвращает (успех, сообщение). Старый пароль обязателен: иначе достаточно
+    увести чужую сессию, чтобы сменить пароль и запереть владельца.
+    """
+    if len(new_password or "") < 8:
+        return False, "Новый пароль — минимум 8 символов"
+    if new_password == old_password:
+        return False, "Новый пароль совпадает со старым"
+    with pool.connection() as conn:
+        row = conn.execute("SELECT password_hash FROM users WHERE id = %s", (user_id,)).fetchone()
+        if not row:
+            return False, "Пользователь не найден"
+        if not verify_password(old_password or "", row["password_hash"]):
+            return False, "Текущий пароль указан неверно"
+        conn.execute("UPDATE users SET password_hash = %s WHERE id = %s",
+                     (hash_password(new_password), user_id))
+        conn.commit()
+    return True, "Пароль изменён"
+
+
+def set_password(user_id: int, new_password: str) -> bool:
+    """Задать пароль без сверки старого — для первичной выдачи и восстановления доступа."""
+    if len(new_password or "") < 8:
+        return False
+    with pool.connection() as conn:
+        conn.execute("UPDATE users SET password_hash = %s WHERE id = %s",
+                     (hash_password(new_password), user_id))
+        conn.commit()
+    return True

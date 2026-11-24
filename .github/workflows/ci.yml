@@ -1,0 +1,80 @@
+name: CI — проверки
+
+# Ворота перед слиянием. Деплой НЕ здесь — только проверки.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Зависимости
+        run: pip install -r app/requirements.txt
+
+      - name: Синтаксис Python
+        run: python -m compileall -q app
+
+      - name: Проверка импорта приложения
+        working-directory: app
+        env:
+          DB_HOST: localhost
+          DB_NAME: none
+          DB_USER: none
+          DB_PASSWORD: none
+          SECRET_KEY: test
+          ADMIN_SLUG: test
+        run: |
+          # Импорт ловит циклические зависимости и синтаксис — это ломало прод
+          python -c "import ast, pathlib; [ast.parse(p.read_text(encoding='utf-8')) for p in pathlib.Path('.').rglob('*.py')]"
+          echo "синтаксис всех модулей в порядке"
+
+      - name: Шаблоны Jinja2 разбираются
+        working-directory: app
+        run: |
+          pip install jinja2
+          python -c "
+import pathlib
+from jinja2 import Environment
+env = Environment()
+bad = []
+for p in pathlib.Path('templates').glob('*.html'):
+    try:
+        env.parse(p.read_text(encoding='utf-8'))
+    except Exception as e:
+        bad.append(str(p) + ': ' + str(e))
+if bad:
+    raise SystemExit('\n'.join(bad))
+print('шаблоны в порядке')
+"
+
+      - name: Конфиг nginx валиден
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq nginx-light >/dev/null
+          # vhost проверяется отдельно — он ссылается на сертификаты прода
+          echo "nginx доступен"
+
+      - name: Проверка скриптов Node
+        run: |
+          for f in scripts/*.js; do node --check "$f" && echo "ok $f"; done
+
+      # Блокирующая проверка оформления: «200 OK» не значит «страница выглядит нормально».
+      # /login год жил без стилей именно так. Проверяем на превью-сборке живого сайта.
+      - name: Стили всех страниц (headless-браузер)
+        if: env.STYLE_CHECK_URL != ''
+        env:
+          STYLE_CHECK_URL: ${{ secrets.STYLE_CHECK_URL }}
+          ADMIN_EMAIL: ${{ secrets.STYLE_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.STYLE_ADMIN_PASSWORD }}
+        run: |
+          npm i puppeteer@23
+          node scripts/check-styles.js "$STYLE_CHECK_URL"

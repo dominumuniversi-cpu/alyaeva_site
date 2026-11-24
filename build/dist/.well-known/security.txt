@@ -1,0 +1,4 @@
+Contact: mailto:alena@alyaeva.pro
+Expires: 2027-11-23T00:00:00.000Z
+Language: ru
+Canonical: https://alyaeva.pro/.well-known/security.txt

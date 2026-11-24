@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ client.full_name or client.email }} — админка{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+<div style="padding:26px 0 10px">
+  <a href="/admin/clients" class="muted" style="text-decoration:none">← Все клиенты</a>
+  <h1 style="margin:10px 0 4px">{{ client.full_name or 'Без имени' }}</h1>
+  <p class="muted" style="margin:0">{{ client.email }}{% if client.phone %} · {{ client.phone }}{% endif %} · с {{ client.created_at.strftime('%d.%m.%Y') }}</p>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <h2 style="font-size:20px; margin-top:0">Заказы ({{ orders|length }})</h2>
+  {% if orders %}
+  <table>
+    <tr><th>№</th><th>Дата</th><th>Сумма</th><th>Проектов</th><th>Статус</th></tr>
+    {% for o in orders %}
+    <tr>
+      <td><strong>{{ o.number }}</strong></td>
+      <td>{{ o.created_at.strftime('%d.%m.%Y') }}</td>
+      <td>{{ '%.0f'|format(o.total_rub) }} ₽</td>
+      <td>{{ o.projects }}</td>
+      <td>
+        <select class="order-status" data-order="{{ o.id }}"
+                style="padding:6px 10px; border:1.5px solid var(--c-lilac); border-radius:8px; font-family:inherit; background:#fff">
+          {% for code, label in statuses.items() %}
+          <option value="{{ code }}" {% if o.status == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="muted" style="margin-bottom:0">Заказов нет.</p>
+  {% endif %}
+</div>
+
+<div class="card" style="margin-top:18px">
+  <h2 style="font-size:20px; margin-top:0">Проекты — папки клиента ({{ projects|length }})</h2>
+  {% if projects %}
+  <table>
+    <tr><th>Проект</th><th>Заказ</th><th>Фото</th><th>Создан</th></tr>
+    {% for p in projects %}
+    <tr>
+      <td><strong>{{ p.title }}</strong></td>
+      <td>{{ p.order_number or '—' }}</td>
+      <td>{{ p.files }}</td>
+      <td>{{ p.created_at.strftime('%d.%m.%Y') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="muted">Проектов нет.</p>
+  {% endif %}
+
+  <details style="margin-top:14px">
+    <summary style="cursor:pointer; color:var(--c-accent); font-weight:700">+ Завести проект вручную</summary>
+    <div id="projMsg" style="margin-top:10px"></div>
+    <form id="projForm" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end">
+      <div style="flex:1; min-width:200px">
+        <label for="ptitle">Название проекта</label>
+        <input id="ptitle" name="title" placeholder="Книга для Ани" style="width:100%">
+      </div>
+      <div style="flex:1; min-width:180px">
+        <label for="porder">Заказ</label>
+        <select id="porder" name="order_id" style="width:100%; padding:11px 14px; border:1.5px solid var(--c-lilac); border-radius:10px; font-family:inherit; background:#fff">
+          <option value="">без заказа</option>
+          {% for o in orders %}<option value="{{ o.id }}">{{ o.number }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn" type="submit">Создать</button>
+    </form>
+  </details>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <h2 style="font-size:20px; margin-top:0">Фото клиента ({{ files|length }})</h2>
+  {% if files %}
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:14px">
+    {% for f in files %}
+    <a href="/api/file/{{ f.id }}" target="_blank" style="text-decoration:none; color:inherit">
+      <img src="/api/file/{{ f.id }}" alt="{{ f.orig_name }}"
+           style="width:100%; height:130px; object-fit:cover; border-radius:10px; background:var(--c-mint)">
+      <div style="font-size:13px; margin-top:6px; color:var(--c-body); word-break:break-all">{{ f.orig_name }}</div>
+      <div class="muted" style="font-size:12px">{{ f.project_title or 'без проекта' }} · {{ (f.size_bytes / 1048576)|round(1) }} МБ</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted" style="margin-bottom:0">Фотографий нет.</p>
+  {% endif %}
+</div>
+
+<script>
+// Смена статуса — без перезагрузки (правило владельца).
+document.querySelectorAll('.order-status').forEach(sel => {
+  sel.addEventListener('change', async () => {
+    const fd = new FormData();
+    fd.append('status', sel.value);
+    try {
+      const r = await fetch('/api/admin/order/' + sel.dataset.order + '/status', {method:'POST', body: fd});
+      const d = await r.json();
+      if (!d.ok) { alert(d.error || 'Не получилось'); return; }
+      sel.style.borderColor = 'var(--c-mint)';
+      setTimeout(() => sel.style.borderColor = 'var(--c-lilac)', 1200);
+    } catch { alert('Нет связи'); }
+  });
+});
+
+document.getElementById('projForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  fd.append('user_id', '{{ client.id }}');
+  const msg = document.getElementById('projMsg');
+  const r = await fetch('/api/admin/project/create', {method:'POST', body: fd});
+  const d = await r.json();
+  msg.innerHTML = d.ok
+    ? '<div class="ok">Проект «' + d.title + '» создан. Обновите страницу, чтобы увидеть в списке.</div>'
+    : '<div class="errors">' + (d.error || 'Не получилось') + '</div>';
+  if (d.ok) e.target.reset();
+});
+</script>
+{% endblock %}

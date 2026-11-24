@@ -20,6 +20,8 @@ const path = require('path');
 
 const DOCKER = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe';
 const EMAIL = 'alena@alyaeva.pro';
+// --force: перевыпуск при изменении состава доменов (срок ещё не подошёл).
+const FORCE = process.argv.includes('--force');
 const CONF_DIR = 'E:\\DockerData\\alyaeva\\certbot\\conf';
 const CERT_DIR = path.join(CONF_DIR, 'certificates');
 const LIVE_DIR = path.join(CONF_DIR, 'live', 'alyaeva.pro');
@@ -45,10 +47,11 @@ function daysLeft() {
 log('--- старт проверки ---');
 const left = daysLeft();
 log('сертификат истекает через ' + left + ' дн.');
-if (left > 30) {
+if (left > 30 && !FORCE) {
   log('обновление не требуется (>30 дней) — proxy НЕ трогаем, простоя нет');
   process.exit(0);
 }
+if (FORCE) log('ПРИНУДИТЕЛЬНЫЙ перевыпуск (--force): состав доменов изменён');
 
 log('осторожно: осталось ' + left + ' дн., запускаю продление');
 log('останавливаю proxy (lego нужен порт 443) — простой ~10 сек');
@@ -58,7 +61,7 @@ let exitCode = 1;
 try {
   const r = docker(['run', '--rm', '--name', 'lego-alpn', '-p', '443:443',
     '-v', 'E:/DockerData/alyaeva/certbot/conf:/out', 'goacme/lego:latest',
-    'run', '--accept-tos', '--email', EMAIL, '--path', '/out', '--tls', '-d', 'alyaeva.pro']);
+    'run', '--accept-tos', '--email', EMAIL, '--path', '/out', '--tls', '-d', 'alyaeva.pro', '-d', 'www.alyaeva.pro']);
   log('lego exit=' + r.status);
   if (r.status === 0) {
     const crt = fs.readFileSync(path.join(CERT_DIR, 'alyaeva.pro.crt'), 'utf8');

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Стоимость — Алёна Аляева{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+{# Цены — из тех же товаров, что в админке (/admin/products). Одна правда, не копия. #}
+<section class="ceny-hero">
+  <h1>Стоимость</h1>
+  <p class="muted">Цена зависит от количества страниц и формата книги. Ниже — от чего отталкиваемся.</p>
+</section>
+
+<div class="card">
+  <table class="price-table">
+    <thead>
+      <tr><th>Что делаем</th><th>Что входит</th><th class="num">Цена</th></tr>
+    </thead>
+    <tbody>
+    {% for p in products %}
+      <tr>
+        <td><strong>{{ p.title }}</strong></td>
+        <td class="muted">{{ p.description or '—' }}</td>
+        <td class="num">
+          {% if p.price_rub and p.price_rub > 0 %}
+            {% if p.old_price %}<s class="old">{{ p.old_price|round|int }}&nbsp;₽</s> {% endif %}
+            <strong>от {{ p.price_rub|round|int }}&nbsp;₽</strong>
+          {% else %}
+            <span class="muted">по запросу</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="3" class="muted">Цены скоро появятся — напишите, назову точно.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="grid grid-3" style="margin-top:22px">
+  <div class="card card-cream">
+    <h3 style="margin-top:0">Срок готовности</h3>
+    <p class="muted" style="margin:0">от 2–3 недель</p>
+  </div>
+  <div class="card card-lilac">
+    <h3 style="margin-top:0">Оплата</h3>
+    <p class="muted" style="margin:0">50% после согласования макета, 50% при получении</p>
+  </div>
+  <div class="card" style="background:var(--c-mint);border-color:var(--c-mint)">
+    <h3 style="margin-top:0">Доставка</h3>
+    <p class="muted" style="margin:0">в любой город России</p>
+  </div>
+</div>
+
+<p style="margin:28px 0 0;text-align:center">
+  <a class="btn" href="/order">Заказать книгу</a>
+  {% if links.tg_url %}<a class="btn btn-ghost" href="{{ links.tg_url }}" target="_blank" rel="noopener" style="margin-left:10px">Спросить в Telegram</a>{% endif %}
+</p>
+{% endblock %}

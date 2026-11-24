@@ -1,0 +1,36 @@
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div class="foot-col">
+      <div class="foot-brand">Алёна Аляева</div>
+      <p class="muted">{{ links.site_footer or 'Именные книги для детей: ребёнок — главный герой.' }}</p>
+      {% if links.site_address or links.site_hours %}
+      <p class="muted">
+        {% if links.site_address %}{{ links.site_address }}{% endif %}
+        {% if links.site_address and links.site_hours %} · {% endif %}
+        {% if links.site_hours %}{{ links.site_hours }}{% endif %}
+      </p>
+      {% endif %}
+    </div>
+    <div class="foot-col">
+      <div class="foot-h">Напишите мне</div>
+      <div class="foot-soc">{% include "_social.html" %}</div>
+      {% if links.site_phone %}<p class="muted"><a href="tel:{{ links.site_phone|replace(' ','') }}">{{ links.site_phone }}</a></p>{% endif %}
+      {% if links.site_email %}<p class="muted"><a href="mailto:{{ links.site_email }}">{{ links.site_email }}</a></p>{% endif %}
+    </div>
+    <div class="foot-col">
+      <div class="foot-h">Разделы</div>
+      <p class="muted"><a href="/">Главная</a></p>
+      <p class="muted"><a href="/order">Заказать книгу</a></p>
+      <p class="muted"><a href="/ceny">Стоимость</a></p>
+      {% if user %}<p class="muted"><a href="/cabinet">Мои заказы</a></p>
+      {% else %}<p class="muted"><a href="/login">Войти</a></p>{% endif %}
+      <p class="muted"><a href="/policy">Политика конфиденциальности</a></p>
+    </div>
+  </div>
+  <div class="wrap foot-legal">
+    <span class="muted">© {{ year }} Алёна Аляева. Все фотографии детей публикуются только с согласия родителей.</span>
+  </div>
+</footer>
+<div class="deco" aria-hidden="true">
+  <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+</div>
