@@ -38,3 +38,36 @@
 .ftr-bottom{margin-top:56px;padding-top:24px;border-top:1px solid #7570B8;font-size:15px;color:#ECE8FA}
 .ftr-copy{margin-bottom:10px}
 .ftr-policy{color:#ECE8FA;text-decoration:underline}
+
+/* Страница «Сайт обновляется» (maintenance.html) — задача #190, шаг 2.
+   Блоки сообщения и подвала. Шапка и значки — общие правила выше. */
+.mtn-main{min-height:60vh;display:flex;align-items:center;justify-content:center;padding:60px 20px;box-sizing:border-box}
+.mtn-in{max-width:620px;text-align:center}
+.mtn-emoji{font-size:74px;line-height:1;margin-bottom:8px}
+.mtn-h{font-family:'Philosopher',Georgia,serif;font-size:clamp(30px,5vw,44px);line-height:1.15;margin:0 0 16px;color:#2A2650}
+.mtn-lead{font-size:18px;line-height:1.6;color:#4A4678;margin:0 0 10px}
+.mtn-text{font-size:17px;line-height:1.6;color:#4A4678;margin:0 0 28px}
+.mtn-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.mtn-btn-solid,.mtn-btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border-radius:999px;font-weight:800;font-size:17px;text-decoration:none;box-sizing:border-box}
+.mtn-btn-solid{background:#4B4690;color:#FFFFFF}
+.mtn-btn-outline{border:2px solid #4B4690;color:#4B4690}
+.mtn-note{margin:26px 0 0;font-size:15px;color:#7570B8}
+.ftr-top{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-end;justify-content:space-between;margin-bottom:44px}
+.ftr-col{flex:1 1 380px}
+.ftr-lead-short{margin:0;color:#ECE8FA;max-width:560px;font-size:17px}
+.ftr-actions-sm{display:flex;flex-wrap:wrap;gap:12px}
+.ftr-btn-call{display:inline-flex;align-items:center;gap:10px;min-height:54px;padding:0 26px;border-radius:999px;background:#FFE7A0;color:#2A2650;font-weight:800;font-size:18px;text-decoration:none;box-sizing:border-box}
+.ftr-btn-outline-lg{display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:0 26px;border-radius:999px;border:2px solid #FFFFFF;color:#FFFFFF;font-weight:800;font-size:18px;text-decoration:none;box-sizing:border-box}
+.ftr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:34px;padding:34px 0;border-top:1px solid #7570B8}
+.ftr-brand{font-family:'Philosopher',Georgia,serif;font-size:24px;font-weight:700;margin-bottom:12px}
+.ftr-text{margin:0;color:#ECE8FA;font-size:16px;line-height:1.6}
+.ftr-sub{font-family:'Philosopher',Georgia,serif;font-size:20px;font-weight:700;color:#FFE7A0;margin-bottom:14px}
+.ftr-list-a{display:block;color:#ECE8FA;text-decoration:none;font-size:16px;line-height:1.9}
+.ftr-line{margin:0 0 16px;color:#ECE8FA;font-size:16px;line-height:1.6}
+.ftr-line-plain{margin:0 0 16px;color:#ECE8FA;font-size:16px}
+.ftr-phone{color:#FFFFFF;font-weight:800;text-decoration:none;font-size:18px}
+.ftr-social{display:flex;gap:10px}
+.ftr-soc-a{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:#FFFFFF;text-decoration:none;transition:transform .15s}
+.ftr-soc-a:hover,.ftr-soc-a:focus-visible{transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){.ftr-soc-a{transition:none}}
+.ftr-bottom-row{padding-top:24px;border-top:1px solid #7570B8;font-size:15px;color:#ECE8FA;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
