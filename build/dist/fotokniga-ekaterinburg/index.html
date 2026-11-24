@@ -27,7 +27,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Service","name":"Фотокнига на заказ в Екатеринбурге","serviceType":"Изготовление фотокниг и альбомов","provider":{"@type":"Organization","name":"Алёна Аляева","url":"https://alyaeva.pro/","telephone":"+79028759387"},"areaServed":[{"@type":"City","name":"Екатеринбург"},{"@type":"Country","name":"Россия"}],"offers":{"@type":"Offer","priceCurrency":"RUB","price":"2000"},"url":"https://alyaeva.pro/fotokniga-ekaterinburg/"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https://alyaeva.pro/"},{"@type":"ListItem","position":2,"name":"Фотокнига в Екатеринбурге","item":"https://alyaeva.pro/fotokniga-ekaterinburg/"}]}</script>
 </head>
-<body>
+<body id="top">
 
 <div style="background:#FFFFFF;color:#2A2650;font-family:'Nunito',system-ui,sans-serif;font-size:18px;line-height:1.6;">
 <header style="position: sticky; top: 0; z-index: 100; padding: 10px 0; background: rgba(230,223,250,.92); backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid rgba(75,70,144,.10);">
@@ -133,5 +133,25 @@
 </div>
 </div>
 </footer>
+<a class="to-top" href="#top" id="toTop" aria-label="Наверх" title="Наверх">
+  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</a>
+<script>
+/* Кнопка «наверх»: наверху страницы не нужна, показываем после прокрутки. */
+(function () {
+  var tt = document.getElementById('toTop');
+  if (!tt) return;
+  var show = function () { tt.classList.toggle('on', window.scrollY > 400); };
+  window.addEventListener('scroll', show, { passive: true });
+  show();
+  tt.addEventListener('click', function (e) {
+    var quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: quiet ? 'auto' : 'smooth' });
+  });
+})();
+</script>
 </body>
 </html>

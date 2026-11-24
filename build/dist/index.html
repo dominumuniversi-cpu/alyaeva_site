@@ -36,13 +36,6 @@
 </style>
 </head>
 <body>
-<div id="top" style="background: #FFFFFF; color: #2A2650; font-family: 'Nunito', system-ui, sans-serif; font-size: 18px; line-height: 1.6;">
-
-<div style="position: relative; overflow: hidden; background: #E6DFFA;">
-<div aria-hidden="true" style="position: absolute; top: -90px; right: -70px; width: 340px; height: 340px; border-radius: 50%; background: #FFFFFF; opacity: 0.5;"></div>
-<div aria-hidden="true" style="position: absolute; bottom: 30px; left: -60px; width: 180px; height: 180px; border-radius: 50%; background: #FFD3DA; opacity: 0.7;"></div>
-<div aria-hidden="true" style="position: absolute; top: 46%; right: 38%; width: 70px; height: 70px; border-radius: 50%; background: #FFE7A0; opacity: 0.8;"></div>
-
 <header style="position: sticky; top: 0; z-index: 100; padding: 10px 0; background: rgba(230,223,250,.92); backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid rgba(75,70,144,.10);">
 <div style="max-width: 1120px; margin: 0 auto; padding: 0 20px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px;">
 <a href="#top" style="font-family: 'Philosopher', Georgia, serif; font-size: 24px; font-weight: 700; text-decoration: none; padding: 8px 0;">Алёна Аляева</a>
@@ -69,6 +62,15 @@
 </div></nav>
 </div>
 </header>
+
+<div id="top" style="background: #FFFFFF; color: #2A2650; font-family: 'Nunito', system-ui, sans-serif; font-size: 18px; line-height: 1.6;">
+
+<div style="position: relative; overflow: hidden; background: #E6DFFA;">
+<div aria-hidden="true" style="position: absolute; top: -90px; right: -70px; width: 340px; height: 340px; border-radius: 50%; background: #FFFFFF; opacity: 0.5;"></div>
+<div aria-hidden="true" style="position: absolute; bottom: 30px; left: -60px; width: 180px; height: 180px; border-radius: 50%; background: #FFD3DA; opacity: 0.7;"></div>
+<div aria-hidden="true" style="position: absolute; top: 46%; right: 38%; width: 70px; height: 70px; border-radius: 50%; background: #FFE7A0; opacity: 0.8;"></div>
+
+
 
 <section style="position: relative; padding: 32px 0 72px;">
 <div style="max-width: 1120px; margin: 0 auto; padding: 0 20px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 48px;">
@@ -367,6 +369,26 @@
 /* Счётчик посещения главной: статику приложение не видит, поэтому страница сама сообщает о заходе.
    Ни cookie, ни личных данных — только «был заход». Ошибку молча глотаем: счётчик не должен мешать. */
 (function(){try{fetch("/api/visited?p=/",{mode:"cors"}).catch(function(){})}catch(e){}})();
+</script>
+<a class="to-top" href="#top" id="toTop" aria-label="Наверх" title="Наверх">
+  <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</a>
+<script>
+/* Кнопка «наверх»: наверху страницы не нужна, показываем после прокрутки. */
+(function () {
+  var tt = document.getElementById('toTop');
+  if (!tt) return;
+  var show = function () { tt.classList.toggle('on', window.scrollY > 400); };
+  window.addEventListener('scroll', show, { passive: true });
+  show();
+  tt.addEventListener('click', function (e) {
+    var quiet = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: quiet ? 'auto' : 'smooth' });
+  });
+})();
 </script>
 </body>
 </html>
