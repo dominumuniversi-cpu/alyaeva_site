@@ -11,8 +11,8 @@
   {% endif %}
   {% if error %}
     <div class="errors">{{ error }}</div>
-    {% if hint %}<p class="muted" style="margin-top:-8px">{{ hint }}</p>{% endif %}
-    <p class="muted" style="font-size:14px">
+    {% if hint %}<p class="muted mt-neg">{{ hint }}</p>{% endif %}
+    <p class="muted small">
       Нет аккаунта? <a href="/register{% if next and next != '/' %}?next={{ next|urlencode }}{% endif %}">Зарегистрируйтесь</a> —
       а если регистрировались, но не пускает, напишите нам: восстановим доступ.
     </p>
@@ -24,7 +24,7 @@
     <input id="email" type="email" name="email" required autocomplete="username" value="{{ email or '' }}">
     <label for="password">Пароль</label>
     <input id="password" type="password" name="password" required autocomplete="current-password">
-    <div style="margin-top:22px"><button class="btn" type="submit">Войти</button></div>
+    <div class="mt-22"><button class="btn" type="submit">Войти</button></div>
   </form>
   <p class="hint">
     Нет аккаунта? <a href="/register{% if reason == 'order' %}?next=/order{% endif %}">Зарегистрироваться</a>

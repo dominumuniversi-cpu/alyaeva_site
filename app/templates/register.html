@@ -5,7 +5,7 @@
   <h1>Регистрация</h1>
   <p class="muted">Заказы и фото будут в одном месте.</p>
   {% if exists %}
-    <div class="hint" style="margin:8px 0 0">Войти под этой почтой: <a href="/login?email={{ email|urlencode }}">на страницу входа</a></div>
+    <div class="hint mt-8">Войти под этой почтой: <a href="/login?email={{ email|urlencode }}">на страницу входа</a></div>
   {% endif %}
   {% if error %}<div class="errors">{{ error }}</div>{% endif %}
   <form method="post" action="/register">
@@ -27,13 +27,13 @@
 
     <div class="consent">
       <input type="checkbox" id="consent" name="consent" required>
-      <label for="consent" style="margin:0;font-weight:400">
+      <label for="consent" class="thin-label">
         Согласен на обработку персональных данных согласно
         <a href="/policy" target="_blank" rel="noopener">политике</a>
       </label>
     </div>
 
-    <div style="margin-top:22px"><button class="btn" type="submit">Создать аккаунт</button></div>
+    <div class="mt-22"><button class="btn" type="submit">Создать аккаунт</button></div>
   </form>
   <p class="hint">Уже есть аккаунт? <a href="/login">Войти</a></p>
 </div>
