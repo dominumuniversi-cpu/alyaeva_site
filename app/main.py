@@ -277,20 +277,19 @@ def register(request: Request, email: str = Form(""), password: str = Form(""),
         # Ошибка на ТОЙ ЖЕ странице: человек не должен заполнять форму заново.
         return render(request, "register.html", user=None, next=_safe_next(next, ""),
                       error="Проверьте почту и пароль — пароль минимум 8 символов.",
-                      email=email, full_name=full_name.strip(), phone=phone.strip(),
-                      next=_safe_next(next, ""))
+                      email=email, full_name=full_name.strip(), phone=phone.strip())
     if db.find_user_by_email(email):
         return render(request, "register.html", user=None, next=_safe_next(next, ""),
                       error="Аккаунт с такой почтой уже есть. Войдите под ним — пароль тот, что вы задали при регистрации.",
                       email=email, full_name=full_name.strip(), phone=phone.strip(),
-                      next=_safe_next(next, ""), exists=True)
+                      exists=True)
     try:
         uid = db.create_user(email, password, full_name.strip(), "customer", phone.strip())
     except db.DuplicateEmail:
         return render(request, "register.html", user=None, next=_safe_next(next, ""),
                       error="Аккаунт с такой почтой уже есть. Войдите под ним — пароль тот, что вы задали при регистрации.",
                       email=email, full_name=full_name.strip(), phone=phone.strip(),
-                      next=_safe_next(next, ""), exists=True)
+                      exists=True)
     # Заказы, оформленные гостем с этим телефоном, становились «ничьими» —
     # теперь у них есть владелец, и фото из guest/ попадают в его кабинет.
     if phone.strip():
