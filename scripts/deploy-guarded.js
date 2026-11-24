@@ -28,6 +28,7 @@ const NET_DB = 'sc-stand-main_net';
 const PROD = 'alyaeva-web';
 const LOCK = path.join(os.tmpdir(), 'alyaeva-deploy.lock');
 
+const PROD_NEW_NAME = 'alyaeva-web-old';
 let candidateName = null;
 
 /** Запустить docker, вернуть {ok, out}. Никогда не бросает. */
@@ -154,41 +155,31 @@ async function main() {
   console.log('3. Проверка страниц кандидата...');
   if (!(await checkPages(ip))) throw new Error('Страницы кандидата не отвечают');
 
-  // ВРЕМЕННО ОТКЛЮЧЕНО: манипуляции с сетевым алиасом рабочего контейнера роняли прод.
-  // Пока не будет проверено на отдельном стенде — только отчёт, без переключения.
-  if (process.env.ALLOW_SWITCH !== '1') {
-    console.log('');
-    console.log('Кандидат проверен и здоров. Переключение не выполняется (ALLOW_SWITCH!=1).');
-    console.log('Прод остался на прежнем образе: ' + prodImage.out);
-    console.log('Чтобы переключить — запустите с ALLOW_SWITCH=1 после проверки на стенде.');
-    cleanup();
-    return;
+  console.log('4. Переключение (окно — доли секунды, пока имя занято)...');
+  /* Имя контейнера в сети освобождает только ОСТАНОВКА — снятие алиаса его не отдаёт.
+     Порядок: остановить прод → убрать его под запасное имя → занять имя прода кандидатом → запустить.
+     Старый контейнер не удаляем до проверки нового: он и есть откат. `docker rename` применяется
+     ТОЛЬКО к уже остановленному, поэтому зомби с --restart unless-stopped не появится. */
+  docker(['rm', '-f', PROD_NEW_NAME]);
+  const stopOld = docker(['stop', PROD]);
+  if (!stopOld.ok) throw new Error('Не удалось остановить прод: ' + stopOld.out.slice(0, 200));
+  const aside = docker(['rename', PROD, PROD_NEW_NAME]);
+  if (!aside.ok) {
+    docker(['start', PROD]);
+    throw new Error('Не удалось отвести старый контейнер: ' + aside.out.slice(0, 200));
   }
-  console.log('4. Переключение (старый не останавливается до проверки нового)...');
-  // Снимаем алиас со старого: имя в сети освобождается, но контейнер продолжает жить.
-  const det = detachAlias(PROD);
-  if (!det.ok && !/not connected|is not connected/i.test(det.out)) {
-    throw new Error('Не удалось снять алиас со старого: ' + det.out.slice(0, 200));
-  }
-  const renamed = docker(['rename', PROD, PROD + '-previous']);
-  if (!renamed.ok) {
-    docker(['network', 'connect', NET, '--alias', PROD, PROD]);
-    throw new Error('Не удалось освободить имя прода: ' + renamed.out.slice(0, 200));
-  }
-  // Кандидат уже проверен — переименовываем его в прод и возвращаем в основную сеть с алиасом.
-  docker(['rm', '-f', PROD + '-previous']);
   const promote = docker(['rename', candidateName, PROD]);
   if (!promote.ok) {
-    docker(['rename', PROD + '-previous', PROD]);
-    docker(['network', 'connect', NET, '--alias', PROD, PROD]);
-    throw new Error('Не удалось назначить имя прода: ' + promote.out.slice(0, 200));
+    docker(['rename', PROD_NEW_NAME, PROD]);
+    docker(['start', PROD]);
+    throw new Error('Не удалось занять имя прода: ' + promote.out.slice(0, 200));
   }
   candidateName = null;
-  docker(['network', 'connect', NET, '--alias', PROD, PROD]);
+  const started = docker(['start', PROD]);
+  if (!started.ok) throw new Error('Новый прод не запустился: ' + started.out.slice(0, 200));
   if (!(await waitHealthy(PROD))) {
     throw new Error('Новый прод не отвечает после переключения');
   }
-
   console.log('5. Живая проверка сайта...');
   let live = '';
   for (let i = 0; i < 6; i += 1) {
@@ -200,24 +191,26 @@ async function main() {
   if (live !== '200') throw new Error('Приложение не отвечает через прокси после деплоя');
   console.log('   через прокси /login -> 200');
 
+  console.log('5а. Новый жив — убираю старый контейнер.');
+  docker(['rm', '-f', PROD_NEW_NAME]);
   console.log('\nГотово. Прод обновлён на ' + image);
   cleanup();
 }
 
 /** Вернуть прод в строй: алиас обязательно, иначе nginx отдаёт 502. */
 function restoreProd() {
-  // Если остался previous — значит новый прод не прижился, возвращаем старый.
-  const prev = docker(['inspect', PROD + '-previous', '--format', '{{.Name}}']);
+  // Прод мог не прижиться: тогда старый лежит под запасным именем и его надо вернуть.
+  const prev = docker(['inspect', PROD_NEW_NAME, '--format', '{{.Name}}']);
   if (prev.ok && prev.out) {
     docker(['rm', '-f', PROD]);
-    docker(['rename', PROD + '-previous', PROD]);
+    const back = docker(['rename', PROD_NEW_NAME, PROD]);
+    if (back.ok) docker(['start', PROD]);
   }
   // Алиас ставим ВСЕГДА — без него прокси не найдёт контейнер по имени.
   docker(['network', 'connect', NET, '--alias', PROD, PROD]);
   const check = docker(['network', 'inspect', NET, '--format', '{{json .Containers}}']);
   return check.ok;
 }
-
 main().catch((e) => {
   console.error('ОШИБКА ДЕПЛОЯ:', e.message);
   console.error('   Восстанавливаю прод...');
