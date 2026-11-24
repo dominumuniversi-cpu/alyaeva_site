@@ -121,7 +121,19 @@ def prices_page(request: Request):
             """SELECT title, description, price_rub, old_price
                FROM products WHERE is_active ORDER BY sort_order, id"""
         ).fetchall()
-    return render(request, "prices.html", products=rows)
+    import pricing
+    return render(request, "prices.html", products=rows, formats=pricing.FORMATS)
+
+
+@app.get("/api/price")
+def api_price(format: str = "a4", pages: int = 16):
+    """Вилка цены для калькулятора на странице цен.
+
+    Правила считает app/pricing.py — те же, что увидит человек в форме заказа.
+    """
+    import pricing
+    d = pricing.calc(format, pages)
+    return JSONResponse({"ok": True, **d})
 
 
 @app.get("/order", response_class=HTMLResponse)
