@@ -91,12 +91,15 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
         counts = admin_counts() if (user and user.get("role") == "admin") else {}
     # Просмотр считаем здесь, а не в каждом маршруте: одна точка — один счётчик.
     # Тяжёлые страницы (админка, кабинет) в общую статистику не идут: там сидят свои.
-    try:
-        import analytics
-        analytics.track("view", request.url.path,
-                        analytics.source_from_referer(request.headers.get("referer", "")))
-    except Exception:
-        pass
+    # Свои проверки не считаем: заголовок X-DSH-Check ставит агент, когда обходит сайт.
+    # Без этого мои обходы попадали в статистику как «люди» (24.11.2026: 18 таких записей).
+    if request.headers.get("x-dsh-check") != "1":
+        try:
+            import analytics
+            analytics.track("view", request.url.path,
+                            analytics.source_from_referer(request.headers.get("referer", "")))
+        except Exception:
+            pass
     # «Что дальше» по заказу — тем же словарём, что и статусы. Иначе в шаблоне
     # снова появится список из пяти старых статусов (так уже было).
     kw.setdefault("next_step", next_step)
