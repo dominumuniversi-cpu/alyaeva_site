@@ -16,54 +16,54 @@
   <div class="card">
     <h2 style="margin-top:0">Контакты</h2>
     <form method="post" action="{{ admin_url }}/settings">
-      <label>Телефон</label>
-      <input type="text" name="site_phone" value="{{ settings.get('site.phone','') }}"
+      <label for="f_site_phone">Телефон</label>
+      <input id="f_site_phone" type="text" name="site_phone" value="{{ settings.get('site.phone','') }}"
              placeholder="+7 900 000-00-00">
 
-      <label>E-mail</label>
-      <input type="text" name="site_email" value="{{ settings.get('site.email','') }}"
+      <label for="f_site_email">E-mail</label>
+      <input id="f_site_email" type="text" name="site_email" value="{{ settings.get('site.email','') }}"
              placeholder="alena@alyaeva.pro">
 
-      <label>Адрес</label>
-      <input type="text" name="site_address" value="{{ settings.get('site.address','') }}"
+      <label for="f_site_address">Адрес</label>
+      <input id="f_site_address" type="text" name="site_address" value="{{ settings.get('site.address','') }}"
              placeholder="Екатеринбург">
       <div class="hint">Город или адрес мастерской — покажем в подвале.</div>
 
-      <label>Часы работы</label>
-      <input type="text" name="site_work_hours" value="{{ settings.get('site.work_hours','') }}"
+      <label for="f_site_work_hours">Часы работы</label>
+      <input id="f_site_work_hours" type="text" name="site_work_hours" value="{{ settings.get('site.work_hours','') }}"
              placeholder="пн–пт, 10:00–19:00">
 
       <h2 style="margin-top:30px">Соцсети</h2>
-      <label>Instagram</label>
-      <input type="text" name="site_instagram" value="{{ settings.get('site.instagram','') }}"
+      <label for="f_site_instagram">Instagram</label>
+      <input id="f_site_instagram" type="text" name="site_instagram" value="{{ settings.get('site.instagram','') }}"
              placeholder="https://instagram.com/...">
 
-      <label>ВКонтакте</label>
-      <input type="text" name="site_vk" value="{{ settings.get('site.vk','') }}"
+      <label for="f_site_vk">ВКонтакте</label>
+      <input id="f_site_vk" type="text" name="site_vk" value="{{ settings.get('site.vk','') }}"
              placeholder="https://vk.com/...">
 
-      <label>Telegram</label>
-      <input type="text" name="site_telegram" value="{{ settings.get('site.telegram','') }}"
+      <label for="f_site_telegram">Telegram</label>
+      <input id="f_site_telegram" type="text" name="site_telegram" value="{{ settings.get('site.telegram','') }}"
              placeholder="https://t.me/...">
 
-      <label>WhatsApp</label>
-      <input type="text" name="site_whatsapp" value="{{ settings.get('site.whatsapp','') }}"
+      <label for="f_site_whatsapp">WhatsApp</label>
+      <input id="f_site_whatsapp" type="text" name="site_whatsapp" value="{{ settings.get('site.whatsapp','') }}"
              placeholder="https://wa.me/79000000000">
       <div class="hint">Это ваши публичные ссылки. Подключение бота — на странице «Приём сообщений».</div>
 
       <h2 style="margin-top:30px">Подвал</h2>
-    <label>Название оператора (кто отвечает за данные)
-      <input name="site_operator_name" value="{{ settings.get('site.operator_name','') }}" placeholder="ИП Аляева Алёна Сергеевна">
+    <label for="f_site_operator_name">Название оператора (кто отвечает за данные)</label>
+      <input id="f_site_operator_name" name="site_operator_name" value="{{ settings.get('site.operator_name','') }}" placeholder="ИП Аляева Алёна Сергеевна">
     </label>
-    <label>Реквизиты (ИНН / ОГРНИП)
-      <input name="site_operator_requisites" value="{{ settings.get('site.operator_requisites','') }}" placeholder="ИНН 660000000000, ОГРНИП 000000000000000">
+    <label for="f_site_operator_requisites">Реквизиты (ИНН / ОГРНИП)</label>
+      <input id="f_site_operator_requisites" name="site_operator_requisites" value="{{ settings.get('site.operator_requisites','') }}" placeholder="ИНН 660000000000, ОГРНИП 000000000000000">
     </label>
-    <label>Сколько месяцев храним фото после заказа
-      <input name="site_keep_photo_months" value="{{ settings.get('site.keep_photo_months','') }}" placeholder="12">
+    <label for="f_site_keep_photo_months">Сколько месяцев храним фото после заказа</label>
+      <input id="f_site_keep_photo_months" name="site_keep_photo_months" value="{{ settings.get('site.keep_photo_months','') }}" placeholder="12">
     </label>
 
-      <label>Текст в подвале</label>
-      <textarea name="site_footer" rows="4"
+      <label for="f_site_footer">Текст в подвале</label>
+      <textarea id="f_site_footer" name="site_footer" rows="4"
                 placeholder="Именные книги ручной работы. Екатеринбург.">{{ settings.get('site.footer','') }}</textarea>
 
       <div style="margin-top:26px"><button class="btn">Сохранить</button></div>

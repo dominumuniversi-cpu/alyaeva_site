@@ -8,7 +8,7 @@
 </div>
 
 <form method="get" action="/admin/clients" style="margin-bottom:18px; display:flex; gap:10px; flex-wrap:wrap">
-  <input type="search" name="q" value="{{ q }}" placeholder="Имя, почта или телефон"
+  <input type="search" name="q" aria-label="Поиск клиента по имени, почте или телефону" value="{{ q }}" placeholder="Имя, почта или телефон"
          style="flex:1; min-width:220px; padding:11px 14px; border:1.5px solid var(--c-lilac); border-radius:10px; font-family:inherit">
   <button class="btn" type="submit">Найти</button>
   {% if q %}<a class="btn-ghost" href="/admin/clients" style="align-self:center">Сбросить</a>{% endif %}
