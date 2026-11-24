@@ -43,7 +43,7 @@
 ## Сборка и деплой
 
 Исходники: `E:\!Develop\sites\alyaeva` (манифесты, build/, seo/, scripts/).
-Деплой: скопировать `build\dist\*` → `E:\DockerData\alyaeva\html\`, затем `docker restart alyaeva-site`.
+Деплой статики: `node scripts\deploy-site.js --apply` (детали — раздел «ГЛАВНАЯ…» ниже). Руками не копировать.
 
 ## Память
 
@@ -468,8 +468,8 @@ Cookie `sid` выдаётся с флагом `Secure`. На стенде по h
 
 | Что | Где |
 |---|---|
-| Главная | `E:\DockerData\alyaeva\html\index.html` — **в git её нет** |
-| Исходник для деплоя | `build/dist/index.html` — копия, расходится с продом |
+| Главная (прод) | `E:\DockerData\alyaeva\html\index.html` |
+| Исходник (источник правды) | `build/dist/index.html` в репозитории — с 24.11.2026 в git |
 | Стили | вёрстка **инлайном** (183 `style=`, 0 `class=`); `assets/style.css` = только `@font-face` |
 
 **Правило (обновлено 24.11.2026):** источник правды — `build/dist/` в репозитории.
