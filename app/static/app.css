@@ -815,3 +815,16 @@ body{
   .admin-subnav .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
   .admin-subnav a{justify-content:center;text-align:center}
 }
+
+/* ---------- ЦЕЛИ ПАЛЬЦА (24.11.2026, задача #223) ---------- */
+/* На телефоне нажимают пальцем: цель меньше 44 px человек промахивается.
+   Ниже — не «красиво», а минимум комфорта. Меню «во всю строку» — сюда же. */
+@media (max-width:600px){
+  .foot-col p{margin:0}
+  .foot-col p a{display:flex;align-items:center;min-height:44px}
+  .foot-in{gap:14px}
+  .foot-h{margin-bottom:4px}
+  .nav-login{min-height:44px;padding:10px 16px}
+  .soc{width:44px;height:44px}
+  .foot-soc{gap:12px}
+}
