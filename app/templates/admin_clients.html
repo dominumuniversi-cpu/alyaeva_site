@@ -2,16 +2,16 @@
 {% block title %}Клиенты — админка{% endblock %}
 {% block main_class %}wide{% endblock %}
 {% block content %}
-<div style="padding:28px 0 12px">
-  <h1 style="margin-bottom:6px">Клиенты</h1>
-  <p class="muted" style="margin-top:0">У каждого клиента — свои заказы, проекты и фото. Нажмите на клиента, чтобы открыть его карточку.</p>
+<div class="page-head">
+  <h1 class="mb-6">Клиенты</h1>
+  <p class="muted mt-0">У каждого клиента — свои заказы, проекты и фото. Нажмите на клиента, чтобы открыть его карточку.</p>
 </div>
 
-<form method="get" action="/admin/clients" style="margin-bottom:18px; display:flex; gap:10px; flex-wrap:wrap">
+<form class="search-row mb-18" method="get" action="/admin/clients">
   <input type="search" name="q" aria-label="Поиск клиента по имени, почте или телефону" value="{{ q }}" placeholder="Имя, почта или телефон"
-         style="flex:1; min-width:220px; padding:11px 14px; border:1.5px solid var(--c-lilac); border-radius:10px; font-family:inherit">
+         class="search-input">
   <button class="btn" type="submit">Найти</button>
-  {% if q %}<a class="btn-ghost" href="/admin/clients" style="align-self:center">Сбросить</a>{% endif %}
+  {% if q %}<a class="btn-ghost self-center" href="/admin/clients">Сбросить</a>{% endif %}
 </form>
 
 {% if clients %}
@@ -24,7 +24,7 @@
     {% for c in clients %}
     <tr>
       <td data-label="Клиент">
-        <a href="/admin/client/{{ c.id }}" style="font-weight:800;color:var(--c-accent)">{{ c.full_name or 'Без имени' }}</a><br>
+        <a class="link-strong" href="/admin/client/{{ c.id }}">{{ c.full_name or 'Без имени' }}</a><br>
         <a class="muted" href="mailto:{{ c.email }}">{{ c.email }}</a>
       </td>
       <td data-label="Телефон">{% if c.phone %}<a href="tel:{{ c.phone|replace(' ','')|replace('-','')|replace('(','')|replace(')','') }}">{{ c.phone }}</a>{% else %}—{% endif %}</td>
@@ -37,9 +37,9 @@
   </table>
 </div>
 {% else %}
-<div class="card" style="background:var(--c-lilac)">
-  <h2 style="margin-top:0">{% if q %}Никого не нашлось{% else %}Здесь появятся клиенты{% endif %}</h2>
-  <p style="margin-bottom:0">{% if q %}Попробуйте другую часть имени, почты или телефона.{% else %}Как только кто-то зарегистрируется — появится здесь.{% endif %}</p>
+<div class="card card-lilac">
+  <h2 class="card-title">{% if q %}Никого не нашлось{% else %}Здесь появятся клиенты{% endif %}</h2>
+  <p class="last">{% if q %}Попробуйте другую часть имени, почты или телефона.{% else %}Как только кто-то зарегистрируется — появится здесь.{% endif %}</p>
 </div>
 {% endif %}
 {% endblock %}

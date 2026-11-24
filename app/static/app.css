@@ -800,3 +800,14 @@ body{
 .inline{display:inline}
 .file-clean{border:none;padding:6px 0}
 .small{font-size:14px}
+.search-row{display:flex;gap:10px;flex-wrap:wrap}
+.search-input{flex:1;min-width:220px;padding:11px 14px;border:1.5px solid var(--c-lilac);border-radius:10px;font-family:inherit}
+.self-center{align-self:center}
+.link-strong{font-weight:800;color:var(--c-accent)}
+.narrow{max-width:640px}
+.h2-22{font-size:22px}
+.h2-20{font-size:20px}
+.mb-16{margin-bottom:16px}
+.mb-20-t{margin-top:20px}
+.tbl-flat{box-shadow:none}
+.card-lilac{background:var(--c-lilac);border-color:var(--c-lilac)}

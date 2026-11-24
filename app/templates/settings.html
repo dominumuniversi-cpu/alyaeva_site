@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Настройки — Алёна Аляева{% endblock %}
 {% block content %}
-<div style="padding:32px 0 64px; max-width:640px">
+<div class="cab-order-page narrow">
   <h1>Настройки</h1>
   <p class="hint">Здравствуйте, {{ user.full_name or user.email }}</p>
 
-  <div class="card" style="margin-top:24px">
-    <h2 style="font-size:22px">Смена пароля</h2>
-    <p class="muted" style="margin:0 0 4px">Пароль должен быть не короче 8 символов.</p>
+  <div class="card mt-24">
+    <h2 class="h2-22">Смена пароля</h2>
+    <p class="muted mb-4">Пароль должен быть не короче 8 символов.</p>
 
     <div id="pwMsg"></div>
 
@@ -21,13 +21,13 @@
       <label for="new_password2">Новый пароль ещё раз</label>
       <input id="new_password2" type="password" name="new_password2" required minlength="8" autocomplete="new-password">
 
-      <div style="margin-top:22px"><button class="btn" type="submit">Сохранить пароль</button></div>
+      <div class="mt-22"><button class="btn" type="submit">Сохранить пароль</button></div>
     </form>
   </div>
 
-  <div class="card" style="margin-top:20px">
-    <h2 style="font-size:20px; margin-top:0">Аккаунт</h2>
-    <table class="tbl" style="box-shadow:none">
+  <div class="card mb-20-t">
+    <h2 class="h2-20 card-title">Аккаунт</h2>
+    <table class="tbl tbl-flat">
       <tr><td class="muted">Почта для входа</td><td><strong>{{ user.email }}</strong></td></tr>
       <tr><td class="muted">Роль</td><td>{% if user.role == 'admin' %}Администратор{% else %}Клиент{% endif %}</td></tr>
       <tr><td class="muted">Выход</td><td><a href="/logout">Выйти из аккаунта</a></td></tr>
@@ -55,7 +55,7 @@ document.getElementById('pwForm').addEventListener('submit', async (e) => {
     const d = await r.json();
     if (d.login) { window.location.href = '/login?next=/settings'; return; }
     if (d.ok) {
-      msg.innerHTML = '<div class="ok" style="margin:0 0 16px">Пароль изменён. Используйте новый при следующем входе.</div>';
+      msg.innerHTML = '<div class="ok mb-16">Пароль изменён. Используйте новый при следующем входе.</div>';
       f.reset();
     } else {
       msg.innerHTML = '<div class="errors">' + (d.error || 'Не получилось сохранить') + '</div>';
