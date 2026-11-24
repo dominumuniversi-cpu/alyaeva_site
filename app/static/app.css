@@ -564,3 +564,11 @@ a.list-card:active{transform:translateY(1px)}
   }
   .card > .tbl-cards[data-labels="1"] td:not([data-label])::before{content:""}
 }
+
+/* Кнопка удаления фото: рядом со «Скачать», но менее заметная — удаление не главное действие. */
+.photo-del {
+  background: none; border: none; padding: 0; margin-left: 10px;
+  color: #B03A3A; font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline;
+}
+.photo-del:hover { color: #8E2626; }
+.photo-del:disabled { color: #A9A4BD; cursor: default; }

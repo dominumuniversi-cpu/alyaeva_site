@@ -160,6 +160,35 @@ def serve_file(file_id: int, request: Request):
     return FileResponse(path, filename=row["orig_name"])
 
 
+@router.post("/api/file/{file_id}/delete")
+def api_delete_file(file_id: int, request: Request):
+    """Удалить своё фото. Политика обещает удаление по просьбе — вот механизм.
+
+    Проверка владельца та же, что при просмотре: чужое фото не удалить.
+    Сначала запись в базе, потом файл: если файл не удалился, запись уже убрана
+    и человек не видит «удалено», пока оно лежит.
+    """
+    user = db.session_user(request.cookies.get("sid", ""))
+    if not user:
+        return JSONResponse({"ok": False, "error": "Нужно войти", "login": True}, status_code=401)
+    with db.pool.connection() as conn:
+        row = conn.execute("SELECT * FROM project_files WHERE id = %s", (file_id,)).fetchone()
+    if not row:
+        return JSONResponse({"ok": False, "error": "Фото не найдено"}, status_code=404)
+    if row["user_id"] != user["id"] and user["role"] != "admin":
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    path = shop.file_path(row)
+    with db.pool.connection() as conn:
+        conn.execute("DELETE FROM project_files WHERE id = %s", (file_id,))
+        conn.commit()
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except OSError:
+        pass
+    return JSONResponse({"ok": True})
+
+
 # ---------- Единый инбокс ----------
 
 
