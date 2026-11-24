@@ -472,7 +472,7 @@ body{position:relative}
 .order-help{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--c-lilac)}
 .order-help-label{font-size:15px;color:var(--c-body);margin-right:2px}
 .help-link{
-  display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;min-height:44px;gap:6px;padding:8px 14px;border-radius:999px;
   border:1.5px solid var(--c-lilac);color:var(--c-accent);font-weight:700;font-size:15px;text-decoration:none;
 }
 .help-link:hover{background:var(--c-lilac);border-color:var(--c-accent)}
@@ -828,3 +828,4 @@ body{
   .soc{width:44px;height:44px}
   .foot-soc{gap:12px}
 }
+
