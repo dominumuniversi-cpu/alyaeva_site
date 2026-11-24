@@ -21,9 +21,9 @@
 </section>
 
 
-<div class="card" id="calc" style="margin-bottom:22px">
-  <h2 style="margin-top:0">Сколько будет стоить ваша книга</h2>
-  <p class="muted" style="margin-top:0">Выберите формат и количество страниц — увидите вилку сразу, без переписки.</p>
+<div class="card mb-22" id="calc">
+  <h2 class="card-title">Сколько будет стоить ваша книга</h2>
+  <p class="muted mt-0">Выберите формат и количество страниц — увидите вилку сразу, без переписки.</p>
   <div class="row">
     <div>
       <label for="calcFormat">Формат</label>
@@ -36,9 +36,9 @@
       <input type="number" id="calcPages" min="4" max="80" step="4" value="16">
     </div>
   </div>
-  <div id="calcOut" aria-live="polite" style="margin-top:16px;font-size:18px;color:var(--c-strong)"></div>
-  <p class="hint" id="calcNote" style="margin-bottom:0"></p>
-  <div style="margin-top:16px">
+  <div id="calcOut" class="calc-out" aria-live="polite"></div>
+  <p class="hint last" id="calcNote"></p>
+  <div class="mt-16">
     <a class="btn" id="calcOrder" href="/order">Заказать с этими параметрами</a>
   </div>
 </div>
@@ -69,24 +69,24 @@
   </table>
 </div>
 
-<div class="grid grid-3" style="margin-top:22px">
+<div class="grid grid-3 mt-22">
   <div class="card card-cream">
-    <h3 style="margin-top:0">Срок готовности</h3>
-    <p class="muted" style="margin:0">2–3 недели</p>
+    <h3 class="card-title">Срок готовности</h3>
+    <p class="muted tight">2–3 недели</p>
   </div>
   <div class="card card-lilac">
-    <h3 style="margin-top:0">Оплата</h3>
-    <p class="muted" style="margin:0">50% после согласования макета, 50% при получении</p>
+    <h3 class="card-title">Оплата</h3>
+    <p class="muted tight">50% после согласования макета, 50% при получении</p>
   </div>
-  <div class="card" style="background:var(--c-mint);border-color:var(--c-mint)">
-    <h3 style="margin-top:0">Доставка</h3>
-    <p class="muted" style="margin:0">в любой город России</p>
+  <div class="card card-mint">
+    <h3 class="card-title">Доставка</h3>
+    <p class="muted tight">в любой город России</p>
   </div>
 </div>
 
-<p style="margin:28px 0 0;text-align:center">
+<p class="cta-row">
   <a class="btn" href="/order">Заказать книгу</a>
-  {% if links.tg_url %}<a class="btn btn-ghost" href="{{ links.tg_url }}" target="_blank" rel="noopener" style="margin-left:10px">Спросить в Telegram</a>{% endif %}
+  {% if links.tg_url %}<a class="btn btn-ghost" href="{{ links.tg_url }}" target="_blank" rel="noopener" class="ml-10">Спросить в Telegram</a>{% endif %}
 </p>
 {% endblock %}
 
