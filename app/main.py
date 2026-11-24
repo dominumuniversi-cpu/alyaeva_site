@@ -268,6 +268,32 @@ def register(request: Request, email: str = Form(""), password: str = Form(""),
     return resp
 
 
+@app.get("/cabinet/notifications", response_class=HTMLResponse)
+def cabinet_notifications(request: Request):
+    """Новости о заказах человека — без переписки и без захода в каждую карточку."""
+    user = current_user(request)
+    if not user:
+        return RedirectResponse("/login?next=/cabinet/notifications", status_code=303)
+    import notifications
+    with db.pool.connection() as conn:
+        items = notifications.list_for(conn, user["id"])
+        # Открыли страницу — значит увидели. Отмечаем сразу, иначе точка в шапке не погаснет.
+        notifications.mark_read(conn, user["id"])
+    return render(request, "cabinet_notifications.html", user=user, list=items)
+
+
+@app.post("/api/notifications/read")
+def api_notifications_read(request: Request):
+    """Отметить прочитанным. Вызывается fetch'ем — страница не перезагружается."""
+    user = current_user(request)
+    if not user:
+        return JSONResponse({"ok": False, "login": True}, status_code=401)
+    import notifications
+    with db.pool.connection() as conn:
+        notifications.mark_read(conn, user["id"])
+    return JSONResponse({"ok": True})
+
+
 @app.get("/cabinet", response_class=HTMLResponse)
 def cabinet(request: Request):
     """Заказы клиента."""
