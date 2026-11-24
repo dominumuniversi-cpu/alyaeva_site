@@ -24,39 +24,13 @@ jobs:
       - name: Синтаксис Python
         run: python -m compileall -q app
 
-      - name: Проверка импорта приложения
-        working-directory: app
-        env:
-          DB_HOST: localhost
-          DB_NAME: none
-          DB_USER: none
-          DB_PASSWORD: none
-          SECRET_KEY: test
-          ADMIN_SLUG: test
-        run: |
-          # Импорт ловит циклические зависимости и синтаксис — это ломало прод
-          python -c "import ast, pathlib; [ast.parse(p.read_text(encoding='utf-8')) for p in pathlib.Path('.').rglob('*.py')]"
-          echo "синтаксис всех модулей в порядке"
+      - name: Синтаксис всех модулей
+        run: python -m compileall -q app && echo "синтаксис в порядке"
 
       - name: Шаблоны Jinja2 разбираются
-        working-directory: app
         run: |
           pip install jinja2
-          python -c "
-import pathlib
-from jinja2 import Environment
-env = Environment()
-bad = []
-for p in pathlib.Path('templates').glob('*.html'):
-    try:
-        env.parse(p.read_text(encoding='utf-8'))
-    except Exception as e:
-        bad.append(str(p) + ': ' + str(e))
-if bad:
-    raise SystemExit('\n'.join(bad))
-print('шаблоны в порядке')
-"
-
+          python scripts/check_templates.py
       - name: Конфиг nginx валиден
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq nginx-light >/dev/null
