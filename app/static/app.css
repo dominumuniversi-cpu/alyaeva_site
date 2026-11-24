@@ -97,6 +97,13 @@ textarea{min-height:90px;resize:vertical}
 }
 .btn:hover{background:#FFDF8C}
 .btn:active{transform:translateY(1px)}
+/* Нажатие: кнопка заметно «утапливается» — палец получает ответ до отправки формы. */
+.btn:active,.btn-ghost:active{transform:translateY(1px)}
+/* Недоступная кнопка не должна выглядеть доступной: иначе человек жмёт и ждёт. */
+.btn[disabled],.btn-ghost[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none}
+/* Второстепенное действие («Отмена», «Назад») — тихое, чтобы рядом с главным не спорило. */
+.btn-quiet{background:transparent;color:var(--c-body);border:1.5px solid rgba(75,70,144,.28)}
+.btn-quiet:hover{background:rgba(75,70,144,.06)}
 .btn-ghost{
   background:transparent;
   color:var(--c-accent);
