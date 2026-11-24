@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Посты — админка{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+<h1>Посты в Telegram и ВКонтакте</h1>
+<p class="muted">Здесь собираются посты и видна история. Отправка включится, когда в
+<a href="/admin/hooks">приёме сообщений</a> появятся токены. До этого пост остаётся черновиком —
+он никуда не уходит, но всё готово, чтобы опубликовать одной кнопкой.</p>
+
+{% if not ready %}
+<div class="card card-cream">
+  <h3 class="card-title">Каналы пока не настроены</h3>
+  <p class="mb-0">Нет токена или адреса канала. Посты копятся черновиками.
+  Настроить: <a href="/admin/hooks">приём сообщений</a>.</p>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3 class="card-title">Новый пост</h3>
+  <label for="npBody">Текст</label>
+  <textarea id="npBody" rows="6" maxlength="4000"
+    placeholder="Например: Аня уже увидела себя на обложке — сейчас книжка сохнет после печати."></textarea>
+  <p class="hint"><span id="npCount">0</span>&nbsp;/ 4000 · в Telegram влезает 1024 символа, лишнее обрежется по слову</p>
+  <div class="row-inline mt-8">
+    <label class="check"><input type="checkbox" id="npTg" checked> Telegram</label>
+    <label class="check"><input type="checkbox" id="npVk" checked> ВКонтакте</label>
+  </div>
+  <label for="npMedia" class="mt-12">Картинка или видео (ссылка)</label>
+  <input id="npMedia" type="url" placeholder="https://alyaeva.pro/static/…">
+  <div class="mt-16">
+    <button class="btn" type="button" id="npSave">Сохранить черновик</button>
+    <span class="save-msg muted" id="npMsg"></span>
+  </div>
+</div>
+
+<h2 class="mt-26">История и очередь</h2>
+{% if posts %}
+<div class="card">
+  <table class="tbl tbl-cards" data-labels="1">
+    <tr><th>Когда</th><th>Текст</th><th>Каналы</th><th>Статус</th><th></th></tr>
+    {% for p in posts %}
+    <tr data-post="{{ p.id }}">
+      <td data-label="Когда">{{ p.publish_at or p.created_at }}</td>
+      <td data-label="Текст">
+        <div class="post-body" data-open="{{ p.id }}" contenteditable="false">{{ p.body }}</div>
+        {% if p.media_url %}<div class="muted small">медиа: {{ p.media_url }}</div>{% endif %}
+        {% if p.result and p.result != '{}' %}<div class="muted small">ответ каналов: {{ p.result }}</div>{% endif %}
+      </td>
+      <td data-label="Каналы">
+        {% for c in p.channels_list %}{{ 'Telegram' if c == 'telegram' else 'ВКонтакте' }}{% if not loop.last %}, {% endif %}{% endfor %}
+      </td>
+      <td data-label="Статус"><span class="badge-status s-{{ p.status }}">{{ p.status_name }}</span></td>
+      <td data-label="">
+        {% if p.status != 'sent' %}
+        <button class="btn btn-ghost btn-sm" type="button" data-save="{{ p.id }}">Сохранить правку</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-del="{{ p.id }}">Удалить</button>
+        <button class="btn btn-sm" type="button" data-pub="{{ p.id }}"
+          {% if not ready %}disabled title="Нет токенов — настроить в «Приём сообщений»"{% endif %}>Опубликовать</button>
+        {% endif %}
+        <span class="save-msg muted small"></span>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<div class="card"><p class="mb-0">Пока ни одного поста. Первый соберётся в форме выше.</p></div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+/* Всё через fetch: страница не перезагружается, человек остаётся на месте. */
+(function () {
+  var body = document.getElementById('npBody');
+  var count = document.getElementById('npCount');
+  if (body) body.addEventListener('input', function () { count.textContent = body.value.length; });
+
+  function say(el, text, ok) {
+    if (!el) return;
+    el.textContent = text;
+    el.classList.toggle('bad', !ok);
+  }
+
+  function post(url, data) {
+    var b = new URLSearchParams();
+    Object.keys(data).forEach(function (k) { b.set(k, data[k]); });
+    return fetch(url, { method: 'POST', body: b, credentials: 'same-origin' })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'Ответ не разобрать' }; }); });
+  }
+
+  var save = document.getElementById('npSave');
+  if (save) save.addEventListener('click', function () {
+    var msg = document.getElementById('npMsg');
+    var chans = [];
+    if (document.getElementById('npTg').checked) chans.push('telegram');
+    if (document.getElementById('npVk').checked) chans.push('vk');
+    if (!body.value.trim()) { say(msg, 'Пустой пост отправлять некуда', false); return; }
+    if (!chans.length) { say(msg, 'Выберите хотя бы один канал', false); return; }
+    save.disabled = true;
+    post('/api/admin/post', {
+      body: body.value,
+      channels: chans.join(','),
+      media_url: document.getElementById('npMedia').value
+    }).then(function (d) {
+      if (!d.ok) { say(msg, d.error || 'Не сохранилось', false); return; }
+      body.value = '';
+      document.getElementById('npMedia').value = '';
+      count.textContent = '0';
+      say(msg, 'Черновик сохранён', true);
+      /* Строку дописываем на месте — перезагрузка выкинула бы человека из формы. */
+      var tr = document.createElement('tr');
+      tr.dataset.post = d.id;
+      tr.innerHTML = '<td data-label="Когда">только что</td>' +
+        '<td data-label="Текст"><div class="post-body" contenteditable="false">' + d.escaped + '</div></td>' +
+        '<td data-label="Каналы">' + d.channels_text + '</td>' +
+        '<td data-label="Статус"><span class="badge-status s-draft">Черновик</span></td>' +
+        '<td data-label=""><button class="btn btn-ghost btn-sm" type="button" data-del="' + d.id + '">Удалить</button> <span class="save-msg muted small"></span></td>';
+      var table = document.querySelector('.tbl tbody') || document.querySelector('.tbl');
+      if (table) table.appendChild(tr);
+      bind(tr);
+    }).catch(function () { say(msg, 'Сеть недоступна — попробуйте ещё раз', false); })
+      .then(function () { save.disabled = false; });
+  });
+
+  function bind(scope) {
+    var root = scope || document;
+    root.querySelectorAll('[data-save]').forEach(function (btn) {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr');
+        var cell = tr.querySelector('[data-open]');
+        var msg = tr.querySelector('.save-msg');
+        btn.disabled = true;
+        say(msg, 'Сохраняю…', true);
+        post('/api/admin/post/' + btn.dataset.save + '/save', { body: cell.textContent }).then(function (d) {
+          say(msg, d.ok ? 'Сохранено' : (d.error || 'Не сохранилось'), d.ok);
+        }).catch(function () { say(msg, 'Сеть недоступна', false); })
+          .then(function () { btn.disabled = false; });
+      });
+    });
+    root.querySelectorAll('[data-del]').forEach(function (btn) {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr');
+        btn.disabled = true;
+        post('/api/admin/post/' + btn.dataset.del + '/delete', {}).then(function (d) {
+          if (d.ok) { tr.remove(); return; }
+          say(tr.querySelector('.save-msg'), d.error || 'Не удалилось', false);
+          btn.disabled = false;
+        }).catch(function () { btn.disabled = false; });
+      });
+    });
+    root.querySelectorAll('[data-pub]').forEach(function (btn) {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr');
+        var msg = tr.querySelector('.save-msg');
+        btn.disabled = true;
+        say(msg, 'Публикую…', true);
+        post('/api/admin/post/' + btn.dataset.pub + '/publish', {}).then(function (d) {
+          if (!d.ok) { say(msg, d.error || 'Не опубликовалось', false); btn.disabled = false; return; }
+          var badge = tr.querySelector('.badge-status');
+          if (badge) { badge.textContent = d.status_name; badge.className = 'badge-status s-' + d.status; }
+          say(msg, d.status === 'sent' ? 'Опубликован' : 'Ушёл не во все каналы', d.status === 'sent');
+        }).catch(function () { say(msg, 'Сеть недоступна', false); btn.disabled = false; });
+      });
+    });
+  }
+  bind(document);
+})();
+</script>
+{% endblock %}

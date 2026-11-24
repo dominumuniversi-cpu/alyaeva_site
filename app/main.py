@@ -45,8 +45,10 @@ import yukassa  # noqa: E402
 from order_status import STATUS_ORDER, STAGE_NAMES, STATUS_NAMES, ACTIVE_STATUSES, next_step
 from routes_shop import router as shop_router, status_name
 from admin_clients import router as admin_clients_router
+from admin_posts import router as admin_posts_router
 from hooks import router as hooks_router  # noqa: E402
 app.include_router(admin_clients_router)
+app.include_router(admin_posts_router)
 app.include_router(hooks_router)
 app.include_router(shop_router)
 
