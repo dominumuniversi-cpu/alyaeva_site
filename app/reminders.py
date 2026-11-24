@@ -17,6 +17,8 @@ import db
 from notifications import notify
 
 log = logging.getLogger("reminders")
+# uvicorn настраивает только свои логгеры: без этого наши сообщения не попадают в docker logs.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 # Через сколько дней молчания заказа без фото напоминаем.
 DAYS_WITHOUT_PHOTOS = 3
@@ -56,16 +58,17 @@ def remind_missing_photos() -> int:
 
 
 def _loop() -> None:
-    """Фон: час сна между проверками, ошибки не роняют приложение."""
+    """Фон: сразу проверка, дальше час сна. Ошибки не роняют приложение."""
     while True:
-        time.sleep(CHECK_EVERY_SECONDS)
         try:
             remind_missing_photos()
         except Exception as e:  # noqa: BLE001 — фон не имеет права молча умереть
             log.warning("напоминания не отправлены: %s", e)
+        time.sleep(CHECK_EVERY_SECONDS)
 
 
 def start() -> None:
     """Запустить фоновую проверку один раз на процесс (поток-демон)."""
     t = threading.Thread(target=_loop, name="reminders", daemon=True)
     t.start()
+    log.info("напоминания о фото запущены (проверка сразу, потом раз в час)")
