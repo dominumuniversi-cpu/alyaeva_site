@@ -270,24 +270,24 @@ def register(request: Request, email: str = Form(""), password: str = Form(""),
     # Согласие проверяем на сервере: галочку в HTML легко снять запросом из консоли,
     # а собирать персональные данные без основания нельзя (152-ФЗ).
     if not consent:
-        return render(request, "register.html", user=None,
+        return render(request, "register.html", user=None, next=_safe_next(next, ""),
                       error="Чтобы зарегистрироваться, нужно согласие на обработку персональных данных")
     email = (email or "").strip().lower()
     if not email or len(password or "") < 8:
         # Ошибка на ТОЙ ЖЕ странице: человек не должен заполнять форму заново.
-        return render(request, "register.html", user=None,
+        return render(request, "register.html", user=None, next=_safe_next(next, ""),
                       error="Проверьте почту и пароль — пароль минимум 8 символов.",
                       email=email, full_name=full_name.strip(), phone=phone.strip(),
                       next=_safe_next(next, ""))
     if db.find_user_by_email(email):
-        return render(request, "register.html", user=None,
+        return render(request, "register.html", user=None, next=_safe_next(next, ""),
                       error="Аккаунт с такой почтой уже есть. Войдите под ним — пароль тот, что вы задали при регистрации.",
                       email=email, full_name=full_name.strip(), phone=phone.strip(),
                       next=_safe_next(next, ""), exists=True)
     try:
         uid = db.create_user(email, password, full_name.strip(), "customer", phone.strip())
     except db.DuplicateEmail:
-        return render(request, "register.html", user=None,
+        return render(request, "register.html", user=None, next=_safe_next(next, ""),
                       error="Аккаунт с такой почтой уже есть. Войдите под ним — пароль тот, что вы задали при регистрации.",
                       email=email, full_name=full_name.strip(), phone=phone.strip(),
                       next=_safe_next(next, ""), exists=True)
