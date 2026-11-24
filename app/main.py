@@ -125,6 +125,30 @@ def prices_page(request: Request):
     return render(request, "prices.html", products=rows, formats=pricing.FORMATS)
 
 
+# Какие статические страницы сайта можно отметить в счётчике.
+# Белый список, а не свободный текст: иначе в базу можно налить любые строки.
+STATIC_PAGES = {"/": "Главная", "/ceny": "Стоимость", "/404": "Не найдено"}
+
+
+@app.get("/api/visited")
+def api_visited(request: Request):
+    """Счётчик для главной: страница статическая, приложение её не видит.
+
+    Принимает только название страницы из белого списка и ничего больше.
+    Свои проверки помечаются заголовком X-DSH-Check: 1 — их не считаем, иначе
+    данные превращаются в «81 просмотр за час» от собственных тестов.
+    """
+    if request.headers.get("x-dsh-check") == "1":
+        return {"ok": True, "skipped": "check"}
+    page = (request.query_params.get("p") or "")[:60]
+    if page not in STATIC_PAGES:
+        return {"ok": False, "error": "unknown page"}
+    referer = request.headers.get("referer", "")
+    import analytics
+    analytics.track("view", page, analytics.source_from_referer(referer))
+    return {"ok": True}
+
+
 @app.get("/api/price")
 def api_price(format: str = "a4", pages: int = 16):
     """Вилка цены для калькулятора на странице цен.
