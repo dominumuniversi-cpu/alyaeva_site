@@ -66,3 +66,15 @@ print('шаблоны в порядке')
       - name: Проверка скриптов Node
         run: |
           for f in scripts/*.js; do node --check "$f" && echo "ok $f"; done
+
+      # Блокирующая проверка оформления: «200 OK» не значит «страница выглядит нормально».
+      # /login год жил без стилей именно так. Проверяем на превью-сборке живого сайта.
+      - name: Стили всех страниц (headless-браузер)
+        if: env.STYLE_CHECK_URL != ''
+        env:
+          STYLE_CHECK_URL: ${{ secrets.STYLE_CHECK_URL }}
+          ADMIN_EMAIL: ${{ secrets.STYLE_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.STYLE_ADMIN_PASSWORD }}
+        run: |
+          npm i puppeteer@23
+          node scripts/check-styles.js "$STYLE_CHECK_URL"
