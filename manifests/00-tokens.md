@@ -6,6 +6,21 @@
 Нейрофотограф / AI-креатор, Екатеринбург. Тёплый, сказочный, «подарочный» тон.
 
 ## Цвета
+
+**Имена в коде.** В манифесте токены названы по смыслу (`--color-accent-primary`), а в CSS сайта
+и приложения живут короткие рабочие имена (`--c-accent`). Это одно и то же, соответствие:
+
+| Манифест | В коде |
+|---|---|
+| --color-text-strong | --c-strong |
+| --color-text-body | --c-body |
+| --color-accent-primary | --c-accent |
+| --color-bg-cream | --c-cream |
+| --color-bg-peach | --c-peach |
+| --color-bg-lilac | --c-lilac |
+| --color-bg-mint | --c-mint |
+
+Приложение (`app/static/app.css`) берёт **рабочие** имена — их и искать в шаблонах.
 | Токен | Значение | Использование |
 |---|---|---|
 | --color-bg-default | #FFFFFF | базовый фон |
