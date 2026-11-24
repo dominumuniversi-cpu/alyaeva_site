@@ -1,0 +1,19 @@
+{# Шкала прогресса заказа. Один макрос на весь сайт — копий быть не должно. #}
+{% macro order_progress(status, stages, names) %}
+{% set cur = stages.index(status) if status in stages else -1 %}
+{% if cur >= 0 %}
+<div class="prog" role="list" aria-label="Этап заказа">
+  {% for s in stages %}
+    {% set i = loop.index0 %}
+    <div class="prog-step {% if i < cur %}prog-done{% elif i == cur %}prog-now{% endif %}" role="listitem">
+      <span class="prog-dot">
+        {% if i < cur %}<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>{% else %}{{ i + 1 }}{% endif %}
+      </span>
+      <span class="prog-name">{{ names[s] }}</span>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="prog prog-cancelled">Заказ отменён</div>
+{% endif %}
+{% endmacro %}

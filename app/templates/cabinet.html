@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Мои заказы — Алёна Аляева{% endblock %}
+{% from "_progress.html" import order_progress %}
 {% block content %}
 {# Кабинет покупателя. Что берём у магазинов с похожим кабинетом:
    1) сводка сверху — сразу видно, сколько заказов и сколько ждут действия;
@@ -34,6 +35,21 @@
     <div class="stat">{{ photos_by_order.values() | map('length') | sum }}</div>
   </div>
 </div>
+
+{# Заказ без фото висит — изготовление не начнётся. Плашка бросается в глаза, а не теряется в тексте. #}
+{% set no_photos = orders | rejectattr('status', 'in', ['done','cancelled']) | selectattr('id', 'in', photos_need) | list %}
+{% if no_photos %}
+<div class="need-photos">
+  <div>
+    <strong>Ждём ваши фотографии</strong>
+    <div class="hint" style="margin-top:2px">
+      {% if no_photos|length == 1 %}По заказу {{ no_photos[0].number }} без фото макет не начать.
+      {% else %}По {{ no_photos|length }} заказам не хватает фотографий — без них макет не начать.{% endif %}
+    </div>
+  </div>
+  <a class="btn" href="/cabinet/order/{{ no_photos[0].id }}">Загрузить фото</a>
+</div>
+{% endif %}
 {% endif %}
 
 {% if not orders %}
@@ -59,6 +75,8 @@
     </div>
     <span class="pill pill-{{ o.status }}">{{ status_name(o.status) }}</span>
   </div>
+
+  {{ order_progress(o.status, stages, stage_names) }}
 
   <div class="order-next">
     {% if o.status == 'new' %}
@@ -88,7 +106,7 @@
       </a>
     </div>
   {% else %}
-    <p class="hint" style="margin:12px 0 0">Фото ещё не загружены — <a href="/cabinet/order/{{ o.id }}">добавить</a>.</p>
+    <p class="no-photos-note">Фотографий нет. <a href="/cabinet/order/{{ o.id }}">Загрузите фото</a> — без них не начну макет.</p>
   {% endif %}
 
   <div class="order-actions">

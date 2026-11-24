@@ -24,13 +24,7 @@ from web_common import render
 
 router = APIRouter()
 
-STATUSES = {
-    "new": "Новый",
-    "in_work": "В работе",
-    "sent": "Отправлен",
-    "done": "Выполнен",
-    "cancelled": "Отменён",
-}
+from order_status import STATUS_NAMES as STATUSES  # один словарь на весь проект
 
 
 def _esc(value) -> str:

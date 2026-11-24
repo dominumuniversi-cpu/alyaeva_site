@@ -58,6 +58,23 @@ def site_links() -> dict:
     }
 
 
+def admin_counts() -> dict:
+    """Сколько ждёт внимания администратора.
+
+    Считается один раз на страницу. Нужно, чтобы Алена, войдя в админку,
+    сразу видела, есть ли новые заказы — без обхода всех разделов.
+    """
+    try:
+        with db.pool.connection() as conn:
+            row = conn.execute(
+                "SELECT count(*) AS new_orders FROM orders WHERE status = 'new'"
+            ).fetchone()
+        return {"new_orders": row["new_orders"]}
+    except Exception:
+        # Счётчик — украшение, а не смысл страницы: если запрос не удался, страница всё равно рисуется.
+        return {"new_orders": 0}
+
+
 def render(request: Request, name: str, **kw) -> HTMLResponse:
     """Рендер шаблона с общим контекстом.
 
@@ -66,8 +83,12 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
     """
     user = kw.pop("user", None) or current_user(request)
     links = kw.pop("links", None) or site_links()
+    counts = kw.pop("counts", None)
+    if counts is None:
+        counts = admin_counts() if (user and user.get("role") == "admin") else {}
     return templates.TemplateResponse(request, name,
-                                      {"user": user, "admin_url": ADMIN, "links": links, **kw})
+                                      {"user": user, "admin_url": ADMIN, "links": links,
+                                       "counts": counts, **kw})
 
 
 def is_browser(request) -> bool:

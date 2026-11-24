@@ -14,7 +14,7 @@
 {% if user and user.role == 'admin' %}
 <nav class="admin-subnav" aria-label="Админка">
   <div class="wrap">
-    <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы</a>
+    <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы{% if counts and counts.new_orders %}<span class="badge">{{ counts.new_orders }}</span>{% endif %}</a>
     <a href="/admin/clients" {% if request.url.path.startswith('/admin/client') %}class="active"{% endif %}>Клиенты</a>
     <a href="/admin/photos" {% if request.url.path.startswith('/admin/photos') %}class="active"{% endif %}>Все фото</a>
     <a href="{{ admin_url }}/inbox" {% if '/inbox' in request.url.path %}class="active"{% endif %}>Инбокс</a>
@@ -50,5 +50,6 @@
   on(); window.addEventListener('scroll', on, { passive: true });
 })();
 </script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

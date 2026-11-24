@@ -13,21 +13,8 @@ from web_common import render, require_admin, require_user, denied
 router = APIRouter()
 
 # Статусы заказа: в базе код, клиенту — понятный текст.
-STATUS_NAMES = {
-    "new": "Новый",
-    "in_work": "В работе",
-    "layout": "На согласовании макета",
-    "paid": "Оплачен",
-    "printing": "В печати",
-    "shipped": "Отправлен",
-    "done": "Выполнен",
-    "cancelled": "Отменён",
-}
+from order_status import STATUS_NAMES, STATUS_ORDER, status_name  # один словарь статусов на весь проект
 
-
-def status_name(code: str) -> str:
-    """Понятное клиенту название статуса заказа."""
-    return STATUS_NAMES.get(code or "new", "Новый")
 
 
 # ---------- Каталог и заказ ----------

@@ -33,6 +33,7 @@ app = FastAPI(title="alyaeva.pro", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 import orders as orders_mod  # noqa: E402
+from order_status import STATUS_ORDER, STAGE_NAMES
 from routes_shop import router as shop_router, status_name
 from admin_clients import router as admin_clients_router
 from hooks import router as hooks_router  # noqa: E402
@@ -53,6 +54,9 @@ def health():
 
 
 # ---------------- Вход / выход ----------------
+
+# Secure-флаг: на проде всегда https, на стенде по http — иначе браузер cookie отбросит.
+_COOKIE_SECURE = os.getenv("COOKIE_SECURE", "1") == "1"
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request, error: str = "", next: str = "", reason: str = "", email: str = ""):
@@ -139,7 +143,7 @@ def login(request: Request, email: str = Form(...), password: str = Form(...),
     wanted = _safe_next(next, "")
     target = wanted or (ADMIN if user["role"] == "admin" else "/cabinet")
     resp = RedirectResponse(target, status_code=303)
-    resp.set_cookie("sid", token, httponly=True, secure=True, samesite="lax", max_age=30 * 86400)
+    resp.set_cookie("sid", token, httponly=True, secure=_COOKIE_SECURE, samesite="lax", max_age=30 * 86400)
     return resp
 
 
@@ -226,7 +230,7 @@ def register(request: Request, email: str = Form(""), password: str = Form(""),
     token = db.create_session(uid, ua=request.headers.get("user-agent", ""),
                               ip=request.client.host if request.client else "")
     resp = RedirectResponse(_safe_next(next, "/cabinet"), status_code=303)
-    resp.set_cookie("sid", token, httponly=True, secure=True, samesite="lax", max_age=30 * 86400)
+    resp.set_cookie("sid", token, httponly=True, secure=_COOKIE_SECURE, samesite="lax", max_age=30 * 86400)
     return resp
 
 
@@ -253,7 +257,9 @@ def cabinet(request: Request):
     for p in photos:
         photos_by_order.setdefault(p["order_id"], []).append(p)
     return render(request, "cabinet.html", user=user, orders=orders,
-                  photos_by_order=photos_by_order, status_name=status_name)
+                  photos_by_order=photos_by_order, status_name=status_name,
+                  photos_need=[o["id"] for o in orders if not photos_by_order.get(o["id"])],
+                  stages=STATUS_ORDER, stage_names=STAGE_NAMES)
 
 
 @app.get("/cabinet/repeat/{order_id}")
@@ -303,7 +309,8 @@ def cabinet_order(order_id: int, request: Request):
             (order_id,),
         ).fetchall()
     return render(request, "cabinet_order.html", user=user, order=row,
-                  photos=photos, status_name=status_name)
+                  photos=photos, status_name=status_name,
+                  stages=STATUS_ORDER, stage_names=STAGE_NAMES)
 
 
 @app.get("/cabinet/projects", response_class=HTMLResponse)
