@@ -563,6 +563,8 @@ def save_settings(
         "site.operator_requisites": site_operator_requisites,
         "site.keep_photo_months": site_keep_photo_months,
     }
+    # Сохранение из формы без JS по-прежнему уводит на ту же страницу с плашкой (#215).
+    wants_json = (request.headers.get("accept") or "").find("application/json") >= 0
     for key, val in pairs.items():
         db.set_setting(key, val.strip(), user["id"])
     # Главная — статический файл, но ссылки на мессенджеры должны быть ОДНИ.
@@ -573,6 +575,9 @@ def save_settings(
     except Exception:
         # Не смогли переписать главную — настройки всё равно сохранены, это главное.
         pass
+    if wants_json:
+        # Сообщение без перезагрузки: страница остаётся на месте, прокрутка не сбрасывается.
+        return JSONResponse({"ok": True, "saved": "настройки сайта"})
     return RedirectResponse(ADMIN + "/settings?saved=1", status_code=303)
 
 
