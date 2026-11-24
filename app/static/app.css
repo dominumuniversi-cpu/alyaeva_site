@@ -787,3 +787,15 @@ body{
 .cab-order-page{padding:32px 0 64px}
 .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .photo-empty{margin-top:14px}
+.mt-6{margin-top:6px}
+.mt-8{margin-top:8px}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap}
+.photo-wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
+.photo-card{padding:10px;margin:0}
+.photo-card-img{width:100%;height:150px;object-fit:cover;border-radius:8px;background:var(--c-mint)}
+.photo-card-name{font-size:13px;margin-top:8px;word-break:break-all}
+.hidden{display:none}
+.note-mint{background:var(--c-mint);padding:10px 14px;border-radius:12px}
+.thin-label{margin:0;font-weight:400}
+.inline{display:inline}
+.file-clean{border:none;padding:6px 0}
