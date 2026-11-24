@@ -86,9 +86,10 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
     counts = kw.pop("counts", None)
     if counts is None:
         counts = admin_counts() if (user and user.get("role") == "admin") else {}
+    import datetime
     return templates.TemplateResponse(request, name,
                                       {"user": user, "admin_url": ADMIN, "links": links,
-                                       "counts": counts, **kw})
+                                       "counts": counts, "year": datetime.date.today().year, **kw})
 
 
 def is_browser(request) -> bool:

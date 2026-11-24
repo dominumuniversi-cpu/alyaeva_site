@@ -62,6 +62,26 @@ def health():
 # Secure-флаг: на проде всегда https, на стенде по http — иначе браузер cookie отбросит.
 _COOKIE_SECURE = os.getenv("COOKIE_SECURE", "1") == "1"
 
+@app.get("/policy", response_class=HTMLResponse)
+def policy_page(request: Request):
+    """Политика обработки персональных данных (152-ФЗ).
+
+    Текст лежит в шаблоне, а реквизиты оператора — в настройках сайта:
+    владелец меняет ИНН в админке, а не в коде. Одна настройка — одно место.
+    """
+    import datetime
+    return render(
+        request, "policy.html",
+        policy_date=datetime.date.today().strftime("%d.%m.%Y"),
+        operator_name=db.get_setting("site.operator_name", "") or "Аляева Алёна",
+        operator_requisites=db.get_setting("site.operator_requisites", "") or "",
+        keep_photo_months=db.get_setting("site.keep_photo_months", "") or "12",
+        contacts=", ".join(x for x in (
+            str(db.get_setting("site.email", "") or ""), str(db.get_setting("site.phone", "") or "")
+        ) if x),
+    )
+
+
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request, error: str = "", next: str = "", reason: str = "", email: str = ""):
     """Форма входа. Хранит, куда человек шёл: после входа вернём его туда."""
@@ -206,8 +226,14 @@ def register_page(request: Request, error: str = "", next: str = ""):
 
 @app.post("/register")
 def register(request: Request, email: str = Form(""), password: str = Form(""),
-             full_name: str = Form(""), phone: str = Form(""), next: str = Form("")):
+             full_name: str = Form(""), phone: str = Form(""), next: str = Form(""),
+             consent: str = Form("")):
     """Регистрация клиента. Гостевые заказы с тем же телефоном переходят к нему."""
+    # Согласие проверяем на сервере: галочку в HTML легко снять запросом из консоли,
+    # а собирать персональные данные без основания нельзя (152-ФЗ).
+    if not consent:
+        return render(request, "register.html", user=None,
+                      error="Чтобы зарегистрироваться, нужно согласие на обработку персональных данных")
     email = (email or "").strip().lower()
     if not email or len(password or "") < 8:
         # Ошибка на ТОЙ ЖЕ странице: человек не должен заполнять форму заново.
@@ -421,6 +447,9 @@ def save_settings(
     site_telegram: str = Form(""),
     site_whatsapp: str = Form(""),
     site_footer: str = Form(""),
+    site_operator_name: str = Form(""),
+    site_operator_requisites: str = Form(""),
+    site_keep_photo_months: str = Form(""),
 ):
     """Настройки САЙТА: контакты, соцсети, подвал.
 
@@ -440,6 +469,9 @@ def save_settings(
         "site.telegram": site_telegram,
         "site.whatsapp": site_whatsapp,
         "site.footer": site_footer,
+        "site.operator_name": site_operator_name,
+        "site.operator_requisites": site_operator_requisites,
+        "site.keep_photo_months": site_keep_photo_months,
     }
     for key, val in pairs.items():
         db.set_setting(key, val.strip(), user["id"])

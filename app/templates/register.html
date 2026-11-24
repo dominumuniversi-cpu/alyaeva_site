@@ -24,6 +24,14 @@
     <input id="password" type="password" name="password" required minlength="8" autocomplete="new-password">
     <p class="hint">Минимум 8 символов.</p>
 
+    <div class="consent">
+      <input type="checkbox" id="consent" name="consent" required>
+      <label for="consent" style="margin:0;font-weight:400">
+        Согласен на обработку персональных данных согласно
+        <a href="/policy" target="_blank" rel="noopener">политике</a>
+      </label>
+    </div>
+
     <div style="margin-top:22px"><button class="btn" type="submit">Создать аккаунт</button></div>
   </form>
   <p class="hint">Уже есть аккаунт? <a href="/login">Войти</a></p>

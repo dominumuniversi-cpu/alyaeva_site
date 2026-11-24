@@ -477,3 +477,14 @@ body{position:relative}
 .feed-status .feed-dot{background:#3E9A6E}
 .feed-title{font-weight:700;color:var(--c-strong);font-size:15.5px}
 .feed-date{font-size:13px;color:var(--c-body);opacity:.8;margin-top:2px}
+
+
+/* ---------- Политика ПДн ---------- */
+.policy{max-width:760px;line-height:1.75}
+.policy h2{font-size:20px;margin:28px 0 10px;color:var(--c-strong)}
+.policy p,.policy li{color:var(--c-body)}
+.policy ul{padding-left:22px;margin:8px 0 14px}
+.policy li{margin-bottom:6px}
+.policy-updated{background:var(--c-mint);display:inline-block;padding:6px 14px;border-radius:8px;font-size:14px}
+
+.foot-legal{margin-top:18px;padding-top:14px;border-top:1px solid rgba(75,70,144,.12);font-size:13px;text-align:center}

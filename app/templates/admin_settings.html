@@ -52,6 +52,16 @@
       <div class="hint">Это ваши публичные ссылки. Подключение бота — на странице «Приём сообщений».</div>
 
       <h2 style="margin-top:30px">Подвал</h2>
+    <label>Название оператора (кто отвечает за данные)
+      <input name="site_operator_name" value="{{ settings.get('site.operator_name','') }}" placeholder="ИП Аляева Алёна Сергеевна">
+    </label>
+    <label>Реквизиты (ИНН / ОГРНИП)
+      <input name="site_operator_requisites" value="{{ settings.get('site.operator_requisites','') }}" placeholder="ИНН 660000000000, ОГРНИП 000000000000000">
+    </label>
+    <label>Сколько месяцев храним фото после заказа
+      <input name="site_keep_photo_months" value="{{ settings.get('site.keep_photo_months','') }}" placeholder="12">
+    </label>
+
       <label>Текст в подвале</label>
       <textarea name="site_footer" rows="4"
                 placeholder="Именные книги ручной работы. Екатеринбург.">{{ settings.get('site.footer','') }}</textarea>
