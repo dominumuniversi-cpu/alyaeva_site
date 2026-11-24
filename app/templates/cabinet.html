@@ -72,6 +72,7 @@
 
 {% for o in orders %}
 {% set photos = photos_by_order.get(o.id, []) %}
+{% set msg = "Здравствуйте! Вопрос по заказу " ~ o.number %}
 <div class="card order-card {% if loop.first %}order-first{% endif %}">
   <div class="order-head">
     <div>
@@ -108,7 +109,24 @@
 
   <div class="order-actions">
     <a class="btn btn-ghost" href="/cabinet/order/{{ o.id }}">Открыть заказ</a>
-    <a class="btn btn-ghost" href="/cabinet/repeat/{{ o.id }}" style="margin-left:10px">Повторить заказ</a>
+    <a class="btn btn-ghost" href="/cabinet/repeat/{{ o.id }}" style="margin
+  {# Связь по конкретному заказу: номер уже в тексте — не нужно вспоминать, о какой книге речь. #}
+  {% if links.tg_url or links.wa_url or links.site_phone %}
+  <div class="order-help">
+    <span class="order-help-label">Вопрос по этому заказу</span>
+    {% if links.tg_url %}
+    <a class="help-link" href="{{ links.tg_url }}?text={{ msg|urlencode }}" target="_blank" rel="noopener">Telegram</a>
+    {% endif %}
+    {% if links.wa_url %}
+    <a class="help-link" href="{{ links.wa_url }}?text={{ msg|urlencode }}" target="_blank" rel="noopener">WhatsApp</a>
+    {% endif %}
+    {% if links.site_phone %}
+    <a class="help-link" href="tel:{{ links.site_phone }}">Позвонить</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+-left:10px">Повторить заказ</a>
   </div>
 </div>
 {% endfor %}

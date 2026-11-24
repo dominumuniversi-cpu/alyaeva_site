@@ -103,6 +103,12 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
     # «Что дальше» по заказу — тем же словарём, что и статусы. Иначе в шаблоне
     # снова появится список из пяти старых статусов (так уже было).
     kw.setdefault("next_step", next_step)
+    # Название статуса — из общего словаря (app/order_status.py), а не из шаблона.
+    # В cabinet.html звалось status_name(...), а в контексте его не было: кабинет
+    # падал бы 500 у любого, у кого есть заказ. Вход в кабинет без заказов этого не показывает (24.11.2026).
+    if "status_name" not in kw:
+        from order_status import status_name as _status_name  # импорт внутри: не тянуть приложение при импорте модуля
+        kw["status_name"] = _status_name
     # Счётчик непрочитанных нужен шапке на каждой странице кабинета.
     unread = kw.pop("unread", 0)
     if user and not unread:
