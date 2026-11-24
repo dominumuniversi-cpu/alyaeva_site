@@ -56,7 +56,7 @@
         <td data-label="Цена" class="num">
           {% if p.price_rub and p.price_rub > 0 %}
             {% if p.old_price %}<s class="old">{{ p.old_price|rub }}</s> {% endif %}
-            <strong>от {{ p.price_rub|rub }}</strong>
+            <strong>{{ p.price_rub|rub }}</strong>
           {% else %}
             <span class="muted">по запросу</span>
           {% endif %}
