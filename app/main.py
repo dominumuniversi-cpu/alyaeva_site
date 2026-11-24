@@ -475,6 +475,14 @@ def save_settings(
     }
     for key, val in pairs.items():
         db.set_setting(key, val.strip(), user["id"])
+    # Главная — статический файл, но ссылки на мессенджеры должны быть ОДНИ.
+    # Иначе владелец правит в настройках и видит старые ссылки на главной (#46).
+    try:
+        import sync_links
+        sync_links.apply_links({k.replace("site.", "site."): v.strip() for k, v in pairs.items()})
+    except Exception:
+        # Не смогли переписать главную — настройки всё равно сохранены, это главное.
+        pass
     return RedirectResponse(ADMIN + "/settings?saved=1", status_code=303)
 
 

@@ -28,5 +28,22 @@ const proxy = status('proxy');
 console.log('alyaeva-site=' + site, 'proxy=' + proxy);
 if (site !== 'running' || proxy !== 'running') ok = false;
 
+// Главная живёт отдельно от приложения. Если прод и репозиторий разошлись,
+// правки теряются молча — поэтому это тоже повод для тревоги (#45).
+try {
+  const { execFileSync } = require('child_process');
+  const out = execFileSync(process.execPath, [require('path').join(__dirname, 'deploy-site.js')],
+                           { encoding: 'utf8', timeout: 60000 });
+  const m = out.match(/изменится (\d+) из/);
+  if (m) {
+    console.log('ВНИМАНИЕ: ' + m[1] + ' файлов статики на проде отличаются от репозитория');
+    console.log('  разложить: node scripts/deploy-site.js --apply');
+  } else {
+    console.log('статика: прод совпадает с репозиторием');
+  }
+} catch (e) {
+  console.log('сверка статики не удалась: ' + e.message.split('\n')[0]);
+}
+
 console.log(ok ? 'OK: сайт жив' : 'ALARM: сайт недоступен');
 process.exit(ok ? 0 : 1);
