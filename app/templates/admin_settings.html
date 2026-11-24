@@ -4,17 +4,17 @@
 {% block content %}
 {# Настройки САЙТА. Мессенджеры — на /admin/hooks, здесь их нет намеренно. #}
 <h1>Настройки сайта</h1>
-<p class="muted" style="margin-top:-4px">
+<p class="muted mt-neg">
   Контакты и подвал. Всё, что вы здесь измените, видно покупателям на страницах сайта.
 </p>
 
 {% if saved %}
-<div class="card card-cream" style="padding:14px 22px; margin-bottom:18px">Сохранено.</div>
+<div class="card card-cream card-pad-sm mb-18">Сохранено.</div>
 {% endif %}
 
 <div class="grid grid-2">
   <div class="card">
-    <h2 style="margin-top:0">Контакты</h2>
+    <h2 class="card-title">Контакты</h2>
     <form method="post" action="{{ admin_url }}/settings">
     {% include "_csrf_field.html" %}
       <label for="f_site_phone">Телефон</label>
@@ -34,7 +34,7 @@
       <input id="f_site_work_hours" type="text" name="site_work_hours" value="{{ settings.get('site.work_hours','') }}"
              placeholder="пн–пт, 10:00–19:00">
 
-      <h2 style="margin-top:30px">Соцсети</h2>
+      <h2 class="mt-30">Соцсети</h2>
       <label for="f_site_instagram">Instagram</label>
       <input id="f_site_instagram" type="text" name="site_instagram" value="{{ settings.get('site.instagram','') }}"
              placeholder="https://instagram.com/...">
@@ -52,7 +52,7 @@
              placeholder="https://wa.me/79000000000">
       <div class="hint">Это ваши публичные ссылки. Подключение бота — на странице «Приём сообщений».</div>
 
-      <h2 style="margin-top:30px">Подвал</h2>
+      <h2 class="mt-30">Подвал</h2>
     <label for="f_site_operator_name">Название оператора (кто отвечает за данные)</label>
       <input id="f_site_operator_name" name="site_operator_name" value="{{ settings.get('site.operator_name','') }}" placeholder="ИП Аляева Алёна Сергеевна">
     </label>
@@ -67,17 +67,17 @@
       <textarea id="f_site_footer" name="site_footer" rows="4"
                 placeholder="Именные книги ручной работы. Екатеринбург.">{{ settings.get('site.footer','') }}</textarea>
 
-      <div style="margin-top:26px"><button class="btn">Сохранить</button></div>
+      <div class="mt-26"><button class="btn">Сохранить</button></div>
     </form>
   </div>
 
   <div class="card card-lilac">
-    <h2 style="margin-top:0">Что здесь, а что нет</h2>
+    <h2 class="card-title">Что здесь, а что нет</h2>
     <p><strong>Здесь</strong> — всё про сам сайт: телефон, почта, адрес, соцсети, текст подвала.</p>
     <p><strong>Не здесь</strong> — подключение мессенджеров. Оно на отдельной странице
       <a href="{{ admin_url }}/hooks">Приём сообщений</a>, чтобы одна и та же настройка
       не лежала в двух местах.</p>
-    <p class="muted" style="margin-top:20px">
+    <p class="muted mt-20">
       Все изменения пишутся в журнал аудита — видно, кто и когда их сделал.
     </p>
   </div>
