@@ -38,10 +38,18 @@
   var b = document.querySelector('.burger');
   var n = document.getElementById('mainnav');
   if (!b || !n) return;
-  b.addEventListener('click', function () {
-    var open = n.classList.toggle('open');
+  /* Открыть/закрыть панель. Пока панель открыта, страница под ней не прокручивается,
+     а Esc и выбор пункта закрывают её — иначе человек остаётся с меню поверх страницы. */
+  var set = function (open) {
+    n.classList.toggle('open', open);
+    document.body.classList.toggle('nav-open', open);
     b.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
+    if (open) { var first = n.querySelector('a'); if (first) first.focus({ preventScroll: true }); }
+  };
+  b.addEventListener('click', function () { set(!n.classList.contains('open')); });
+  n.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+  window.addEventListener('resize', function () { if (window.innerWidth > 820) set(false); });
 })();
 /* Тень под шапкой появляется только когда страница прокручена — так шапка не «висит в воздухе». */
 (function () {

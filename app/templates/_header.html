@@ -10,9 +10,10 @@
       {% if user %}
         <a href="/cabinet" {% if request.url.path == '/cabinet' %}class="on"{% endif %}>Мои заказы</a>
         <a href="/cabinet/notifications" {% if '/notifications' in request.url.path %}class="on"{% endif %}>Уведомления{% if unread %}<span class="badge">{{ unread }}</span>{% endif %}</a>
-        {% if user.role == 'admin' %}<a href="{{ admin_url }}">Админка</a>{% endif %}
+        {% if user.role == 'admin' %}<a href="{{ admin_url }}" {% if request.url.path.startswith(admin_url) %}class="on"{% endif %}>Админка</a>{% endif %}
         <a href="/ceny" {% if request.url.path == '/ceny' %}class="on"{% endif %}>Стоимость</a>
         <a href="/order" {% if request.url.path == '/order' %}class="on"{% endif %}>Заказать</a>
+        <a href="/settings" {% if request.url.path == '/settings' %}class="on"{% endif %}>Настройки</a>
       {% else %}
         <a href="/">На сайт</a>
         <a href="/ceny">Стоимость</a>
