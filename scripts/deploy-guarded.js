@@ -181,14 +181,22 @@ async function main() {
     throw new Error('Новый прод не отвечает после переключения');
   }
   console.log('5. Живая проверка сайта...');
+  /* 301 от прокси — норма: он всегда уводит http на https. Живой ответ — это 200 либо 301,
+     а не только 200. Проверка «=== 200» уже роняла деплой на здоровом сайте (24.11). */
+  const okLive = (code) => code === '200' || code === '301' || code === '302' || code === '303';
   let live = '';
   for (let i = 0; i < 6; i += 1) {
     live = docker(['run', '--rm', '--network', NET, 'curlimages/curl:latest', '-s', '--max-time', '10',
       '-o', '/dev/null', '-w', '%{http_code}', '-H', 'Host: alyaeva.pro', 'http://proxy/login'], 40000).out;
-    if (live === '200') break;
+    if (okLive(live)) break;
     await new Promise((res) => setTimeout(res, 3000));
   }
-  if (live !== '200') throw new Error('Приложение не отвечает через прокси после деплоя');
+  if (!okLive(live)) throw new Error('Приложение не отвечает через прокси после деплоя (код ' + (live || 'нет ответа') + ')');
+  /* Настоящая проверка работы — снаружи по https: там видно, что приложение реально отвечает. */
+  const external = docker(['run', '--rm', 'curlimages/curl:latest', '-s', '--max-time', '15', '-o', '/dev/null',
+    '-w', '%{http_code}', '-H', 'X-DSH-Check: 1', 'https://alyaeva.pro/login'], 60000).out;
+  if (external !== '200') throw new Error('Снаружи по https /login отвечает ' + (external || 'нет ответа'));
+  console.log('   через прокси ' + live + ', снаружи по https 200');
   console.log('   через прокси /login -> 200');
 
   console.log('5а. Новый жив — убираю старый контейнер.');
@@ -219,5 +227,5 @@ main().catch((e) => {
   const code = docker(['run', '--rm', '--network', NET, 'curlimages/curl:latest', '-s', '--max-time', '10',
     '-o', '/dev/null', '-w', '%{http_code}', '-H', 'Host: alyaeva.pro', 'http://proxy/login'], 40000).out;
   console.error('   проверка после восстановления: /login -> ' + (code || 'нет ответа'));
-  process.exit(code === '200' ? 0 : 1);
+  process.exit(code === '200' || code === '301' ? 0 : 1);
 });
