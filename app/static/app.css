@@ -158,7 +158,23 @@ tr:last-child td{border-bottom:none}
    1. широкий экран — все пункты В ОДНУ строку, одной высоты;
    2. не влезает — переносим целиком: строки выровнены по центру, высота одинаковая;
    3. телефон — один столбец: пункты друг под другом, каждый во всю ширину;
-   4. значок новых заказов не выше строки (24 px), иначе «Заказы» выше остальных. */
+   4. значок новых заказов не выше строки, иначе «Заказы» выше остальных.
+
+   ЗАМЕР 24.11.2026 (Chrome, реальные окна, 10 пунктов):
+       1912 / 1432 / 1272 / 1016 px — в строку влезали ДЕВЯТЬ, «Настройки сайта» падал вторым рядом;
+       812 px — планшетное правило не срабатывало вовсе, выходило 4 + 4 + 2;
+       500 px — столбец, 10 строк по 44 px (правильно).
+   Причина на широком: пункты тянулись по содержимому («Приём сообщений» и «Настройки сайта»
+   по 142 px), сумма ~1010 px при доступных ~960. Лечение — разрешить пунктам поджиматься
+   (flex-shrink) и запретить им переносить текст: тогда десять пунктов укладываются в строку
+   на 1280 и шире, а на узком экран честно уходит по правилу 2–3.
+
+   ПОЧЕМУ «ЗАКАЗЫ» ВЫПАДАЛ (нашёл 24.11.2026, повторное замечание владельца).
+   Тег у всех пунктов один — <a>. Отличалось СОДЕРЖИМОЕ: только у «Заказов» внутри есть
+   счётчик <span class="badge">. В inline-flex он становится вторым flex-элементом,
+   и вертикаль считается иначе, чем у соседей с одиноким текстом: значок садился
+   по базовой линии и поднимал строку. Лечение — не «поправить один пункт», а задать
+   выравнивание явно для ВСЕХ: в строке стираем baseline, а счётчику даём свою высоту. */
 .admin-subnav .wrap {
   display: flex;
   align-items: center;
@@ -166,16 +182,52 @@ tr:last-child td{border-bottom:none}
   flex-wrap: wrap;
   padding: 8px 20px;
 }
+/* Строгий центр по поперечной оси: правило одинаково для пункта с текстом и со значком. */
 .admin-subnav a {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 6px;
   min-height: 36px;
-  padding: 7px 14px;
+  height: 36px;              /* одна высота у всех: текст не растягивает, значок не поднимает */
+  box-sizing: border-box;
+  padding: 0 14px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 700;
+  line-height: 1;
   color: var(--c-accent);
   text-decoration: none;
+  vertical-align: middle;
+  white-space: nowrap;       /* «Приём сообщений» не рвётся на две строки внутри кнопки */
+  flex: 0 1 auto;            /* может поджаться, чтобы десять пунктов встали в одну строку */
+  min-width: 0;
+}
+/* ЗАМЕР (Chrome 24.11.2026), .wrap = 960 px минус padding 40 = 920 доступно:
+   десять пунктов по 14px давали 991 — не хватало 71 px, отсюда «Настройки сайта» вторым рядом.
+   Меню уже не помещается в контейнер сайта при 10 пунктах и кегле 14.
+   Решение: на широком экране пункты чуть компактнее (12.5px, отступ 10, зазор 4):
+   это ~830 px — строка одна с запасом. Ниже 1000 px — сетка 5×2, на телефоне — столбец. */
+@media (min-width: 1001px) {
+  .admin-subnav a { padding: 0 10px; font-size: 12.5px; gap: 4px; }
+}
+/* Счётчик внутри пункта: не выше строки, не сдвигает текст, стоит строго по центру. */
+.admin-subnav .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex: 0 0 auto;
+  min-width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
 }
 .admin-subnav a:hover { background: #fff; }
 .admin-subnav a.active { background: var(--c-accent); color: #fff; }
@@ -548,9 +600,12 @@ body{position:relative}
 }
 
 /* ---------- Значок новых заказов в подменю админки ---------- */
+/* .admin-subnav a раскладку уже задал выше (правило #221) — здесь только позиция-страховка. */
 .admin-subnav a{position:relative}
-.badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;line-height:1;padding:0 6px;
-  margin-left:7px;border-radius:999px;background:#D9534F;color:#fff;font-size:12px;font-weight:800;vertical-align:middle}
+/* ЦВЕТ и форма значка. Отступ и вертикаль задаются в блоке .admin-subnav .badge выше:
+   дублировать margin/height здесь нельзя — это правило идёт ниже и молча перебивало их.
+   Поправка 24.11.2026: именно margin-left:7px и сбивал строку у «Заказов». */
+.badge{border-radius:999px;background:#D9534F;color:#fff}
 
 /* ---------- Лента событий заказа ---------- */
 .feed{list-style:none;margin:0;padding:0 0 0 4px}
@@ -808,19 +863,26 @@ body{
 .save-msg-bad { color: #b03a2e; opacity: 1; }
 .btn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 
-@media (max-width:600px){
-  /* Меню админки на телефоне — столбец: строки по ширине экрана, палец попадает целиком. */
-  .admin-subnav .wrap{flex-direction:column;align-items:stretch;gap:4px;padding:8px 16px}
-  .admin-subnav a{width:100%;justify-content:space-between;min-height:44px}
-  .admin-subnav .badge{margin-left:0}
+/* Правило 2 доводим: пока пункты «почти» влезают, последний уезжает один — это и выглядит рвано.
+   Планшетный диапазон был 601–900 по ОКНУ, но меню живёт в контейнере 960: на 812 px
+   (планшет) правило не срабатывало и выходило 4 + 4 + 2. Теперь режем по контейнеру:
+   всё, что уже 1000, делится ровно на пять колонок — десять пунктов встают в два ряда.
+
+   ПОРЯДОК ВАЖЕН: этот блок идёт ДО телефонного. Раньше телефонный столбец стоял выше,
+   идущая следом сетка перебивала его — на 500 px выходила «сетка 5×2», а не столбец. */
+@media (max-width:1000px){
+  .admin-subnav .wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .admin-subnav a{justify-content:center;text-align:center;width:auto}
 }
 
-/* Правило 2 доводим: пока пункты «почти» влезают, последний уезжает один — это и выглядит рвано.
-   На узком планшете делим ровно на две строки по четыре, а не «сколько получится». */
+/* Телефон — последним: столбец, самая поздняя победа в каскаде. */
+@media (max-width:600px){
+  /* Меню админки на телефоне — столбец: строки по ширине экрана, палец попадает целиком. */
+  .admin-subnav .wrap{display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px 16px}
+  .admin-subnav a{width:100%;justify-content:space-between;min-height:44px;height:auto;font-size:14px}
+  .admin-subnav .badge{margin-left:0}
+}
 @media (max-width:900px) and (min-width:601px){
-  /* 900 включительно: сетку «4 + 4» держим и на самом краю, иначе восьмой пункт уезжает третьей строкой (#254). */
-  .admin-subnav .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-  .admin-subnav a{justify-content:center;text-align:center}
   /* Шапка сайта на планшете: два ровных ряда по четыре, а не «сколько влезло» (#221).
      Бургер и выезжающая панель остаются для телефона (600 и уже). */
   .topbar .burger{display:none}
