@@ -9,6 +9,7 @@
   {% endif %}
   {% if error %}<div class="errors">{{ error }}</div>{% endif %}
   <form method="post" action="/register">
+    {% include "_csrf_field.html" %}
     <input type="hidden" name="next" value="{{ next }}">
     <label for="full_name">Как вас зовут</label>
     <input id="full_name" type="text" name="full_name" autocomplete="name" placeholder="Анна Петрова" value="{{ full_name or '' }}">
