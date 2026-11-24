@@ -114,7 +114,11 @@
             : "В цену входит " + d.included + " страниц. Точную цену назову после просмотра фото.";
           link.href = "/order?format=" + encodeURIComponent(f.value) + "&pages=" + encodeURIComponent(d.pages);
         })
-        .catch(function(){ out.textContent = "Сеть недоступна"; });
+        .catch(function(){
+              /* Не «Сеть недоступна», а что делать человеку. */
+              out.textContent = "Не получилось посчитать";
+              note.textContent = "Похоже, пропала связь. Обновите страницу — расчёт вернётся.";
+            });
     }, 220);
   }
   f.addEventListener("change", update);
