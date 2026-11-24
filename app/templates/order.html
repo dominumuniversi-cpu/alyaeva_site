@@ -74,7 +74,8 @@ fetch('/api/products').then(r=>r.json()).then(list=>{
     /* Цена 0 = «по запросу» теми же словами, что в таблице на /ceny.
        Услуга (видео, коллажи, реставрация) цену по запросу заказывать не мешает —
        человек выбирает её и пишет пожелания, а не идёт в мессенджер. */
-    o.textContent = p.title + (p.price_rub ? ' — ' + Math.round(p.price_rub).toLocaleString('ru-RU') + '\u00a0₽' : ' — по запросу');
+    /* «от» — потому что точную цену называем после разговора (задача #97). */
+    o.textContent = p.title + (p.price_rub ? ' — от\u00a0' + Math.round(p.price_rub).toLocaleString('ru-RU') + '\u00a0₽' : ' — по запросу');
     if (!p.price_rub) o.dataset.free = '1';
     sel.appendChild(o);
   });
