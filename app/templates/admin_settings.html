@@ -15,7 +15,9 @@
 <div class="grid grid-2">
   <div class="card">
     <h2 class="card-title">Контакты</h2>
-    <form method="post" action="{{ admin_url }}/settings">
+    {# Сохранение через fetch: страница не перезагружается, человек остаётся на том же месте (#215).
+       Без JS форма работает как раньше — обычный POST. #}
+    <form method="post" action="{{ admin_url }}/settings" id="f_settings">
     {% include "_csrf_field.html" %}
       <label for="f_site_phone">Телефон</label>
       <input id="f_site_phone" type="text" name="site_phone" value="{{ settings.get('site.phone','') }}"
@@ -67,7 +69,10 @@
       <textarea id="f_site_footer" name="site_footer" rows="4"
                 placeholder="Именные книги ручной работы. Екатеринбург.">{{ settings.get('site.footer','') }}</textarea>
 
-      <div class="mt-26"><button class="btn">Сохранить</button></div>
+      <div class="mt-26 btn-row">
+        <button class="btn" type="submit">Сохранить</button>
+        <span class="save-msg" id="f_settings_msg" role="status" aria-live="polite"></span>
+      </div>
     </form>
   </div>
 
@@ -82,4 +87,38 @@
     </p>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var form = document.getElementById("f_settings");
+  var msg = document.getElementById("f_settings_msg");
+  if (!form || !window.fetch) return;
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var btn = form.querySelector("button[type=submit]");
+    btn.disabled = true;
+    msg.textContent = "Сохраняю…";
+    msg.className = "save-msg";
+    fetch(form.action, {method: "POST", body: new FormData(form), credentials: "same-origin",
+      headers: {"Accept": "application/json", "X-Requested-With": "fetch"}})
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok) {
+          msg.textContent = d.saved ? ("Сохранено: " + d.saved) : "Сохранено";
+          msg.className = "save-msg save-msg-ok";
+        } else {
+          msg.textContent = (d && d.error) || "Не сохранилось — попробуйте ещё раз";
+          msg.className = "save-msg save-msg-bad";
+        }
+      })
+      .catch(function () {
+        msg.textContent = "Сеть недоступна — попробуйте ещё раз";
+        msg.className = "save-msg save-msg-bad";
+      })
+      .then(function () { btn.disabled = false; });
+  });
+})();
+</script>
 {% endblock %}

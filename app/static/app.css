@@ -787,3 +787,8 @@ body{
 /* Связь по заказу на странице самого заказа: вертикально, с номером в подписи. */
 .order-help-stack{flex-direction:column;align-items:flex-start;gap:10px}
 .order-help-row{display:flex;flex-wrap:wrap;gap:8px}
+/* Сообщение под кнопкой сохранения: видно, что записалось, без перезагрузки (#215, #216). */
+.save-msg { font-size: 13px; line-height: 1.4; color: var(--c-body); opacity: .8; }
+.save-msg-ok { color: #2f7d57; opacity: 1; }
+.save-msg-bad { color: #b03a2e; opacity: 1; }
+.btn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
