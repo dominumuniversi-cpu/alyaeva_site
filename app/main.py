@@ -33,7 +33,7 @@ app = FastAPI(title="alyaeva.pro", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 import orders as orders_mod  # noqa: E402
-from order_status import STATUS_ORDER, STAGE_NAMES, STATUS_NAMES
+from order_status import STATUS_ORDER, STAGE_NAMES, STATUS_NAMES, ACTIVE_STATUSES
 from routes_shop import router as shop_router, status_name
 from admin_clients import router as admin_clients_router
 from hooks import router as hooks_router  # noqa: E402
@@ -319,7 +319,7 @@ def cabinet(request: Request):
     return render(request, "cabinet.html", user=user, orders=orders,
                   photos_by_order=photos_by_order, status_name=status_name,
                   photos_need=[o["id"] for o in orders if not photos_by_order.get(o["id"])],
-                  stages=STATUS_ORDER, stage_names=STAGE_NAMES)
+                  stages=STATUS_ORDER, stage_names=STAGE_NAMES, active_statuses=ACTIVE_STATUSES)
 
 
 @app.get("/cabinet/repeat/{order_id}")
