@@ -1,0 +1,19 @@
+/* Шапка сайта: одинаковое поведение на главной, на 404 и на странице «Сайт обновляется».
+   Правила лежат в одном файле, а не копией в каждой странице: иначе правка приезжает
+   в одну из трёх и расходится. */
+
+/* На узком экране липкая шапка не должна занимать пол-экрана: меню в одну строку
+   с горизонтальной прокруткой. */
+@media (max-width: 900px){
+  /* Все пункты меню — на одной линии: у ссылок разная высота, и кнопка съезжала вниз. */
+  header nav > a{vertical-align:middle !important; line-height:1.6 !important}
+  header > div{flex-wrap:wrap !important; gap:2px 24px !important}
+  header nav{flex-wrap:nowrap !important; overflow-x:auto; -webkit-overflow-scrolling:touch;
+             width:100%; justify-content:flex-start !important; gap:0 16px !important;
+             font-size:14px !important; scrollbar-width:none}
+  header nav::-webkit-scrollbar{display:none}
+  header nav a{padding:6px 0 !important; white-space:nowrap}
+  header a[href="/login"]{padding:6px 14px !important; font-size:14px}
+  /* Значки в подвале: на телефоне палец, а не курсор — целиться крупнее. */
+  footer a[aria-label]{width:52px !important; height:52px !important}
+}
