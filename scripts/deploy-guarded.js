@@ -189,20 +189,16 @@ async function main() {
     throw new Error('Не удалось занять имя прода: ' + promote.out.slice(0, 200));
   }
   candidateName = null;
+  /* `docker stop` снимает контейнер с сетей, и `start` их НЕ возвращает: без явного connect
+     сетевое имя alyaeva-web не резолвится, nginx получает 113 и отдаёт 502.
+     Порядок важен: сначала start, затем connect — иначе старт снова снимет сеть. */
   const started = docker(['start', PROD]);
   if (!started.ok) throw new Error('Новый прод не запустился: ' + started.out.slice(0, 200));
-  /* Контейнер, отведённый в сторону, теряет сеть прокси — при `start` она НЕ возвращается.
-     Без неё nginx отдаёт 502 (connect: Host is unreachable). Подключаем явно и ждём IP. */
-  const attach = docker(['network', 'connect', NET, PROD]);
-  if (!attach.ok && !/already exists|already connected/i.test(attach.out)) {
-    throw new Error('Не удалось подключить прод к сети прокси: ' + attach.out.slice(0, 200));
-  }
-  for (let i = 0; i < 10; i += 1) {
-    const nets = docker(['inspect', PROD, '--format', '{{json .NetworkSettings.Networks}}']);
-    let ip = '';
-    try { ip = (JSON.parse(nets.out || '{}')[NET] || {}).IPAddress || ''; } catch (e) { ip = ''; }
-    if (ip) break;
-    await new Promise((res) => setTimeout(res, 1000));
+  for (const net of [NET, NET_DB]) {
+    const attach = docker(['network', 'connect', net, PROD]);
+    if (!attach.ok && !/already exists|already connected/i.test(attach.out)) {
+      throw new Error('Сеть ' + net + ' не подключилась: ' + attach.out.slice(0, 160));
+    }
   }
   if (!(await waitHealthy(PROD))) {
     throw new Error('Новый прод не отвечает после переключения');
@@ -250,8 +246,8 @@ function restoreProd() {
     const back = docker(['rename', PROD_NEW_NAME, PROD]);
     if (back.ok) docker(['start', PROD]);
   }
-  // Алиас ставим ВСЕГДА — без него прокси не найдёт контейнер по имени.
-  docker(['network', 'connect', NET, '--alias', PROD, PROD]);
+  // Сети ставим ВСЕГДА и ПОСЛЕ start: без них nginx не резолвит имя, а база недоступна.
+  for (const net of [NET, NET_DB]) docker(['network', 'connect', net, PROD]);
   const check = docker(['network', 'inspect', NET, '--format', '{{json .Containers}}']);
   return check.ok;
 }
