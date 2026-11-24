@@ -430,7 +430,7 @@ def admin_orders(request: Request):
                FROM orders o LEFT JOIN users u ON u.id = o.user_id
                ORDER BY o.created_at DESC LIMIT 200"""
         ).fetchall()
-    return render(request, "admin_orders.html", user=user, orders=orders)
+    return render(request, "admin_orders.html", user=user, orders=orders, status_names=STATUS_NAMES)
 
 
 @app.get(ADMIN + "/inbox", response_class=HTMLResponse)
