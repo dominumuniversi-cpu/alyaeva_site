@@ -709,3 +709,26 @@ body{
 .pill-printing,.pill-shipped{background:#E7EEFF;color:#2B4A8A}
 .pill-done{background:var(--c-mint);color:#1F6B5B}
 .pill-cancelled{background:#F2F2F5;color:#6B6B7B}
+
+/* Утилиты страниц кабинета и админки (24.11.2026). Перенос встроенных style="…"
+   в классы: одна и та же разметка выглядит одинаково, а правка шапки карточки
+   не превращается в поиск по 26 местам. */
+.page-head{padding:26px 0 10px}
+.page-title{margin:10px 0 4px}
+.card-stack{margin-top:18px}
+.card-title{font-size:20px;margin-top:0}
+.tight{margin:0}
+.last{margin-bottom:0}
+.bare-link{text-decoration:none}
+.bare-link.inherit{color:inherit}
+.sum-toggle{cursor:pointer;color:var(--c-accent);font-weight:700}
+.mt-10{margin-top:10px}
+.w-full{width:100%}
+.field-grow{flex:1;min-width:200px}
+.field-grow-sm{flex:1;min-width:180px}
+.input-compact{padding:6px 10px;border:1.5px solid var(--c-lilac);border-radius:8px;font-family:inherit;background:#fff}
+.input-full{width:100%;padding:11px 14px;border:1.5px solid var(--c-lilac);border-radius:10px;font-family:inherit}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.photo-thumb{width:100%;height:130px;object-fit:cover;border-radius:10px;background:var(--c-mint)}
+.photo-cap{font-size:13px;margin-top:6px;color:var(--c-body);word-break:break-all}
+.tiny{font-size:12px}
