@@ -3,18 +3,33 @@
 {% block main_class %}wide{% endblock %}
 {% block content %}
 <h1>Товары и цены</h1>
-<p class="muted">Цены меняются здесь и сразу попадают на сайт — HTML править не нужно. Цена 0 значит «по запросу»: так и увидит клиент.</p>
+<p class="muted">Меняйте цену прямо здесь — она сразу попадёт на сайт, HTML править не нужно.
+Цена 0 значит «по запросу»: так и увидит клиент.</p>
 {% if products %}
 <div class="card">
   <table>
-    <tr><th>Название</th><th>Цена</th><th>Старая</th><th>Ед.</th><th>Активен</th></tr>
+    <tr><th>Название</th><th>Цена, ₽</th><th>Старая, ₽</th><th>Показывать</th><th></th></tr>
     {% for p in products %}
-    <tr>
+    <tr data-row="{{ p.id }}">
       <td><strong>{{ p.title }}</strong><br><span class="muted">{{ p.slug }}</span></td>
-      <td>{% if p.price_rub and p.price_rub > 0 %}{{ '%.0f'|format(p.price_rub) }} ₽{% else %}<span class="muted">по запросу</span>{% endif %}</td>
-      <td>{% if p.old_price %}<s>{{ '%.0f'|format(p.old_price) }} ₽</s>{% else %}—{% endif %}</td>
-      <td>{{ p.unit }}</td>
-      <td>{% if p.is_active %}да{% else %}<span class="muted">нет</span>{% endif %}</td>
+      <td>
+        <input class="price-in" type="number" min="0" max="10000000" step="1"
+               name="price_rub" value="{% if p.price_rub and p.price_rub > 0 %}{{ '%.0f'|format(p.price_rub) }}{% else %}0{% endif %}"
+               aria-label="Цена товара {{ p.title }}">
+      </td>
+      <td>
+        <input class="price-in" type="number" min="0" step="1" name="old_price"
+               value="{% if p.old_price %}{{ '%.0f'|format(p.old_price) }}{% endif %}"
+               placeholder="—" aria-label="Старая цена {{ p.title }}">
+      </td>
+      <td>
+        <input type="checkbox" name="is_active" {% if p.is_active %}checked{% endif %}
+               aria-label="Показывать товар {{ p.title }}">
+      </td>
+      <td>
+        <button class="btn btn-save" type="button" data-id="{{ p.id }}">Сохранить</button>
+        <span class="save-msg" aria-live="polite"></span>
+      </td>
     </tr>
     {% endfor %}
   </table>
@@ -22,4 +37,31 @@
 {% else %}
 <div class="card card-cream"><h2>Товаров пока нет</h2><p>Добавим при наполнении каталога.</p></div>
 {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+/* Сохранение цены без перезагрузки: человек правит цену и сразу видит подпись, как её увидит клиент. */
+document.querySelectorAll('.btn-save').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var row = btn.closest('tr');
+    var msg = row.querySelector('.save-msg');
+    var price = row.querySelector('input[name="price_rub"]').value;
+    var old = row.querySelector('input[name="old_price"]').value;
+    var active = row.querySelector('input[name="is_active"]').checked ? '1' : '0';
+    btn.disabled = true;
+    msg.textContent = 'Сохраняю…';
+    var body = new URLSearchParams();
+    body.set('price_rub', price);
+    body.set('old_price', old);
+    body.set('is_active', active);
+    fetch('/api/admin/product/' + btn.dataset.id + '/price', {method: 'POST', body: body, credentials: 'same-origin'})
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        msg.textContent = d.ok ? ('Сохранено: ' + d.label) : (d.error || 'Не сохранилось');
+      })
+      .catch(function () { msg.textContent = 'Сеть недоступна — попробуйте ещё раз'; })
+      .then(function () { btn.disabled = false; });
+  });
+});
+</script>
 {% endblock %}

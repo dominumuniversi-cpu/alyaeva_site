@@ -183,6 +183,44 @@ def set_order_status(request: Request, order_id: int, status: str = Form("")):
     return JSONResponse({"ok": True, "status": status, "label": STATUSES[status]})
 
 
+@router.post("/api/admin/product/{product_id}/price")
+def set_product_price(request: Request, product_id: int, price_rub: str = Form(""),
+                      old_price: str = Form(""), is_active: str = Form("")):
+    """Правка цены товара без перезагрузки страницы.
+
+    Цена 0 — это «по запросу», а не «бесплатно»: так же её понимает и сайт, и форма заказа.
+    Пустое поле цены — ошибка, а не повод записать ноль: ноль отнимает у товара цену молча.
+    """
+    user, redirect = admin_only(request)
+    if redirect:
+        return JSONResponse({"ok": False, "error": "Нужно войти"}, status_code=401)
+    try:
+        price = float((price_rub or "").replace(" ", "").replace(",", "."))
+    except ValueError:
+        return JSONResponse({"ok": False, "error": "Цена должна быть числом"}, status_code=400)
+    if price < 0 or price > 10_000_000:
+        return JSONResponse({"ok": False, "error": "Цена вне разумных пределов"}, status_code=400)
+    old = None
+    if (old_price or "").strip():
+        try:
+            old = float(old_price.replace(" ", "").replace(",", "."))
+        except ValueError:
+            return JSONResponse({"ok": False, "error": "Старая цена должна быть числом"}, status_code=400)
+        if old <= 0:
+            old = None
+    with db.pool.connection() as conn:
+        row = conn.execute("SELECT id FROM products WHERE id = %s", (product_id,)).fetchone()
+        if not row:
+            return JSONResponse({"ok": False, "error": "Товар не найден"}, status_code=404)
+        conn.execute(
+            "UPDATE products SET price_rub = %s, old_price = %s, is_active = %s WHERE id = %s",
+            (price, old, (is_active == "1"), product_id),
+        )
+    # Подпись для интерфейса считаем на сервере: в шаблоне правило «0 = по запросу» не дублируется.
+    label = ("%.0f ₽" % price) if price > 0 else "по запросу"
+    return JSONResponse({"ok": True, "price_rub": price, "label": label,
+                         "old_price": old, "is_active": is_active == "1"})
+
 @router.post("/api/admin/project/create")
 def create_project(request: Request, user_id: int = Form(...), title: str = Form(""),
                    order_id: str = Form("")):
