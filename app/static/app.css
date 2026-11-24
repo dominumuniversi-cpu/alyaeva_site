@@ -96,7 +96,6 @@ textarea{min-height:90px;resize:vertical}
   box-shadow:0 8px 18px rgba(75,70,144,.18);
 }
 .btn:hover{background:#FFDF8C}
-.btn:active{transform:translateY(1px)}
 /* Нажатие: кнопка заметно «утапливается» — палец получает ответ до отправки формы. */
 .btn:active,.btn-ghost:active{transform:translateY(1px)}
 /* Недоступная кнопка не должна выглядеть доступной: иначе человек жмёт и ждёт. */
@@ -110,7 +109,6 @@ textarea{min-height:90px;resize:vertical}
   border:1.5px solid var(--c-accent);
 }
 .btn-ghost:hover{background:var(--c-lilac);color:var(--c-strong)}
-.btn[disabled]{opacity:.55;cursor:default}
 
 /* Подписи, подсказки */
 .muted{color:var(--c-body);opacity:.75}
