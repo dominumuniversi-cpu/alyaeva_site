@@ -511,6 +511,7 @@ Cookie `sid` выдаётся с флагом `Secure`. На стенде по h
 | Сверка | `SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname = orders_status_chk` |
 
 **Путь вызова — с id в середине:** `/api/admin/order/{id}/status`.
+
 ### Словарь статусов живёт ТОЛЬКО в app/order_status.py
 
 Один и тот же список разъехался в проекте пять раз. Каждый раз страницы открывались,
