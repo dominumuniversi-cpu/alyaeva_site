@@ -722,7 +722,6 @@ body{
 .bare-link{text-decoration:none}
 .bare-link.inherit{color:inherit}
 .sum-toggle{cursor:pointer;color:var(--c-accent);font-weight:700}
-.mt-10{margin-top:10px}
 .w-full{width:100%}
 .field-grow{flex:1;min-width:200px}
 .field-grow-sm{flex:1;min-width:180px}
@@ -771,3 +770,20 @@ body{
 .text-strong{font-weight:700}
 .calc-out{margin-top:16px;font-size:18px;color:var(--c-strong)}
 .cta-row{margin:28px 0 0;text-align:center}
+.mt-neg{margin-top:-4px}
+.mt-10{margin-top:10px}
+.mt-14{margin-top:14px}
+.mt-24{margin-top:24px}
+.mt-26{margin-top:26px}
+.mb-4{margin-bottom:4px}
+.mb-6{margin-bottom:6px}
+.mb-18{margin-bottom:18px}
+.mb-20{margin-bottom:20px}
+.card-pad-sm{padding:14px 22px}
+.h3-tight{margin:0 0 8px}
+.h3-gap{margin:28px 0 8px}
+.h2-gap{margin:28px 0 12px}
+.hook-url{display:block;background:#fff;padding:12px 14px;border-radius:8px;word-break:break-all;font-size:13px}
+.cab-order-page{padding:32px 0 64px}
+.head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.photo-empty{margin-top:14px}

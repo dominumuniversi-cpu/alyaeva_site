@@ -3,13 +3,13 @@
 {% from "_progress.html" import order_progress %}
 {% from "_events.html" import order_events %}
 {% block content %}
-<div style="padding:32px 0 64px">
-  <p class="hint" style="margin:0 0 6px"><a href="/cabinet">← Мои заказы</a></p>
+<div class="cab-order-page">
+  <p class="hint mb-6"><a href="/cabinet">← Мои заказы</a></p>
 
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <div class="head-row">
     <div>
-      <h1 style="margin:0">Заказ {{ order.number }}</h1>
-      <p class="hint" style="margin:6px 0 0">
+      <h1 class="tight">Заказ {{ order.number }}</h1>
+      <p class="hint hint-tight">
         {{ order.created_at.strftime('%d.%m.%Y') }}
         {% if order.total_rub %} · {{ order.total_rub|rub }}{% endif %}
       </p>
@@ -17,21 +17,21 @@
     <span class="pill">{{ status_name(order.status) }}</span>
   </div>
 
-  <div class="card" style="margin-top:18px;padding:18px 22px">
+  <div class="card card-stack card-pad">
     {{ order_progress(order.status, stages, stage_names) }}
   </div>
 
-  <h2 style="margin:28px 0 12px">История заказа</h2>
+  <h2 class="h2-gap">История заказа</h2>
   {{ order_events(events, status_names) }}
 
   {% if order.comment %}
-    <div class="card card-cream" style="margin-top:18px">
-      <div class="hint" style="margin-bottom:4px">Пожелания к заказу</div>
+    <div class="card card-cream card-stack">
+      <div class="hint mb-4">Пожелания к заказу</div>
       <div>{{ order.comment }}</div>
     </div>
   {% endif %}
 
-  <h2 style="margin:28px 0 12px">Фотографии · {{ photos|length }}</h2>
+  <h2 class="h2-gap">Фотографии · {{ photos|length }}</h2>
 
   {% if photos %}
     <div class="photo-grid">
@@ -48,11 +48,11 @@
         </figure>
       {% endfor %}
     </div>
-    <p class="hint" style="margin-top:14px">
+    <p class="hint mt-14">
       Эти фотографии видите только вы и исполнитель. Для остальных они закрыты.
     </p>
   {% endif %}
-  {% if not photos %}<p class="hint photo-empty" style="margin:14px 0 0">Здесь появятся фотографии — загрузите их блоком ниже.</p>{% endif %}
+  {% if not photos %}<p class="hint photo-empty mt-14">Здесь появятся фотографии — загрузите их блоком ниже.</p>{% endif %}
 
   {# Загрузка фото прямо здесь: перетащил или снял на телефон — и готово, без ухода со страницы. #}
   <div class="dropzone" id="drop">
@@ -63,11 +63,11 @@
     <div class="drop-title">Перетащите фотографии сюда</div>
     <div class="hint">или выберите файлы — сразу можно несколько</div>
     <div class="drop-actions">
-      <label class="btn btn-ghost" style="margin:0">
+      <label class="btn btn-ghost tight">
         Выбрать файлы
         <input type="file" id="pick" multiple accept="image/*" hidden>
       </label>
-      <label class="btn btn-ghost" style="margin:0">
+      <label class="btn btn-ghost tight">
         Снять на камеру
         <input type="file" id="shoot" accept="image/*" capture="environment" hidden>
       </label>
