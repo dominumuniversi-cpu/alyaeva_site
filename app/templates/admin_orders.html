@@ -22,15 +22,15 @@
 </div>
 {% else %}
 <div class="card card-lilac">
-  <h2 style="margin-top:0">Здесь появятся заказы</h2>
+  <h2 class="mt-0">Здесь появятся заказы</h2>
   <p>Как только клиент оформит — заказ появится здесь. Что можно сделать прямо сейчас:</p>
   <ol class="steps">
     <li><b>Проверить цены и товары</b> — в разделе «Товары», чтобы суммы в заказах считались верно.</li>
     <li><b>Заполнить реквизиты</b> в настройках сайта — они попадут в политику обработки данных.</li>
     <li><b>Проверить приём сообщений</b> — там видно, доходят ли вебхуки от мессенджеров.</li>
   </ol>
-  <p style="margin:18px 0 0"><a class="btn" href="{{ admin_url }}/products">Товары и цены</a>
-    <a class="btn btn-ghost" href="{{ admin_url }}/settings" style="margin-left:10px">Настройки сайта</a></p>
+  <p class="mt-18"><a class="btn" href="{{ admin_url }}/products">Товары и цены</a>
+    <a class="btn btn-ghost ml-10" href="{{ admin_url }}/settings">Настройки сайта</a></p>
 </div>
 {% endif %}
 {% endblock %}

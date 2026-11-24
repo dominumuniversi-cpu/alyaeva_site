@@ -6,7 +6,7 @@
 <p class="hint">Здесь новости о ваших заказах: смена этапа, добавленные фото.</p>
 <div class="feed">
   {% for n in list %}
-  <a class="feed-item{% if not n.is_read %} unread{% endif %}" href="{{ n.url or '/cabinet' }}" style="text-decoration:none;color:inherit">
+  <a class="feed-item plain-link{% if not n.is_read %} unread{% endif %}" href="{{ n.url or '/cabinet' }}">
     <span class="feed-dot"></span>
     <span class="feed-title">{{ n.title }}</span>
     {% if n.body %}<span class="feed-text">{{ n.body }}</span>{% endif %}

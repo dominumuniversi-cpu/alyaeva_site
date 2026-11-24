@@ -7,16 +7,16 @@
 <div class="grid grid-2">
   {% for p in projects %}
   <div class="card">
-    <h2 style="font-size:20px">{{ p.title }}</h2>
+    <h2 class="h2-20">{{ p.title }}</h2>
     <p class="muted">{{ p.files }} фото{% if p.note %} · {{ p.note }}{% endif %}</p>
   </div>
   {% endfor %}
 </div>
 {% else %}
 <div class="card card-cream">
-  <h2 style="margin-top:0">Здесь появятся проекты</h2>
+  <h2 class="mt-0">Здесь появятся проекты</h2>
   <p>Проект создаётся, когда вы оформляете заказ — туда загружаются фото ребёнка.</p>
-  <p style="margin-bottom:0"><a class="btn" href="/order">Заказать книгу</a></p>
+  <p class="mb-0"><a class="btn" href="/order">Заказать книгу</a></p>
 </div>
 {% endif %}
 {% endblock %}
