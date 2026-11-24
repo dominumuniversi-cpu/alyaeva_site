@@ -1,0 +1,20 @@
+{# Лента событий заказа. Один макрос на кабинет и страницу заказа. #}
+{% macro order_events(events, names) %}
+{% if events %}
+<ol class="feed">
+  {% for ev in events %}
+  <li class="feed-item feed-{{ ev.kind }}">
+    <span class="feed-dot" aria-hidden="true"></span>
+    <div>
+      <div class="feed-title">
+        {% if ev.kind == 'status' %}{{ names.get(ev.status, ev.status) }}{% else %}{{ ev.body or 'Событие' }}{% endif %}
+      </div>
+      <div class="feed-date">{{ ev.created_at.strftime('%d.%m.%Y, %H:%M') }}</div>
+    </div>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+<p class="hint">История появится, как только по заказу что-то произойдёт.</p>
+{% endif %}
+{% endmacro %}

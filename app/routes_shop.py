@@ -13,7 +13,7 @@ from web_common import render, require_admin, require_user, denied
 router = APIRouter()
 
 # Статусы заказа: в базе код, клиенту — понятный текст.
-from order_status import STATUS_NAMES, STATUS_ORDER, status_name  # один словарь статусов на весь проект
+from order_status import STATUS_NAMES, STATUS_ORDER, status_name, add_event  # статусы и события — в одном месте
 
 
 
@@ -132,6 +132,10 @@ async def api_order_photos(number: str, request: Request, files: list[UploadFile
             saved.append(row["orig_name"])
         else:
             skipped.append((f.filename, "не изображение"))
+    # Событие в ленту: покупатель видит, что фото дошли.
+    if saved:
+        with db.pool.connection() as conn:
+            add_event(conn, order["id"], "photos", body=f"Добавлено фото: {len(saved)}")
     return JSONResponse({"ok": True, "saved": len(saved), "skipped": len(skipped), "project_id": project_id})
 
 

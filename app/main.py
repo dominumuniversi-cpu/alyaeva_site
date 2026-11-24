@@ -33,7 +33,7 @@ app = FastAPI(title="alyaeva.pro", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 import orders as orders_mod  # noqa: E402
-from order_status import STATUS_ORDER, STAGE_NAMES
+from order_status import STATUS_ORDER, STAGE_NAMES, STATUS_NAMES
 from routes_shop import router as shop_router, status_name
 from admin_clients import router as admin_clients_router
 from hooks import router as hooks_router  # noqa: E402
@@ -312,7 +312,13 @@ def cabinet_order(order_id: int, request: Request):
                WHERE p.order_id = %s ORDER BY f.created_at""",
             (order_id,),
         ).fetchall()
-    return render(request, "cabinet_order.html", user=user, order=row,
+        events = conn.execute(
+            """SELECT kind, status, body, created_at FROM order_events
+               WHERE order_id = %s ORDER BY created_at, id""",
+            (order_id,),
+        ).fetchall()
+    return render(request, "cabinet_order.html", user=user, order=row, events=events,
+                  status_names=STATUS_NAMES,
                   photos=photos, status_name=status_name,
                   stages=STATUS_ORDER, stage_names=STAGE_NAMES)
 

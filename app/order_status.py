@@ -40,3 +40,34 @@ def status_name(code: str) -> str:
 def stage_index(code: str) -> int:
     """Номер этапа на шкале прогресса. Отменённый заказ показывает -1."""
     return STATUS_ORDER.index(code) if code in STATUS_ORDER else -1
+
+
+# ---------- Лента событий заказа ----------
+
+EVENT_TEXT = {
+    "created": "Заказ создан",
+    "photos": "Загружены фотографии",
+    "status": "Статус изменился",
+    "comment": "Комментарий",
+}
+
+
+def add_event(conn, order_id: int, kind: str, status: str | None = None,
+              body: str | None = None, author: str = "system") -> None:
+    """Записать событие в ленту заказа.
+
+    conn передаётся снаружи: вызывающий код уже держит соединение
+    и транзакцию — лишнее открытие пула здесь ни к чему.
+    """
+    conn.execute(
+        "INSERT INTO order_events (order_id, kind, status, body, author) VALUES (%s, %s, %s, %s, %s)",
+        (order_id, kind, status, body, author),
+    )
+
+
+def event_text(ev) -> tuple[str, str]:
+    """Что показать покупателю: (заголовок, подробность)."""
+    kind = ev["kind"]
+    if kind == "status" and ev["status"]:
+        return STATUS_NAMES.get(ev["status"], ev["status"]), ""
+    return EVENT_TEXT.get(kind, kind), (ev["body"] or "")

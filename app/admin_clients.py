@@ -24,7 +24,7 @@ from web_common import render
 
 router = APIRouter()
 
-from order_status import STATUS_NAMES as STATUSES  # один словарь на весь проект
+from order_status import STATUS_NAMES as STATUSES, add_event  # один словарь на весь проект
 
 
 def _esc(value) -> str:
@@ -163,9 +163,14 @@ def set_order_status(request: Request, order_id: int, status: str = Form("")):
         row = conn.execute("SELECT id, number FROM orders WHERE id = %s", (order_id,)).fetchone()
         if not row:
             return JSONResponse({"ok": False, "error": "Заказ не найден"}, status_code=404)
+        # Старое значение нужно, чтобы не писать в ленту «сменился» на тот же самый статус.
+        old = conn.execute("SELECT status FROM orders WHERE id = %s", (order_id,)).fetchone()
         conn.execute(
             "UPDATE orders SET status = %s, updated_at = now() WHERE id = %s", (status, order_id)
         )
+        # Пишем только реальную смену: клик по текущему статусу — не событие.
+        if not old or old["status"] != status:
+            add_event(conn, order_id, "status", status=status, author="admin")
         conn.commit()
     return JSONResponse({"ok": True, "status": status, "label": STATUSES[status]})
 

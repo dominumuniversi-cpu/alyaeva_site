@@ -41,6 +41,11 @@ def create_order(user_id: int | None, name: str, phone: str, email: str, comment
                VALUES (%s,%s,%s,%s,%s,%s,%s, now()) RETURNING *""",
             (number, user_id, name, phone, email, comment, total),
         ).fetchone()
+        # Событие пишем в той же транзакции: заказ без записи в ленте — это дыра в истории.
+        conn.execute(
+            "INSERT INTO order_events (order_id, kind, body) VALUES (%s, 'created', %s)",
+            (order["id"], "Заказ создан"),
+        )
         for it in items:
             conn.execute(
                 """INSERT INTO order_items (order_id, product_id, title, price_rub, qty)

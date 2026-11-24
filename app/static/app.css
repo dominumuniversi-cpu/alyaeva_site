@@ -463,3 +463,17 @@ body{position:relative}
 .admin-subnav a{position:relative}
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;
   margin-left:7px;border-radius:999px;background:#D9534F;color:#fff;font-size:12px;font-weight:800;vertical-align:middle}
+
+
+/* ---------- Лента событий заказа ---------- */
+.feed{list-style:none;margin:0;padding:0 0 0 4px}
+.feed-item{position:relative;display:flex;gap:14px;padding:0 0 18px 0}
+.feed-item::before{content:"";position:absolute;left:7px;top:18px;bottom:0;width:2px;background:var(--c-lilac)}
+.feed-item:last-child{padding-bottom:0}
+.feed-item:last-child::before{display:none}
+.feed-dot{width:16px;height:16px;border-radius:50%;background:var(--c-accent);flex:none;margin-top:2px;position:relative;z-index:1}
+.feed-created .feed-dot{background:var(--c-accent)}
+.feed-photos .feed-dot{background:#C8A951}
+.feed-status .feed-dot{background:#3E9A6E}
+.feed-title{font-weight:700;color:var(--c-strong);font-size:15.5px}
+.feed-date{font-size:13px;color:var(--c-body);opacity:.8;margin-top:2px}

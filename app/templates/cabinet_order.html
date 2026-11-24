@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Заказ {{ order.number }} — Алёна Аляева{% endblock %}
 {% from "_progress.html" import order_progress %}
+{% from "_events.html" import order_events %}
 {% block content %}
 <div style="padding:32px 0 64px">
   <p class="hint" style="margin:0 0 6px"><a href="/cabinet">← Мои заказы</a></p>
@@ -19,6 +20,9 @@
   <div class="card" style="margin-top:18px;padding:18px 22px">
     {{ order_progress(order.status, stages, stage_names) }}
   </div>
+
+  <h2 style="margin:28px 0 12px">История заказа</h2>
+  {{ order_events(events, status_names) }}
 
   {% if order.comment %}
     <div class="card card-cream" style="margin-top:18px">
