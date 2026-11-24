@@ -10,7 +10,7 @@
  *   node scripts\smoke.js --user a@b.c --pass ПАРОЛЬ
  *   node scripts\smoke.js --user a@b.c --ask-pass   # пароль спросит, в историю не попадёт
  *
- * Код возврата: 0 — ни одной 5xx; 1 — есть 5xx или не удалось войти.
+ * Код возврата: 0 — ни одной ошибки; 1 — есть 5xx, 404 в списке страниц или не удалось войти.
  */
 const readline = require('readline');
 
@@ -23,7 +23,9 @@ const PUBLIC = ['/', '/ceny', '/policy', '/login', '/register'];
 /** Страницы клиента после входа. */
 const CABINET = ['/cabinet', '/cabinet/notifications', '/cabinet/projects', '/settings'];
 
-/** Админка — точный список из кода: main.py, admin_clients.py, hooks.py. */
+/** Админка — точный список из кода: main.py, admin_clients.py, hooks.py.
+ *  Заказы живут на самом /admin (маршрут @app.get(ADMIN) → admin_orders.html), отдельного
+ *  /admin/orders НЕТ — не добавлять его сюда, иначе проверка будет красной впустую. */
 const ADMIN = ['/admin', '/admin/inbox', '/admin/products', '/admin/stats', '/admin/settings',
                '/admin/hooks', '/admin/clients', '/admin/photos'];
 
@@ -94,8 +96,11 @@ async function sweep(list, cookie, label) {
     rows = rows.concat(await sweep(ADMIN, cookie, 'админка'));
   }
 
-  const bad = rows.filter((r) => r.code === 0 || r.code >= 500);
-  process.stdout.write(nl2 + 'страниц: ' + rows.length + ', 5xx или ошибок: ' + bad.length + nl2);
+  // 404 здесь — тоже поломка: все адреса в списках взяты из кода и обязаны существовать.
+  // Раньше 404 проходил молча, и отсутствие страницы выглядело как успешная проверка
+  // (так /admin/orders «прошёл» 24.11.2026, хотя такого адреса нет).
+  const bad = rows.filter((r) => r.code === 0 || r.code >= 400);
+  process.stdout.write(nl2 + 'страниц: ' + rows.length + ', ошибок: ' + bad.length + nl2);
   for (const b of bad) process.stdout.write('  ПЛОХО ' + b.url + ' → ' + (b.error || b.code) + nl2);
   if (cookie) await get('/logout', cookie);
   process.exit(bad.length ? 1 : 0);
