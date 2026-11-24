@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Доступ закрыт — Алёна Аляева{% endblock %}
 {% block content %}
-<div class="card" style="text-align:center; padding:56px 32px; margin-top:40px">
-  <div style="font-size:56px; font-family:Philosopher, serif; color:var(--c-accent); line-height:1">403</div>
-  <h1 style="margin:16px 0 10px">Сюда нельзя</h1>
-  <p class="muted" style="max-width:480px; margin:0 auto 28px">
+<div class="card error-card">
+  <div class="error-code error-code-56">403</div>
+  <h1 class="error-title">Сюда нельзя</h1>
+  <p class="muted error-lead error-lead-480">
     {% if who %}Вы вошли как <strong>{{ who }}</strong>, но эта страница доступна только администратору сайта.
     {% else %}Эта страница доступна только администратору сайта.{% endif %}
   </p>
   <a class="btn" href="/cabinet">В личный кабинет</a>
-  <a class="btn-ghost" href="/" style="margin-left:10px; display:inline-block; padding:12px 20px">На главную</a>
+  <a class="btn-ghost btn-home" href="/">На главную</a>
 </div>
 {% endblock %}
