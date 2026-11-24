@@ -75,6 +75,28 @@
     <div class="drop-status hint" id="dropStatus"></div>
   </div>
   <div class="drop-preview" id="dropPreview"></div>
+  {# Связь по заказу — на странице самого заказа её не было: человек уходил назад в список,
+     чтобы написать. Номер заказа уже в тексте сообщения. #}
+  {% set msg = "Здравствуйте! Вопрос по заказу " ~ order.number %}
+  {% if links.tg_url or links.wa_url or links.site_phone %}
+  <div class="order-help order-help-stack">
+    <span class="order-help-label">Вопрос по этому заказу</span>
+    <div>
+      <b>Заказ {{ order.number }}</b> уже в тексте сообщения — писать можно сразу.
+    </div>
+    <div class="order-help-row">
+      {% if links.tg_url %}
+      <a class="help-link" href="{{ links.tg_url }}?text={{ msg|urlencode }}" target="_blank" rel="noopener">Telegram</a>
+      {% endif %}
+      {% if links.wa_url %}
+      <a class="help-link" href="{{ links.wa_url }}?text={{ msg|urlencode }}" target="_blank" rel="noopener">WhatsApp</a>
+      {% endif %}
+      {% if links.site_phone %}
+      <a class="help-link" href="tel:{{ links.site_phone }}">Позвонить</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}
 {% block scripts %}
