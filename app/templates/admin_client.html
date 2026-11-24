@@ -20,7 +20,7 @@
       <td data-label="Сумма">{{ '%.0f'|format(o.total_rub) }} ₽</td>
       <td data-label="Проектов">{{ o.projects }}</td>
       <td data-label="Статус">
-        <select class="order-status" data-order="{{ o.id }}"
+        <select class="order-status" data-order="{{ o.id }}" aria-label="Статус заказа {{ o.number }}"
                 style="padding:6px 10px; border:1.5px solid var(--c-lilac); border-radius:8px; font-family:inherit; background:#fff">
           {% for code, label in statuses.items() %}
           <option value="{{ code }}" {% if o.status == code %}selected{% endif %}>{{ label }}</option>
