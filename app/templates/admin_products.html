@@ -7,7 +7,7 @@
 Цена 0 значит «по запросу»: так и увидит клиент.</p>
 {% if products %}
 <div class="card">
-  <table class="tbl-cards" data-labels="1">
+  <table class="tbl tbl-cards" data-labels="1">
     <tr><th>Название</th><th>Цена, ₽</th><th>Старая, ₽</th><th>Показывать</th><th></th></tr>
     {% for p in products %}
     <tr data-row="{{ p.id }}">
