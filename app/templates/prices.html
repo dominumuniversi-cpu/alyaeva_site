@@ -55,8 +55,8 @@
         <td data-label="Что входит" class="muted">{{ p.description or '—' }}</td>
         <td data-label="Цена" class="num">
           {% if p.price_rub and p.price_rub > 0 %}
-            {% if p.old_price %}<s class="old">{{ p.old_price|round|int }}&nbsp;₽</s> {% endif %}
-            <strong>от {{ p.price_rub|round|int }}&nbsp;₽</strong>
+            {% if p.old_price %}<s class="old">{{ p.old_price|rub }}</s> {% endif %}
+            <strong>от {{ p.price_rub|rub }}</strong>
           {% else %}
             <span class="muted">по запросу</span>
           {% endif %}
@@ -108,7 +108,7 @@
         .then(function(r){ return r.json(); })
         .then(function(d){
           if (!d.ok) { out.textContent = "Не удалось посчитать"; return; }
-          out.textContent = d.formatted + " ₽ — " + d.format + ", " + d.pages + " стр.";
+          out.textContent = d.formatted + "\u00a0₽ — " + d.format + ", " + d.pages + " стр.";
           note.textContent = d.long_book
             ? "В цену входит " + d.included + " страниц, остальные добавлены по цене за страницу. Точную цену назову после просмотра фото."
             : "В цену входит " + d.included + " страниц. Точную цену назову после просмотра фото.";

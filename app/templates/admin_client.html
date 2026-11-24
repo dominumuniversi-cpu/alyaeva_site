@@ -17,7 +17,7 @@
     <tr>
       <td data-label="№"><strong>{{ o.number }}</strong></td>
       <td data-label="Дата">{{ o.created_at.strftime('%d.%m.%Y') }}</td>
-      <td data-label="Сумма">{{ '%.0f'|format(o.total_rub) }} ₽</td>
+      <td data-label="Сумма">{{ o.total_rub|rub }}</td>
       <td data-label="Проектов">{{ o.projects }}</td>
       <td data-label="Статус">
         <select class="order-status" data-order="{{ o.id }}" aria-label="Статус заказа {{ o.number }}"

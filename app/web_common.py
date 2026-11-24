@@ -18,6 +18,25 @@ templates = Jinja2Templates(directory="templates")
 ADMIN = "/admin"
 
 
+def rub(value, dash: bool = True) -> str:
+    """Цена по-человечески: 2500 → «2 500 ₽», пусто → «—».
+
+    Разделитель — неразрывный пробел: иначе число рвётся между строками и на телефоне
+    «2» остаётся в одной строке, а «500 ₽» — в другой.
+    """
+    if value in (None, ""):
+        return "—" if dash else ""
+    try:
+        num = round(float(value))
+    except (TypeError, ValueError):
+        return "—" if dash else ""
+    text = f"{num:,}".replace(",", "\u00a0")
+    return f"{text}\u00a0₽"
+
+
+templates.env.filters["rub"] = rub
+
+
 def current_user(request: Request) -> dict | None:
     """Пользователь из cookie-сессии."""
     return db.session_user(request.cookies.get("sid", ""))

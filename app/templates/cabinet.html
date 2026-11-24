@@ -85,7 +85,7 @@
       <a href="/cabinet/order/{{ o.id }}" class="order-num">Заказ {{ o.number }}</a>
       <div class="hint" style="margin-top:4px">
         {{ o.created_at.strftime('%d.%m.%Y') }}
-        {% if o.total_rub %} · {{ '%.0f'|format(o.total_rub) }} ₽{% endif %}
+        {% if o.total_rub %} · {{ o.total_rub|rub }}{% endif %}
         {% if photos %} · {{ photos|length }} фото{% endif %}
       </div>
     </div>
