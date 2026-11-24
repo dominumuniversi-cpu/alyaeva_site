@@ -853,6 +853,17 @@ body{
 .pay-account{font-family:'Nunito',monospace;letter-spacing:.5px;word-break:break-all}
 .card-green{background:var(--c-mint)}
 
+/* Выбор способа оплаты (#122): один и тот же список в кабинете и на /oplata.
+   Способы идут строкой, на телефоне — в столбец; кнопки-действия не меньше 44 px. */
+.pay-choice{display:grid;gap:14px;margin-top:10px}
+.pay-option{padding:14px 16px;border-radius:16px;background:var(--c-cream)}
+.pay-option-head{margin-bottom:6px}
+.pay-option p{margin:6px 0}
+.pay-option .btn,.pay-option a.btn{min-height:44px;display:inline-flex;align-items:center}
+.pay-option .btn-sm{min-height:36px}
+.pay-choice:has(.pay-option) .card{padding:0}
+@media (max-width:600px){ .pay-option{padding:12px} .pay-option .btn{width:100%;justify-content:center} }
+
 /* ---------- ФЛАЖКИ В АДМИНКЕ (#263) ---------- */
 /* Мелкий чекбокс 13×16 на телефоне не попасть пальцем: увеличиваем и даём отступ от соседей. */
 input[type="checkbox"]{width:22px;height:22px;accent-color:var(--c-accent);vertical-align:middle}

@@ -1,0 +1,24 @@
+{# Способы оплаты — один список на весь сайт: кабинет и страница /oplata.
+   Показываются ТОЛЬКО блоки, включённые и заполненные в админке (#122).
+   Все выключены — этот файл не выводит ничего, и оплату сайт не предлагает. #}
+{% for b in pay_blocks %}
+{% set d = pay[b] %}
+<div class="pay-option">
+  <div class="pay-option-head">
+    <b>{{ pay_state[b].title }}</b>
+  </div>
+  {% if b == 'bank' %}
+    <p class="tight">Получатель: {{ d.recipient }}{% if d.bank_name %} · {{ d.bank_name }}{% endif %}</p>
+    <p class="tight">Счёт: <span class="pay-account">{{ d.account }}</span>
+      <button class="btn btn-ghost btn-sm pay-copy" type="button" data-copy="{{ d.account }}">Скопировать</button></p>
+    {% if d.sbp_phone %}<p class="tight">СБП по номеру: <span class="pay-account">{{ d.sbp_phone }}</span></p>{% endif %}
+  {% elif b == 'link' %}
+    <p class="tight">Счёт из банка по вашему заказу.</p>
+    <p class="tight"><a class="btn" href="{{ d.url }}" target="_blank" rel="noopener">Перейти к оплате</a></p>
+  {% elif b == 'yukassa' %}
+    <p class="tight">Карта, СБП или кошелёк — на защищённой странице.</p>
+    <button class="btn" type="button" data-pay-card="{{ order.id if order else '' }}">Оплатить картой</button>
+  {% endif %}
+  {% if d.note %}<p class="muted tight">{{ d.note }}</p>{% endif %}
+</div>
+{% endfor %}

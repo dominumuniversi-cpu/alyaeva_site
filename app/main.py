@@ -454,10 +454,14 @@ def cabinet_order(order_id: int, request: Request):
                WHERE order_id = %s ORDER BY created_at, id""",
             (order_id,),
         ).fetchall()
-    # Кнопка оплаты — только если оплата картой настроена и заказ ещё не оплачен.
-    can_pay = bool(yukassa.enabled() and row["status"] != "paid" and (row["total_rub"] or 0) > 0)
+    # Способы оплаты в карточке заказа: все включённые и заполненные блоки (#122).
+    # Раньше здесь была только кнопка ЮKassa — включённый счёт или ссылка в кабинете не показывались.
+    # Оплаченный заказ и заказ без суммы выбора не получают: платить там нечего.
+    pay_blocks = [] if row["status"] == "paid" or not (row["total_rub"] or 0) else payments.ready()
     return render(request, "cabinet_order.html", user=user, order=row, events=events,
-                  status_names=STATUS_NAMES, can_pay=can_pay,
+                  status_names=STATUS_NAMES, pay_blocks=pay_blocks,
+                  pay_state=payments.state(),
+                  pay={b: payments.details(b) for b in payments.BLOCKS},
                   photos=photos, status_name=status_name,
                   stages=STATUS_ORDER, stage_names=STAGE_NAMES)
 
