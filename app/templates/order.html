@@ -3,7 +3,7 @@
 {% block content %}
 <section class="ceny-hero">
   <h1>{% if request.query_params.get("repeat") %}Повторить заказ{% else %}Заказать книгу{% endif %}</h1>
-  <p class="muted" style="margin:8px 0 0">Оставьте контакты — свяжусь, обсудим сказку и покажу макет. Фото можно загрузить сразу.</p>
+  <p class="muted mt-8">Оставьте контакты — свяжусь, обсудим сказку и покажу макет. Фото можно загрузить сразу.</p>
 </section>
 
 {# Те же четыре шага, что в разделе «Как заказать книгу» на главной сайта. #}
@@ -31,33 +31,33 @@
       </div>
     </div>
     <label for="femail">E-mail</label>
-    <p class="hint" style="margin:0 0 6px">Необязательно — нужен, чтобы присылать уведомления о заказе.</p>
+    <p class="hint mb-6">Необязательно — нужен, чтобы присылать уведомления о заказе.</p>
     <input type="email" name="email" id="femail" placeholder="you@example.ru" autocomplete="email" inputmode="email">
 
     <label for="productSelect">Что хотите заказать</label>
-    <p class="hint" style="margin:0 0 6px">Не уверены, что подойдёт — выберите «Пока не знаю», обсудим вместе.</p>
+    <p class="hint mb-6">Не уверены, что подойдёт — выберите «Пока не знаю», обсудим вместе.</p>
     <select name="product_id" id="productSelect" autocomplete="off">
       <option value="">— выберите —</option>
     </select>
-    <p class="hint" id="productHint" style="display:none;margin:6px 0 0">Цена по запросу — назову после того, как посмотрю фотографии.</p>
+    <p class="hint hidden mt-6" id="productHint">Цена по запросу — назову после того, как посмотрю фотографии.</p>
 
     <label for="fcomment">Расскажите о ребёнке</label>
     <textarea name="comment" id="fcomment" rows="4" placeholder="Имя ребёнка, сколько лет, что любит">{{ request.query_params.get('comment', '') }}</textarea>
     {% if request.query_params.get('repeat') %}
-      <div class="hint" style="background:var(--c-mint);padding:10px 14px;border-radius:12px">
+      <div class="hint note-mint">
         Пожелания подставлены из прошлого заказа — поправьте, если что-то изменилось.
       </div>
     {% endif %}
 
     <div class="consent">
       <input type="checkbox" id="consent" required>
-      <label for="consent" style="margin:0;font-weight:400">
+      <label for="consent" class="thin-label">
         Согласен на обработку персональных данных согласно
         <a href="/policy" target="_blank" rel="noopener">политике</a>
       </label>
     </div>
 
-    <div style="margin-top:24px">
+    <div class="mt-24">
       <button class="btn" type="submit" id="submitBtn">Отправить заявку</button>
     </div>
     <div id="result"></div>
@@ -94,12 +94,12 @@ function showUpload(number) {
   result.innerHTML =
     '<div class="ok"><strong>Заявка принята!</strong><br>Номер: ' + number +
     '<br>Свяжусь с вами в течение дня.</div>' +
-    '<div class="card" style="margin-top:18px">' +
-      '<label>Добавьте фото ребёнка <span class="hint" style="display:inline">(можно выбрать сразу несколько)</span></label>' +
-      '<input type="file" id="photoInput" accept="image/*,.heic,.heif" multiple style="border:none;padding:6px 0">' +
-      '<div style="margin-top:14px"><button class="btn" type="button" id="uploadBtn">Загрузить фото</button></div>' +
-      '<div id="uploadResult" style="margin-top:12px"></div>' +
-      '<p class="hint" style="margin-top:12px">Фото видите вы и Алёна. Другие клиенты — нет.</p>' +
+    '<div class="card card-stack">' +
+      '<label>Добавьте фото ребёнка <span class="hint inline">(можно выбрать сразу несколько)</span></label>' +
+      '<input class="file-clean" type="file" id="photoInput" accept="image/*,.heic,.heif" multiple>' +
+      '<div class="mt-14"><button class="btn" type="button" id="uploadBtn">Загрузить фото</button></div>' +
+      '<div class="mt-12" id="uploadResult"></div>' +
+      '<p class="hint mt-12">Фото видите вы и Алёна. Другие клиенты — нет.</p>' +
     '</div>';
   document.getElementById('uploadBtn').addEventListener('click', () => uploadPhotos(number));
 }
@@ -121,7 +121,7 @@ async function uploadPhotos(number) {
     const d = await r.json();
     if (d.login) { window.location.href = '/login?next=/order&reason=order'; return; }
     if (d.ok) {
-      out.innerHTML = '<div class="ok" style="margin-top:0">Загружено фото: ' + d.saved +
+      out.innerHTML = '<div class="ok mt-0">Загружено фото: ' + d.saved +
         (d.skipped ? '<br>Пропущено: ' + d.skipped : '') + '</div>';
       input.value = '';
     } else {
