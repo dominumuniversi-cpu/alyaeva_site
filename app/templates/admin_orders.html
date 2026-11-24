@@ -5,17 +5,17 @@
 <h1>Заказы</h1>
 {% if orders %}
 <div class="card">
-  <table>
+  <table class="tbl-cards" data-labels="1">
     <tr><th>№</th><th>Дата</th><th>Клиент</th><th>Контакт</th><th>Сумма</th><th>Статус</th><th>Проектов</th></tr>
     {% for o in orders %}
     <tr>
-      <td><strong>{{ o.number }}</strong></td>
-      <td>{{ o.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-      <td>{{ o.customer_name }}</td>
-      <td>{{ o.customer_phone }}{% if o.user_email %}<br><span class="muted">{{ o.user_email }}</span>{% endif %}</td>
-      <td>{{ '%.0f'|format(o.total_rub) }} ₽</td>
-      <td><span class="badge badge-{{ o.status }}">{{ status_names.get(o.status, o.status) }}</span></td>
-      <td>{{ o.projects }}</td>
+      <td data-label="№"><strong>{{ o.number }}</strong></td>
+      <td data-label="Дата">{{ o.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+      <td data-label="Клиент">{{ o.customer_name }}</td>
+      <td data-label="Контакт">{{ o.customer_phone }}{% if o.user_email %}<br><span class="muted">{{ o.user_email }}</span>{% endif %}</td>
+      <td data-label="Сумма">{{ '%.0f'|format(o.total_rub) }} ₽</td>
+      <td data-label="Статус"><span class="badge badge-{{ o.status }}">{{ status_names.get(o.status, o.status) }}</span></td>
+      <td data-label="Проектов">{{ o.projects }}</td>
     </tr>
     {% endfor %}
   </table>
