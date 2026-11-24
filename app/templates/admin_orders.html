@@ -14,13 +14,23 @@
       <td>{{ o.customer_name }}</td>
       <td>{{ o.customer_phone }}{% if o.user_email %}<br><span class="muted">{{ o.user_email }}</span>{% endif %}</td>
       <td>{{ '%.0f'|format(o.total_rub) }} ₽</td>
-      <td><span class="badge badge-{{ o.status }}">{{ {'new':'Новый','in_work':'В работе','sent':'Отправлен','done':'Выполнен','cancelled':'Отменён'}[o.status] }}</span></td>
+      <td><span class="badge badge-{{ o.status }}">{{ status_names.get(o.status, o.status) }}</span></td>
       <td>{{ o.projects }}</td>
     </tr>
     {% endfor %}
   </table>
 </div>
 {% else %}
-<div class="card card-lilac"><h2>Заказов пока нет</h2><p>Как только клиент оформит — появится здесь.</p></div>
+<div class="card card-lilac">
+  <h2>Заказов пока нет</h2>
+  <p>Как только клиент оформит — заказ появится здесь. Что можно сделать прямо сейчас:</p>
+  <ol class="steps">
+    <li><b>Проверить цены и товары</b> — в разделе «Товары», чтобы суммы в заказах считались верно.</li>
+    <li><b>Заполнить реквизиты</b> в настройках сайта — они попадут в политику обработки данных.</li>
+    <li><b>Проверить приём сообщений</b> — там видно, доходят ли вебхуки от мессенджеров.</li>
+  </ol>
+  <p style="margin:18px 0 0"><a class="btn" href="{{ admin_url }}/products">Товары и цены</a>
+    <a class="btn btn-ghost" href="{{ admin_url }}/settings" style="margin-left:10px">Настройки сайта</a></p>
+</div>
 {% endif %}
 {% endblock %}
