@@ -44,13 +44,17 @@ app.include_router(shop_router)
 
 @app.get("/health")
 def health():
-    """Проверка живости приложения (для nginx и мониторинга)."""
+    """Проверка живости приложения вместе с базой.
+
+    Раньше возвращала 200 даже при мёртвой БД — деплой и сторож принимали
+    нерабочее приложение за живое. Теперь ошибка БД = 503.
+    """
     try:
         with db.pool.connection() as conn:
             conn.execute("SELECT 1")
-        return {"ok": True}
+        return {"ok": True, "db": "up"}
     except Exception as e:
-        return {"ok": False, "error": str(e)}
+        return JSONResponse({"ok": False, "db": "down", "error": str(e)}, status_code=503)
 
 
 # ---------------- Вход / выход ----------------
