@@ -31,6 +31,8 @@
 /* На узком экране липкая шапка не должна занимать пол-экрана: прячем второстепенное. */
 @media (max-width: 900px){
   /* Одна строка с горизонтальной прокруткой: шапка не занимает треть экрана. */
+  /* Все пункты меню — на одной линии: у ссылок разная высота, и кнопка съезжала вниз. */
+  header nav > a{vertical-align:middle !important; line-height:1.6 !important}
   header > div{flex-wrap:wrap !important; gap:2px 24px !important}
   header nav{flex-wrap:nowrap !important; overflow-x:auto; -webkit-overflow-scrolling:touch;
              width:100%; justify-content:flex-start !important; gap:0 16px !important;
@@ -65,7 +67,7 @@
 <a href="#faq" style="text-decoration: none; padding: 8px 0;">Вопросы</a>
 <a href="#kontakty" style="text-decoration: none; padding: 8px 0;">Контакты</a>
 <a href="/ceny" style="text-decoration: none; padding: 8px 0;">Стоимость</a>
-<a href="/order" style="text-decoration: none; padding: 12px 0; color:#4B4690; font-weight:700;">Заказать</a>
+<a href="/order" style="text-decoration: none; padding: 8px 0; color:#4B4690; font-weight:700;">Заказать</a>
 <a href="/login" style="text-decoration:none; padding:8px 16px; margin:4px 0; border:1.5px solid #4B4690; border-radius:999px; color:#4B4690;">Войти</a>
 
 <div style="display:flex;align-items:center;gap:10px;margin-left:4px">
