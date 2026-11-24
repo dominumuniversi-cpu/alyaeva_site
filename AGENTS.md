@@ -253,8 +253,8 @@ nginx проверяет регулярки (`location ~* \\.(css|js)$`) **РА�
 
 ## КАЖДЫЙ МАРШРУТ ПРИЛОЖЕНИЯ — В NGINX ВРУЧНУЮ (23.11.2026)
 
-Маршруты приложения в `alyaeva.pro.conf` прописаны **по одному**: `/login`, `/register`, `/order`,
-`/cabinet`, `/logout`, `/settings`, `/api/`, `/health`, `/6b03c5256535e9ab5a`, `/static/`.
+Маршруты приложения в `alyaeva.pro.conf` прописаны **по одному**: `/` (главная), `/fotokniga-ekaterinburg/`,
+`/login`, `/register`, `/order`, `/cabinet`, `/logout`, `/settings`, `/admin`, `/api/`, `/health`, `/static/`.
 
 **Добавил страницу в FastAPI — добавь `location` в vhost, иначе 404.**
 Именно так `/settings` отдавал 404 после деплоя, хотя в приложении всё работало.
