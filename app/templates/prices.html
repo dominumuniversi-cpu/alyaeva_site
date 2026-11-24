@@ -8,6 +8,29 @@
   <p class="muted">Цена зависит от количества страниц и формата книги. Ниже — от чего отталкиваемся.</p>
 </section>
 
+
+<div class="card" id="calc" style="margin-bottom:22px">
+  <h2 style="margin-top:0">Сколько будет стоить ваша книга</h2>
+  <p class="muted" style="margin-top:0">Выберите формат и количество страниц — увидите вилку сразу, без переписки.</p>
+  <div class="row">
+    <div>
+      <label for="calcFormat">Формат</label>
+      <select id="calcFormat">
+        {% for f in formats %}<option value="{{ f.key }}"{% if loop.first %} selected{% endif %}>{{ f.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="calcPages">Страниц</label>
+      <input type="number" id="calcPages" min="4" max="80" step="4" value="16">
+    </div>
+  </div>
+  <div id="calcOut" aria-live="polite" style="margin-top:16px;font-size:18px;color:var(--c-strong)"></div>
+  <p class="hint" id="calcNote" style="margin-bottom:0"></p>
+  <div style="margin-top:16px">
+    <a class="btn" id="calcOrder" href="/order">Заказать с этими параметрами</a>
+  </div>
+</div>
+
 <div class="card">
   <table class="price-table">
     <thead>
@@ -53,4 +76,38 @@
   <a class="btn" href="/order">Заказать книгу</a>
   {% if links.tg_url %}<a class="btn btn-ghost" href="{{ links.tg_url }}" target="_blank" rel="noopener" style="margin-left:10px">Спросить в Telegram</a>{% endif %}
 </p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* Расчёт цены: правила живут в app/pricing.py, здесь только показ и запрос. */
+(function(){
+  var f = document.getElementById("calcFormat");
+  var p = document.getElementById("calcPages");
+  var out = document.getElementById("calcOut");
+  var note = document.getElementById("calcNote");
+  var link = document.getElementById("calcOrder");
+  if (!f || !p) return;
+  var t = null;
+  function update(){
+    clearTimeout(t);
+    t = setTimeout(function(){
+      fetch("/api/price?format=" + encodeURIComponent(f.value) + "&pages=" + encodeURIComponent(p.value))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d.ok) { out.textContent = "Не удалось посчитать"; return; }
+          out.textContent = d.formatted + " ₽ — " + d.format + ", " + d.pages + " стр.";
+          note.textContent = d.long_book
+            ? "В цену входит " + d.included + " страниц, остальные добавлены по цене за страницу. Точную цену назову после просмотра фото."
+            : "В цену входит " + d.included + " страниц. Точную цену назову после просмотра фото.";
+          link.href = "/order?format=" + encodeURIComponent(f.value) + "&pages=" + encodeURIComponent(d.pages);
+        })
+        .catch(function(){ out.textContent = "Сеть недоступна"; });
+    }, 220);
+  }
+  f.addEventListener("change", update);
+  p.addEventListener("input", update);
+  update();
+})();
+</script>
 {% endblock %}
