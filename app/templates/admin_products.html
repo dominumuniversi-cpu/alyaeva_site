@@ -3,7 +3,7 @@
 {% block main_class %}wide{% endblock %}
 {% block content %}
 <h1>Товары и цены</h1>
-<p class="muted">Цены меняются здесь и сразу попадают на сайт — HTML править не нужно.</p>
+<p class="muted">Цены меняются здесь и сразу попадают на сайт — HTML править не нужно. Цена 0 значит «по запросу»: так и увидит клиент.</p>
 {% if products %}
 <div class="card">
   <table>
@@ -11,7 +11,7 @@
     {% for p in products %}
     <tr>
       <td><strong>{{ p.title }}</strong><br><span class="muted">{{ p.slug }}</span></td>
-      <td>{{ '%.0f'|format(p.price_rub) }} ₽</td>
+      <td>{% if p.price_rub and p.price_rub > 0 %}{{ '%.0f'|format(p.price_rub) }} ₽{% else %}<span class="muted">по запросу</span>{% endif %}</td>
       <td>{% if p.old_price %}<s>{{ '%.0f'|format(p.old_price) }} ₽</s>{% else %}—{% endif %}</td>
       <td>{{ p.unit }}</td>
       <td>{% if p.is_active %}да{% else %}<span class="muted">нет</span>{% endif %}</td>
