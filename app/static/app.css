@@ -502,3 +502,8 @@ body{position:relative}
 .tbl th{background:var(--c-lilac);font-weight:700;color:var(--c-strong)}
 .tbl tr:last-child td{border-bottom:none}
 @media (max-width:600px){.stat-num{font-size:24px}.stat{padding:14px 16px}.tbl th,.tbl td{padding:8px 10px;font-size:14px}}
+
+.feed-item.unread .feed-title{font-weight:800}
+.feed-item.unread{background:var(--c-cream)}
+.feed-item .feed-text{display:block;font-size:14px;color:var(--c-body);margin-top:2px}
+a.feed-item:hover{background:var(--c-lilac)}

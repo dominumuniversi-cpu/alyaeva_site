@@ -94,10 +94,20 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
                         analytics.source_from_referer(request.headers.get("referer", "")))
     except Exception:
         pass
+    # Счётчик непрочитанных нужен шапке на каждой странице кабинета.
+    unread = kw.pop("unread", 0)
+    if user and not unread:
+        try:
+            import notifications
+            with db.pool.connection() as conn:
+                unread = notifications.unread_count(conn, user["id"])
+        except Exception:
+            unread = 0
     import datetime
     return templates.TemplateResponse(request, name,
                                       {"user": user, "admin_url": ADMIN, "links": links,
-                                       "counts": counts, "year": datetime.date.today().year, **kw})
+                                       "counts": counts, "unread": unread,
+                                       "year": datetime.date.today().year, **kw})
 
 
 def is_browser(request) -> bool:

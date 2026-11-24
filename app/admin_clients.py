@@ -160,7 +160,7 @@ def set_order_status(request: Request, order_id: int, status: str = Form("")):
     if status not in STATUSES:
         return JSONResponse({"ok": False, "error": "Неизвестный статус"}, status_code=400)
     with db.pool.connection() as conn:
-        row = conn.execute("SELECT id, number FROM orders WHERE id = %s", (order_id,)).fetchone()
+        row = conn.execute("SELECT id, number, user_id FROM orders WHERE id = %s", (order_id,)).fetchone()
         if not row:
             return JSONResponse({"ok": False, "error": "Заказ не найден"}, status_code=404)
         # Старое значение нужно, чтобы не писать в ленту «сменился» на тот же самый статус.
@@ -171,6 +171,14 @@ def set_order_status(request: Request, order_id: int, status: str = Form("")):
         # Пишем только реальную смену: клик по текущему статусу — не событие.
         if not old or old["status"] != status:
             add_event(conn, order_id, "status", status=status, author="admin")
+            # Клиенту не нужно самому гадать, на каком этапе книга — он получит новость (задача #21).
+            import notifications
+            notifications.notify(
+                conn, row["user_id"], "order_status",
+                f"Заказ {row['number']}: {STATUSES[status]}",
+                "Подробности и история — в карточке заказа.",
+                f"/cabinet/order/{order_id}",
+            )
         conn.commit()
     return JSONResponse({"ok": True, "status": status, "label": STATUSES[status]})
 

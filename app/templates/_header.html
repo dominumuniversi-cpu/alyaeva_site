@@ -9,6 +9,7 @@
     <nav class="nav" id="mainnav" aria-label="Разделы">
       {% if user %}
         <a href="/cabinet" {% if request.url.path == '/cabinet' %}class="on"{% endif %}>Мои заказы</a>
+        <a href="/cabinet/notifications" {% if '/notifications' in request.url.path %}class="on"{% endif %}>Уведомления{% if unread %}<span class="badge">{{ unread }}</span>{% endif %}</a>
         <a href="/order" {% if request.url.path == '/order' %}class="on"{% endif %}>Заказать</a>
         <a href="/ceny" {% if request.url.path == '/ceny' %}class="on"{% endif %}>Стоимость</a>
         {% if user.role == 'admin' %}<a href="{{ admin_url }}">Админка</a>{% endif %}

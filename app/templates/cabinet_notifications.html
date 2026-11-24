@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Уведомления{% endblock %}
+{% block content %}
+<h1>Уведомления</h1>
+{% if list %}
+<p class="hint">Здесь новости о ваших заказах: смена этапа, добавленные фото.</p>
+<div class="feed">
+  {% for n in list %}
+  <a class="feed-item{% if not n.is_read %} unread{% endif %}" href="{{ n.url or '/cabinet' }}" style="text-decoration:none;color:inherit">
+    <span class="feed-dot"></span>
+    <span class="feed-title">{{ n.title }}</span>
+    {% if n.body %}<span class="feed-text">{{ n.body }}</span>{% endif %}
+    <span class="feed-date">{{ n.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="hint">Пока новостей нет. Здесь появятся сообщения о смене этапа заказа.</p>
+{% endif %}
+{% endblock %}
