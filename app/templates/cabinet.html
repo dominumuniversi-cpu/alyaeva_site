@@ -95,6 +95,13 @@
   {{ order_progress(o.status, stages, stage_names) }}
 
   <div class="order-next">{{ next_step(o.status) }}</div>
+  {# Фото — то, чего ждут от клиента. Пока их нет, заказ об этом просит сам, а не тонет в списке. #}
+  {% if not photos and o.status in active_statuses %}
+  <div class="order-ask">
+    <div><b>Нужны фотографии</b><span>Без них не начать макет. Загрузить можно прямо на странице заказа.</span></div>
+    <a class="btn" href="/cabinet/order/{{ o.id }}#drop">Загрузить фото</a>
+  </div>
+  {% endif %}
 
   {% if o.comment %}<p class="muted" style="margin:12px 0 0">Ваши пожелания: {{ o.comment }}</p>{% endif %}
 
