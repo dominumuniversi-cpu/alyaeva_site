@@ -25,6 +25,12 @@ from web_common import ADMIN, current_user, render, require_admin, require_user,
 async def lifespan(app: FastAPI):
     """Открыть/закрыть пул БД вместе с приложением."""
     db.open_pool()
+    # Напоминания о заказах без фото — сразу после того, как база доступна.
+    try:
+        import reminders
+        reminders.start()
+    except Exception:  # noqa: BLE001 — фон не должен мешать сайту подняться
+        logging.getLogger("main").warning("напоминания не запущены", exc_info=True)
     yield
     db.close_pool()
 
