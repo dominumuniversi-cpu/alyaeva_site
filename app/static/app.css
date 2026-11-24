@@ -21,6 +21,7 @@
   --c-peach:#FFEBE0;
   --c-lilac:#E6DFFA;
   --c-mint:#EAF7F4;
+  --c-cta:#FFE7A0;   /* главная кнопка как на сайте: тёплая, тёмный текст */
   --radius:14px;
   --radius-sm:10px;
   --shadow:0 10px 30px rgba(42,38,80,.08);
@@ -85,8 +86,8 @@ textarea{min-height:90px;resize:vertical}
   padding:12px 24px;
   border:none;
   border-radius:999px;
-  background:var(--c-accent);
-  color:#fff;
+  background:var(--c-cta);
+  color:var(--c-strong);
   font:inherit;
   font-weight:700;
   cursor:pointer;
@@ -94,7 +95,7 @@ textarea{min-height:90px;resize:vertical}
   transition:background .15s, transform .1s, box-shadow .15s;
   box-shadow:0 8px 18px rgba(75,70,144,.18);
 }
-.btn:hover{background:var(--c-strong)}
+.btn:hover{background:#FFDF8C}
 .btn:active{transform:translateY(1px)}
 .btn-ghost{
   background:transparent;
@@ -576,3 +577,15 @@ a.list-card:active{transform:translateY(1px)}
 }
 .photo-del:hover { color: #8E2626; }
 .photo-del:disabled { color: #A9A4BD; cursor: default; }
+
+/* ---------- Шаги заказа в кабинете: один в один с блоком «Как заказать» на сайте ---------- */
+.steps{list-style:none;counter-reset:step;padding:0}
+.steps li{counter-increment:step;position:relative;padding-left:52px}
+.steps li::before{
+  content:counter(step);position:absolute;left:18px;top:16px;
+  width:24px;height:24px;border-radius:50%;
+  background:var(--c-accent);color:#fff;
+  font-size:14px;font-weight:800;line-height:24px;text-align:center;
+}
+.steps li b{display:block;margin-bottom:4px}
+.steps li span{display:block;font-weight:400;color:var(--c-body);font-size:15px;line-height:1.5}
