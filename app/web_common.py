@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 import db
+import payments
 from config import config
 from order_status import next_step, NEW_STATUS
 
@@ -137,6 +138,8 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
     """
     user = kw.pop("user", None) or current_user(request)
     links = kw.pop("links", None) or site_links()
+    # Есть ли на сайте оплата (#122). Одна правда: блоки оплаты включены и заполнены.
+    kw.setdefault("pay_available", payments.available())
     counts = kw.pop("counts", None)
     if counts is None:
         counts = admin_counts() if (user and user.get("role") == "admin") else {}

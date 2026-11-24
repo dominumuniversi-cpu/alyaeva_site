@@ -16,6 +16,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 import db
+import payments
+import secrets_helper
 from config import config
 
 from web_common import ADMIN, current_user, pages, render, require_admin, require_user, site_links, templates  # noqa: E402
@@ -77,7 +79,7 @@ def home_page(request: Request):
     """
     return pages.TemplateResponse(
         request, "index.html",
-        {"links": site_links(), "user": current_user(request)},
+        {"links": site_links(), "user": current_user(request), "pay_available": payments.available()},
         headers={"Cache-Control": "no-cache"},
     )
 
@@ -87,9 +89,17 @@ def fotokniga_page(request: Request):
     """Лендинг фотокниги — контакты из админки, как на главной."""
     return pages.TemplateResponse(
         request, "fotokniga-ekaterinburg.html",
-        {"links": site_links(), "user": current_user(request)},
+        {"links": site_links(), "user": current_user(request), "pay_available": payments.available()},
         headers={"Cache-Control": "no-cache"},
     )
+
+@app.get("/oplata", response_class=HTMLResponse)
+def pay_page(request: Request):
+    """Как оплатить. Показываем только включённые и заполненные способы (#122)."""
+    blocks = payments.ready()
+    return render(request, "oplata.html", user=current_user(request), blocks=blocks,
+                  pay_state=payments.state(),
+                  pay={b: payments.details(b) for b in payments.BLOCKS})
 
 @app.get("/policy", response_class=HTMLResponse)
 def policy_page(request: Request):
@@ -595,6 +605,58 @@ def save_settings(
         return JSONResponse({"ok": True, "saved": "настройки сайта"})
     return RedirectResponse(ADMIN + "/settings?saved=1", status_code=303)
 
+
+@app.get(ADMIN + "/pay", response_class=HTMLResponse)
+def admin_pay(request: Request):
+    """Оплата: три способа в одном месте (#122). Мессенджеры — на /admin/hooks, контакты — на /admin/settings."""
+    user = require_admin(request)
+    if not user:
+        return _deny(request)
+    st = payments.state()
+    secret = payments._value("pay.yukassa.secret")
+    return render(request, "admin_pay.html", user=user,
+                  settings=db.all_settings("pay."), pay_state=st, pay_ready=payments.ready(),
+                  yukassa_mask=("задан ···· " + secret[-4:]) if len(secret) > 4 else "не задан",
+                  yukassa_webhook=payments.webhook_url(),
+                  saved=request.query_params.get("saved") == "1")
+
+
+@app.post(ADMIN + "/pay")
+def save_pay(
+    request: Request,
+    pay_bank_on: str = Form(""), pay_bank_recipient: str = Form(""), pay_bank_account: str = Form(""),
+    pay_bank_bank_name: str = Form(""), pay_bank_sbp_phone: str = Form(""), pay_bank_note: str = Form(""),
+    pay_link_on: str = Form(""), pay_link_url: str = Form(""), pay_link_note: str = Form(""),
+    pay_yukassa_on: str = Form(""), pay_yukassa_shop_id: str = Form(""),
+    pay_yukassa_secret: str = Form(""), pay_yukassa_note: str = Form(""),
+):
+    """Сохранение настроек оплаты. Пустой секретный ключ — «не менять»."""
+    user = require_admin(request)
+    if not user:
+        return _deny(request)
+    pairs = {
+        "pay.bank.on": "1" if pay_bank_on else "",
+        "pay.bank.recipient": pay_bank_recipient,
+        "pay.bank.account": pay_bank_account,
+        "pay.bank.bank_name": pay_bank_bank_name,
+        "pay.bank.sbp_phone": pay_bank_sbp_phone,
+        "pay.bank.note": pay_bank_note,
+        "pay.link.on": "1" if pay_link_on else "",
+        "pay.link.url": pay_link_url,
+        "pay.link.note": pay_link_note,
+        "pay.yukassa.on": "1" if pay_yukassa_on else "",
+        "pay.yukassa.shop_id": pay_yukassa_shop_id,
+        "pay.yukassa.note": pay_yukassa_note,
+    }
+    for key, val in pairs.items():
+        db.set_setting(key, val.strip(), user["id"])
+    # Ключ пишем только если его вписали: иначе каждое сохранение затирало бы секрет пустотой.
+    if pay_yukassa_secret.strip():
+        db.set_setting("pay.yukassa.secret", secrets_helper.encrypt(pay_yukassa_secret.strip()), user["id"])
+    wants_json = (request.headers.get("accept") or "").find("application/json") >= 0
+    if wants_json:
+        return JSONResponse({"ok": True, "saved": "оплата", "ready": payments.ready()})
+    return RedirectResponse(ADMIN + "/pay?saved=1", status_code=303)
 
 # ---------------- Страницы ошибок ----------------
 # Раньше несуществующий путь приложения отдавал голый {"detail":"Not Found"} —
