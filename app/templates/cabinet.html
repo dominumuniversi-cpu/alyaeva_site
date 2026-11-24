@@ -97,9 +97,8 @@
   <div class="order-next">
     {{ next_step(o.status) }}
     {# Шаг говорит «пришлите фото / посмотрите макет» — рядом ссылка туда, где это сделать. #}
-    {% if o.status == 'new' and not photos %}
-      <a class="next-link" href="/cabinet/order/{{ o.id }}#drop">Загрузить фото →</a>
-    {% elif o.status in ('layout', 'in_work') %}
+    {# Новый заказ без фото уже зовёт блоком «Нужны фотографии» ниже — второй ссылки не нужно. #}
+    {% if photos and o.status in ('layout', 'in_work') %}
       <a class="next-link" href="/cabinet/order/{{ o.id }}">Открыть заказ →</a>
     {% endif %}
   </div>
