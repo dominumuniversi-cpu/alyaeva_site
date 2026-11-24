@@ -6,33 +6,19 @@
 <p class="muted mt-neg">Предоплата — 50% после согласования макета, остальное при получении книги.</p>
 
 {% if not blocks %}
-  {# Оплата не настроена: честно говорим, что способ обсуждаем в переписке, и не изобретаем реквизиты. #}
+  {# Все способы выключены в админке: честно говорим «в переписке» и не изобретаем реквизиты. #}
   <div class="card">
     <p>Онлайн-оплаты пока нет. Способ и время оплаты согласуем в переписке после того, как выбран макет.</p>
     <p class="muted">Написать: {% include "_social.html" %}</p>
   </div>
 {% else %}
-<div class="grid grid-2">
+{% if blocks|length > 1 %}
+<p class="muted">Платить можно так — выбирайте, что удобнее:</p>
+{% endif %}
+{# Список способов — тот же файл, что и в кабинете: одна правка на весь сайт. #}
+<div class="grid grid-2 pay-choice">
   {% for b in blocks %}
-  <div class="card">
-    <h2 class="card-title">{{ pay_state[b].title }}</h2>
-    {% if b == 'bank' %}
-      <p><b>Получатель:</b> {{ pay.bank.recipient }}</p>
-      {% if pay.bank.bank_name %}<p><b>Банк:</b> {{ pay.bank.bank_name }}</p>{% endif %}
-      <p><b>Счёт:</b> <span class="pay-account">{{ pay.bank.account }}</span>
-         <button class="btn btn-ghost pay-copy" type="button" data-copy="{{ pay.bank.account }}">Скопировать</button></p>
-      {% if pay.bank.sbp_phone %}<p><b>СБП по номеру:</b> {{ pay.bank.sbp_phone }}</p>{% endif %}
-    {% elif b == 'link' %}
-      <p>Выставлю счёт по вашему заказу — откройте его по кнопке.</p>
-      <p><a class="btn" href="{{ pay.link.url }}" target="_blank" rel="noopener">Перейти к оплате</a></p>
-    {% elif b == 'yukassa' %}
-      <p>Оплата картой на сайте. Счёт приходит на почту после согласования макета.</p>
-      {% if user %}<p><a class="btn" href="/cabinet">Мои заказы</a></p>{% endif %}
-    {% endif %}
-    {% if (b == 'bank' and pay.bank.note) or (b == 'link' and pay.link.note) or (b == 'yukassa' and pay.yukassa.note) %}
-      <p class="muted tight">{{ pay.bank.note if b == 'bank' else (pay.link.note if b == 'link' else pay.yukassa.note) }}</p>
-    {% endif %}
-  </div>
+  <div class="card">{% set _single = [b] %}{% with pay_blocks = _single %}{% include "_pay_choice.html" %}{% endwith %}</div>
   {% endfor %}
 </div>
 {% endif %}

@@ -21,13 +21,17 @@
     {{ order_progress(order.status, stages, stage_names) }}
   </div>
 
-  {# Оплата картой: кнопка есть, только если ЮKassa настроена и заказ ещё не оплачен (#122).
-     Деньги идут на счёт владельца; статус «Оплачен» ставит уведомление ЮKassa, а не клик. #}
-  {% if can_pay %}
+  {# Оплата: показываем те способы, которые владелец включил и заполнил (#122).
+     Раньше здесь была только кнопка ЮKassa — человек с включённым счётом или ссылкой
+     не видел выбора вовсе и уходил на отдельную страницу. Теперь выбор прямо в карточке.
+     Статус «Оплачен» ставит уведомление ЮKassa, а не клик. #}
+  {% if pay_blocks %}
   <div class="card card-mint card-pad mt-18">
     <b>Заказ принят, к оплате {{ order.total_rub|rub }}</b>
-    <p class="muted tight">Оплата картой. Заказ станет «Оплачен» сразу после того, как банк подтвердит платёж.</p>
-    <button class="btn" type="button" id="payBtn" data-order="{{ order.id }}">Оплатить картой</button>
+    {% if pay_blocks|length > 1 %}
+    <p class="muted tight">Выберите, как удобно оплатить:</p>
+    {% endif %}
+    <div class="pay-choice">{% include "_pay_choice.html" %}</div>
     <p class="hint" id="payNote" hidden></p>
   </div>
   {% endif %}
@@ -182,6 +186,31 @@
   document.getElementById('pick').addEventListener('change', e => send(e.target.files));
   document.getElementById('shoot').addEventListener('change', e => send(e.target.files));
 })();
+</script>
+<script>
+/* Оплата картой. Раньше кнопка была объявлена, но обработчика не было вовсе — нажатие ничего не делало.
+   Теперь: создаём платёж и уводим на страницу оплаты банка. Ошибку показываем рядом, страницу не трогаем. */
+document.querySelectorAll('[data-pay-card]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var note = document.getElementById('payNote');
+    btn.disabled = true;
+    btn.textContent = 'Готовлю страницу оплаты…';
+    if (note) { note.hidden = false; note.textContent = ''; }
+    fetch('/api/pay/order/' + btn.getAttribute('data-pay-card'), { method: 'POST' })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'Ответ не разобрать' }; }); })
+      .then(function (d) {
+        if (d.ok && d.url) { location.href = d.url; return; }
+        if (note) note.textContent = d.error || 'Не получилось создать платёж. Напишите нам — оплатим вручную.';
+        btn.disabled = false;
+        btn.textContent = 'Оплатить картой';
+      })
+      .catch(function () {
+        if (note) note.textContent = 'Сеть недоступна — попробуйте ещё раз.';
+        btn.disabled = false;
+        btn.textContent = 'Оплатить картой';
+      });
+  });
+});
 </script>
 <script>
 /* Удаление фото: политика обещает «удалю по просьбе» — человеку не надо писать и ждать. */
