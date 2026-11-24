@@ -40,6 +40,12 @@
   header a[href="/login"]{padding:6px 14px !important; font-size:14px}
 }
 </style>
+<style>
+/* Плашка связи: на узком экране кнопки в столбик и на всю ширину — иначе «ВКонтакте» не влезает. */
+@media (max-width:520px){
+  #svyaz .soc-cta{flex:1 1 100%;justify-content:center;padding:13px 18px}
+}
+</style>
 </head>
 <body>
 <div id="top" style="background: #FFFFFF; color: #2A2650; font-family: 'Nunito', system-ui, sans-serif; font-size: 18px; line-height: 1.6;">
@@ -238,6 +244,28 @@
 </section>
 
 <div style="background: #F1ECFF; line-height: 0;"><svg viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden="true" style="display: block; width: 100%; height: 48px;"><path d="M0 24 C 120 0 240 0 360 24 S 600 48 720 24 S 960 0 1080 24 S 1320 48 1440 24 V48 H0 Z" fill="#FFFFFF"></path></svg></div>
+
+
+<!-- Плашка связи: тянется из шапки и подвала, стоит сразу после «Как заказать». -->
+<section id="svyaz" style="padding:0 0 56px;background:#FFF1C7">
+  <div style="max-width:1100px;margin:0 auto;padding:28px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px">
+    <div style="max-width:560px">
+      <div style="font-family:Philosopher,serif;font-size:26px;line-height:1.25;color:#2A2650">Не нашли свою сказку? Расскажите, какую хотите</div>
+      <p style="margin:8px 0 0;color:#4A4678;font-size:16px">Отвечу в тот же мессенджер, где удобнее писать.</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <a href="https://t.me/tel_menedger_alena" class="soc-cta" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#4B4690;color:#fff;border-radius:999px;text-decoration:none;font-weight:800">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFFFF" aria-hidden="true"><path d="M21.8 3.2c-.3-.3-.8-.4-1.2-.2L2.6 10.4c-.5.2-.8.6-.8 1.1 0 .5.4.9.8 1l4.6 1.4 1.8 5.7c.1.4.5.7.9.7.4 0 .8-.2 1-.6l1.8-2.9 4.4 3.2c.3.2.7.3 1 .1.3-.1.6-.4.7-.8l3-14.7c.1-.5-.1-.9-.5-1.2zM9.6 14.2l-.5 3.1-1.1-3.5 8.1-5.6-6.5 6z"/></svg>
+        Telegram</a>
+      <a href="https://wa.me/79028759387" class="soc-cta" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#fff;color:#2A2650;border:1.5px solid #4B4690;border-radius:999px;text-decoration:none;font-weight:800">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#4B4690" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-5.9c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1-.7-.3-1.5-.8-2.1-1.6-.5-.6-.8-1.2-.9-1.5-.1-.2 0-.3.1-.4l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.3 0-.5l-.7-1.6c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.7.7-.9 1.6-.7 2.5.3 1.2 1 2.4 1.9 3.4 1.2 1.3 2.6 2.2 4.2 2.6.4.1.8.2 1.2.1.6-.1 1.1-.4 1.4-.9.2-.3.2-.7.1-1l-.3-.3z"/></svg>
+        WhatsApp</a>
+      <a href="https://vk.ru/neuroart_ekb" class="soc-cta" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:#fff;color:#2A2650;border:1.5px solid #4B4690;border-radius:999px;text-decoration:none;font-weight:800">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#4B4690" aria-hidden="true"><path d="M12.8 17.5h1.4c.4 0 .6-.2.6-.6-.1-1.5.8-2.2 1.6-1.2.8 1 1.2 1.8 2.1 1.8h2c.4 0 .5-.3.3-.7-.4-.9-1.3-2-1.9-2.8-.3-.4-.2-.6 0-.9.7-.9 1.6-2 1.9-2.7.2-.4 0-.6-.4-.6h-2c-.4 0-.5.2-.7.5-.6 1.3-1.4 2.5-1.9 2.5-.3 0-.4-.2-.4-.6V10c0-.4-.1-.6-.5-.6h-1.7c-.3 0-.5.2-.2.5.3.4.4.8.4 1.4v2.1c0 .6-.1.7-.4.7-.6 0-1.5-1.2-2.1-2.6-.2-.5-.4-.6-.8-.6H7.4c-.4 0-.5.2-.4.6.4 1 1.4 3.2 2.9 5.1 1 1.3 2 1.9 2.9 1.9z"/></svg>
+        ВКонтакте</a>
+    </div>
+  </div>
+</section>
 
 <section id="cena" style="padding: 40px 0 80px;">
 <div style="max-width: 1120px; margin: 0 auto; padding: 0 20px; box-sizing: border-box;">
