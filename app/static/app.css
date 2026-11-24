@@ -507,3 +507,60 @@ body{position:relative}
 .feed-item.unread{background:var(--c-cream)}
 .feed-item .feed-text{display:block;font-size:14px;color:var(--c-body);margin-top:2px}
 a.feed-item:hover{background:var(--c-lilac)}
+
+/* --- Кабинет и админка: оформление под сайт + мобильный вид (24.11.2026) --- */
+
+/* Фон страниц за входом: тот же мягкий переход, что на главной, но чуть заметнее. */
+body{background:linear-gradient(180deg,#fff 0%,#FBF9FF 55%,#F6F2FF 100%)}
+
+/* Заголовок и подпись страницы кабинета — как заголовки на сайте. */
+.page-head{margin:0 0 20px}
+.page-head h1{margin-bottom:4px}
+.page-head p{margin:0;color:var(--c-body);opacity:.85}
+
+/* Карточка списка: одна запись заказа или клиента. */
+.list-card{
+  background:#fff;border:1px solid var(--c-lilac);border-radius:var(--radius);
+  padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow);
+  display:block;color:inherit;text-decoration:none;transition:box-shadow .15s,border-color .15s,transform .1s;
+}
+a.list-card:hover{border-color:var(--c-accent);box-shadow:0 12px 34px rgba(75,70,144,.14)}
+a.list-card:active{transform:translateY(1px)}
+.list-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.list-card-title{font-family:Philosopher,serif;font-size:20px;font-weight:700;color:var(--c-strong)}
+.list-card-sub{font-size:14px;opacity:.75;margin-top:2px}
+.list-card-rows{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:14px}
+.list-card-rows span{color:var(--c-body)}
+.list-card-rows b{color:var(--c-strong);font-weight:700}
+
+/* Плашка статуса: цвет берётся из своего класса, форма одна на всех страницах. */
+.pill,.badge{white-space:nowrap}
+
+@media (max-width:600px){
+  /* Таблица на телефоне не влезает: прокрутка вместо разъезжающейся вёрстки. */
+  .card{padding:16px}
+  .card > table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  .list-card{padding:14px 16px}
+  .list-card-title{font-size:18px}
+  .cab-head{align-items:flex-start}
+}
+
+@media (max-width:700px){
+  /* Админские таблицы с data-label разворачиваются в карточки: на телефоне
+     таблица в 7 колонок не читается вообще. Где подписей нет — остаётся прокрутка. */
+  .card > .tbl-cards[data-labels="1"]{display:block;overflow:visible;white-space:normal;margin:0}
+  .card > .tbl-cards[data-labels="1"] tr:first-child{display:none}
+  .card > .tbl-cards[data-labels="1"] tr{
+    display:block;border:1px solid var(--c-lilac);border-radius:var(--radius-sm);
+    padding:12px 14px;margin-bottom:12px;background:#fff;
+  }
+  .card > .tbl-cards[data-labels="1"] td{
+    display:flex;justify-content:space-between;gap:14px;
+    border:0;padding:6px 0;font-size:14px;text-align:right;
+  }
+  .card > .tbl-cards[data-labels="1"] td::before{
+    content:attr(data-label);
+    font-weight:700;color:var(--c-strong);text-align:left;flex:0 0 auto;
+  }
+  .card > .tbl-cards[data-labels="1"] td:not([data-label])::before{content:""}
+}

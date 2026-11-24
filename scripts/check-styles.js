@@ -10,7 +10,8 @@
  *
  * Выход 1 — если хоть одна страница без стилей (так это встаёт в CI).
  */
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 
 const BASE = (process.argv[2] || 'https://alyaeva.pro').replace(/\/$/, '');
 
@@ -62,7 +63,7 @@ function problems(m) {
 }
 
 (async () => {
-  const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+  const browser = await puppeteer.launch({ executablePath: EDGE, userDataDir: require('os').tmpdir() + '\\dsh-check-styles', args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] });
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 900 });
   const results = [];

@@ -1,0 +1,14 @@
+{
+  "name": "alyaeva-site",
+  "private": true,
+  "description": "Скрипты обслуживания сайта alyaeva.pro. Зависимость нужна только проверке стилей.",
+  "scripts": {
+    "check-live": "node scripts/check-live.js",
+    "check-styles": "node scripts/check-styles.js https://alyaeva.pro",
+    "deploy": "node scripts/deploy-site.js --apply",
+    "backup": "node scripts/backup.js"
+  },
+  "dependencies": {
+    "puppeteer-core": "^25.18.1"
+  }
+}
