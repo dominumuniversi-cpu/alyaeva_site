@@ -18,7 +18,7 @@ from fastapi.templating import Jinja2Templates
 import db
 from config import config
 
-from web_common import ADMIN, current_user, render, require_admin, require_user, templates  # noqa: E402
+from web_common import ADMIN, current_user, pages, render, require_admin, require_user, site_links, templates  # noqa: E402
 
 
 @asynccontextmanager
@@ -67,6 +67,29 @@ def health():
 
 # Secure-флаг: на проде всегда https, на стенде по http — иначе браузер cookie отбросит.
 _COOKIE_SECURE = os.getenv("COOKIE_SECURE", "1") == "1"
+
+@app.get("/", response_class=HTMLResponse)
+def home_page(request: Request):
+    """Главная — из админки: телефон и мессенджеры подставляются, а не лежат копиями в файле.
+
+    Статический html/index.html остаётся как есть (nginx отдаёт его напрямую); приложение рендерит
+    свой шаблон `pages/web/index.html`. Смена контакта в /admin/settings меняет и шапку, и подвал.
+    """
+    return pages.TemplateResponse(
+        request, "index.html",
+        {"links": site_links(), "user": current_user(request)},
+        headers={"Cache-Control": "no-cache"},
+    )
+
+@app.get("/fotokniga-ekaterinburg/", response_class=HTMLResponse)
+@app.get("/fotokniga-ekaterinburg", response_class=HTMLResponse)
+def fotokniga_page(request: Request):
+    """Лендинг фотокниги — контакты из админки, как на главной."""
+    return pages.TemplateResponse(
+        request, "fotokniga-ekaterinburg.html",
+        {"links": site_links(), "user": current_user(request)},
+        headers={"Cache-Control": "no-cache"},
+    )
 
 @app.get("/policy", response_class=HTMLResponse)
 def policy_page(request: Request):
@@ -567,14 +590,6 @@ def save_settings(
     wants_json = (request.headers.get("accept") or "").find("application/json") >= 0
     for key, val in pairs.items():
         db.set_setting(key, val.strip(), user["id"])
-    # Главная — статический файл, но ссылки на мессенджеры должны быть ОДНИ.
-    # Иначе владелец правит в настройках и видит старые ссылки на главной (#46).
-    try:
-        import sync_links
-        sync_links.apply_links({k.replace("site.", "site."): v.strip() for k, v in pairs.items()})
-    except Exception:
-        # Не смогли переписать главную — настройки всё равно сохранены, это главное.
-        pass
     if wants_json:
         # Сообщение без перезагрузки: страница остаётся на месте, прокрутка не сбрасывается.
         return JSONResponse({"ok": True, "saved": "настройки сайта"})

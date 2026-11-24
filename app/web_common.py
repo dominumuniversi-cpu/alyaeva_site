@@ -13,9 +13,25 @@ from config import config
 from order_status import next_step, NEW_STATUS
 
 templates = Jinja2Templates(directory="templates")
+# Главная и лендинг — статические HTML рядом с приложением. Отдаём их же движком,
+# чтобы контакты (телефон, мессенджеры, почта) подставлялись из админки, а не жили копиями в файлах.
+# Порядок: сначала pages, потом templates — имена не пересекаются.
+pages = Jinja2Templates(directory=["pages/web", "templates"])
 # Админка живёт по /admin — нормальный, читаемый адрес.
 # Раньше был секретный слаг /6b03c5256535e9ab5a: владелец набирал его руками и путался.
 ADMIN = "/admin"
+
+
+def tel(value: str) -> str:
+    """Телефон по-человечески: +79028759387 → «+7 902 875-93-87».
+
+    В настройках номер хранится цифрами (так проще набирать и сверять), а показывается
+    с пробелами — иначе на главной, в шапке и в подвале он выглядит по-разному.
+    """
+    digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+    if len(digits) == 11 and digits[0] in "78":
+        return f"+7 {digits[1:4]} {digits[4:7]}-{digits[7:9]}-{digits[9:11]}"
+    return str(value or "")
 
 
 def rub(value, dash: bool = True) -> str:
@@ -35,6 +51,10 @@ def rub(value, dash: bool = True) -> str:
 
 
 templates.env.filters["rub"] = rub
+templates.env.filters["tel"] = tel
+# Главная рендерится отдельным движком — те же фильтры, иначе телефон выйдет как в базе.
+pages.env.filters["rub"] = rub
+pages.env.filters["tel"] = tel
 
 
 def current_user(request: Request) -> dict | None:
