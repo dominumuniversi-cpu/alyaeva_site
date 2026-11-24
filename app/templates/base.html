@@ -20,6 +20,7 @@
     <a href="{{ admin_url }}/inbox" {% if '/inbox' in request.url.path %}class="active"{% endif %}>Инбокс</a>
     <a href="{{ admin_url }}/products" {% if '/products' in request.url.path %}class="active"{% endif %}>Товары</a>
     <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Приём сообщений</a>
+    <a href="{{ admin_url }}/stats" {% if '/stats' in request.url.path %}class="active"{% endif %}>Статистика</a>
     <a href="{{ admin_url }}/settings" {% if '/settings' in request.url.path and '/admin' in request.url.path %}class="active"{% endif %}>Настройки сайта</a>
   </div>
 </nav>

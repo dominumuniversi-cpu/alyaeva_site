@@ -133,6 +133,8 @@ def order_page(request: Request):
     user = current_user(request)
     if not user:
         return RedirectResponse("/login?next=/order&reason=order", status_code=303)
+    import analytics
+    analytics.track("order_open", "/order")
     return render(request, "order.html", user=user)
 
 
@@ -257,6 +259,8 @@ def register(request: Request, email: str = Form(""), password: str = Form(""),
     # теперь у них есть владелец, и фото из guest/ попадают в его кабинет.
     if phone.strip():
         orders_mod.claim_guest_orders(uid, phone.strip(), email)
+    import analytics
+    analytics.track("register", "/register")
     token = db.create_session(uid, ua=request.headers.get("user-agent", ""),
                               ip=request.client.host if request.client else "")
     resp = RedirectResponse(_safe_next(next, "/cabinet"), status_code=303)
@@ -419,6 +423,21 @@ def admin_products(request: Request):
     with db.pool.connection() as conn:
         products = conn.execute("SELECT * FROM products ORDER BY sort_order, id").fetchall()
     return render(request, "admin_products.html", user=user, products=products)
+
+
+@app.get(ADMIN + "/stats", response_class=HTMLResponse)
+def admin_stats(request: Request, days: int = 30):
+    """Сколько зашли, сколько открыли заказ, сколько оформили, откуда пришли.
+
+    Свои счётчики в БД: данные наши, 152-ФЗ не затрагивается — личности мы не пишем.
+    """
+    user = require_admin(request)
+    if not user:
+        return _deny(request)
+    import analytics
+    days = max(1, min(days, 365))
+    return render(request, "admin_stats.html", days=days, s=analytics.summary(days),
+                  SOURCE_NAMES=analytics.SOURCE_NAMES)
 
 
 @app.get(ADMIN + "/settings", response_class=HTMLResponse)

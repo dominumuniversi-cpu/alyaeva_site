@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Статистика — админка{% endblock %}
+{% block content %}
+<h1>Статистика за {{ days }} дней</h1>
+<p class="lead">Свои счётчики: без внешних сервисов и без слежки за людьми. Хранится только событие — ни IP, ни cookie.</p>
+
+<div class="stats-row">
+  <div class="stat"><span class="stat-num">{{ s.views }}</span><span class="stat-label">просмотров</span></div>
+  <div class="stat"><span class="stat-num">{{ s.order_open }}</span><span class="stat-label">открыли заказ</span></div>
+  <div class="stat"><span class="stat-num">{{ s.order_created }}</span><span class="stat-label">оформили</span></div>
+  <div class="stat"><span class="stat-num">{{ s.register }}</span><span class="stat-label">зарегистрировались</span></div>
+  <div class="stat stat-accent"><span class="stat-num">{{ s.conversion }}%</span><span class="stat-label">конверсия заказа</span></div>
+</div>
+
+<h2>Откуда пришли</h2>
+{% if s.by_source %}
+<table class="tbl">
+  <tr><th>Источник</th><th>Просмотров</th></tr>
+  {% for r in s.by_source %}<tr><td>{{ SOURCE_NAMES.get(r.name, r.name) }}</td><td>{{ r.n }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="hint">Пока пусто — данные появятся, когда на сайт придут посетители.</p>{% endif %}
+
+<h2>Какие страницы смотрят</h2>
+{% if s.by_page %}
+<table class="tbl">
+  <tr><th>Страница</th><th>Просмотров</th></tr>
+  {% for r in s.by_page %}<tr><td><code>{{ r.name or '—' }}</code></td><td>{{ r.n }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="hint">Пока пусто.</p>{% endif %}
+
+<h2>По дням</h2>
+{% if s.by_day %}
+<table class="tbl">
+  <tr><th>День</th><th>Просмотров</th><th>Заказов</th></tr>
+  {% for r in s.by_day %}<tr><td>{{ r.day.strftime('%d.%m.%Y') }}</td><td>{{ r.views }}</td><td>{{ r.orders }}</td></tr>{% endfor %}
+</table>
+{% else %}<p class="hint">Пока пусто.</p>{% endif %}
+{% endblock %}

@@ -60,6 +60,8 @@ def api_order(
     order = shop.create_order(user["id"], name, phone, email, comment, items)
     shop.log_message("site", "in", f"Новый заказ {order['number']} от {name}, {phone}. {comment}".strip(),
                      author=name)
+    import analytics
+    analytics.track("order_created", "/order")
     return JSONResponse({"ok": True, "number": order["number"], "id": order["id"]})
 
 

@@ -488,3 +488,17 @@ body{position:relative}
 .policy-updated{background:var(--c-mint);display:inline-block;padding:6px 14px;border-radius:8px;font-size:14px}
 
 .foot-legal{margin-top:18px;padding-top:14px;border-top:1px solid rgba(75,70,144,.12);font-size:13px;text-align:center}
+
+
+/* ---------- Статистика в админке ---------- */
+.stats-row{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0 8px}
+.stat{flex:1 1 150px;background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 4px 18px rgba(75,70,144,.08);border:1px solid var(--c-lilac)}
+.stat-accent{background:var(--c-accent);border-color:var(--c-accent)}
+.stat-accent .stat-num,.stat-accent .stat-label{color:#fff}
+.stat-num{display:block;font-family:Philosopher,Georgia,serif;font-size:30px;font-weight:700;color:var(--c-strong)}
+.stat-label{display:block;font-size:13.5px;color:var(--c-body);margin-top:4px}
+.tbl{width:100%;border-collapse:collapse;margin:8px 0 24px;background:#fff;border-radius:12px;overflow:hidden}
+.tbl th,.tbl td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-lilac);font-size:15px}
+.tbl th{background:var(--c-lilac);font-weight:700;color:var(--c-strong)}
+.tbl tr:last-child td{border-bottom:none}
+@media (max-width:600px){.stat-num{font-size:24px}.stat{padding:14px 16px}.tbl th,.tbl td{padding:8px 10px;font-size:14px}}

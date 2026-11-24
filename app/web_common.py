@@ -86,6 +86,14 @@ def render(request: Request, name: str, **kw) -> HTMLResponse:
     counts = kw.pop("counts", None)
     if counts is None:
         counts = admin_counts() if (user and user.get("role") == "admin") else {}
+    # Просмотр считаем здесь, а не в каждом маршруте: одна точка — один счётчик.
+    # Тяжёлые страницы (админка, кабинет) в общую статистику не идут: там сидят свои.
+    try:
+        import analytics
+        analytics.track("view", request.url.path,
+                        analytics.source_from_referer(request.headers.get("referer", "")))
+    except Exception:
+        pass
     import datetime
     return templates.TemplateResponse(request, name,
                                       {"user": user, "admin_url": ADMIN, "links": links,
