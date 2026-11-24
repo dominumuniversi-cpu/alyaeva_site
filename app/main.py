@@ -587,6 +587,63 @@ def _wants_json(request: Request) -> bool:
     return "text/html" not in accept
 
 
+# ---------- Защита от чужих форм (CSRF) ----------
+
+# Действия, которые меняют данные и принимают простую отправку формы
+# (application/x-www-form-urlencoded, multipart, text/plain). Именно такую форму
+# чужой сайт отправляет в браузере человека, где уже лежит его сессия.
+_FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data", "text/plain", "")
+_SAFE_METHODS = ("GET", "HEAD", "OPTIONS", "TRACE")
+# Сюда стучатся мессенджеры: у них нет ни cookie, ни нашего домена.
+_NO_CSRF_PREFIX = ("/hooks/",)
+
+
+def _site_origins(request: Request) -> set[str]:
+    """Какие домены считаем своими: текущий и alyaeva.pro (с www и без)."""
+    host = (request.url.hostname or "").lower()
+    names = {host, "alyaeva.pro", "www.alyaeva.pro"}
+    return {f"{scheme}://{name}" for scheme in ("https", "http") for name in names if name}
+
+
+def _csrf_ok(request: Request, body: bytes) -> bool:
+    """Форма пришла с нашего сайта? Проверка источника, не сессии.
+
+    Два заслона:
+    1. Origin (или Referer, если Origin не прислали) должен быть нашим доменом.
+       Так отвечаем на «форму прислали с чужой страницы».
+    2. Если cookie сессии нет — пропускаем: защищать нечего, запрос всё равно
+       вернёт 401. Иначе сломались бы скрипты и smoke.js, которые ходят по сети.
+    """
+    cookie = request.cookies.get("sid", "")
+    if not cookie:
+        return True
+    origin = request.headers.get("origin", "")
+    if origin:
+        return origin in _site_origins(request)
+    referer = request.headers.get("referer", "")
+    if referer:
+        return any(referer.startswith(o + "/") or referer == o for o in _site_origins(request))
+    return False
+
+
+@app.middleware("http")
+async def _csrf_middleware(request: Request, call_next):
+    """Отказ до обработчика: чужая форма не должна дойти до кода.
+
+    Раньше единственным заслоном был SameSite=Lax в cookie. Замер 24.11.2026:
+    POST /login с Origin чужого сайта отвечал 200, /api/password с чужим Origin
+    доходил до проверки сессии. Теперь такие запросы получают 403.
+    """
+    if request.method not in _SAFE_METHODS and not request.url.path.startswith(_NO_CSRF_PREFIX):
+        ctype = (request.headers.get("content-type") or "").split(";")[0].strip().lower()
+        if ctype in _FORM_TYPES:
+            body = await request.body()
+            if not _csrf_ok(request, body):
+                return JSONResponse({"ok": False, "error": "Форма пришла не с нашего сайта. Обновите страницу и попробуйте ещё раз."}, status_code=403)
+            # Тело уже прочитано — кладём обратно, иначе форма придёт пустой.
+            request._body = body
+    return await call_next(request)
+
 @app.exception_handler(_HTTPExc)
 async def _http_error(request: Request, exc: _HTTPExc):
     """404 → страница «не найдено»; 403 → «сюда нельзя»; остальное — честный код."""
