@@ -732,3 +732,42 @@ body{
 .photo-thumb{width:100%;height:130px;object-fit:cover;border-radius:10px;background:var(--c-mint)}
 .photo-cap{font-size:13px;margin-top:6px;color:var(--c-body);word-break:break-all}
 .tiny{font-size:12px}
+
+/* Отступы и мелкие утилиты страниц (24.11.2026). Нужны там, где раньше стояло
+   style="margin-top:4px": одинаковые отступы на всех страницах и никакой магии чисел. */
+.card-pad{padding:18px 22px}
+.card-mint{background:var(--c-mint);border-color:var(--c-mint)}
+.stat-label{font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.hint-tight{margin:6px 0 0}
+.mt-2{margin-top:2px}
+.mt-4{margin-top:4px}
+.mt-12{margin-top:12px}
+.mt-18{margin-top:18px}
+.mb-lg{margin-bottom:24px}
+.ml-10{margin-left:10px}
+.text-strong{font-weight:700}
+.mt-0{margin-top:0}
+.mt-16{margin-top:16px}
+.mt-22{margin-top:22px}
+.mb-22{margin-bottom:22px}
+.calc-out{margin-top:16px;font-size:18px;color:var(--c-strong)}
+.cta-row{margin:28px 0 0;text-align:center}
+
+/* Отступы и мелкие утилиты страниц (24.11.2026). Нужны там, где раньше стояло
+   style="margin-top:4px": одинаковые отступы на всех страницах вместо чисел по месту. */
+.card-pad{padding:18px 22px}
+.card-mint{background:var(--c-mint);border-color:var(--c-mint)}
+.hint-tight{margin:6px 0 0}
+.mt-0{margin-top:0}
+.mt-2{margin-top:2px}
+.mt-4{margin-top:4px}
+.mt-12{margin-top:12px}
+.mt-16{margin-top:16px}
+.mt-18{margin-top:18px}
+.mt-22{margin-top:22px}
+.mb-lg{margin-bottom:24px}
+.mb-22{margin-bottom:22px}
+.ml-10{margin-left:10px}
+.text-strong{font-weight:700}
+.calc-out{margin-top:16px;font-size:18px;color:var(--c-strong)}
+.cta-row{margin:28px 0 0;text-align:center}
