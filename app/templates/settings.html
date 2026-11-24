@@ -27,7 +27,7 @@
 
   <div class="card" style="margin-top:20px">
     <h2 style="font-size:20px; margin-top:0">Аккаунт</h2>
-    <table style="box-shadow:none">
+    <table class="tbl" style="box-shadow:none">
       <tr><td class="muted">Почта для входа</td><td><strong>{{ user.email }}</strong></td></tr>
       <tr><td class="muted">Роль</td><td>{% if user.role == 'admin' %}Администратор{% else %}Клиент{% endif %}</td></tr>
       <tr><td class="muted">Выход</td><td><a href="/logout">Выйти из аккаунта</a></td></tr>

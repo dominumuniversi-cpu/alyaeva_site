@@ -15,23 +15,25 @@
 
 <div class="card" style="margin-bottom:20px">
   <h2 style="margin-top:0">Как это работает</h2>
-  <table>
-    <tr><th>Канал</th><th>Состояние</th><th>Что нужно</th></tr>
+  <table class="tbl tbl-cards" data-labels="1">
+    <thead><tr><th>Канал</th><th>Состояние</th><th>Что нужно</th></tr></thead>
+    <tbody>
     <tr>
-      <td><strong>Telegram</strong></td>
-      <td>{% if tg_ready %}<span class="ok">подключён</span>{% else %}<span class="err">не подключён</span>{% endif %}</td>
-      <td class="muted">токен бота от @BotFather</td>
+      <td data-label="Канал"><strong>Telegram</strong></td>
+      <td data-label="Состояние">{% if tg_ready %}<span class="ok">подключён</span>{% else %}<span class="err">не подключён</span>{% endif %}</td>
+      <td data-label="Что нужно" class="muted">токен бота от @BotFather</td>
     </tr>
     <tr>
-      <td><strong>ВКонтакте</strong></td>
-      <td>{% if vk_ready %}<span class="ok">подключён</span>{% else %}<span class="err">не подключён</span>{% endif %}</td>
-      <td class="muted">токен сообщества</td>
+      <td data-label="Канал"><strong>ВКонтакте</strong></td>
+      <td data-label="Состояние">{% if vk_ready %}<span class="ok">подключён</span>{% else %}<span class="err">не подключён</span>{% endif %}</td>
+      <td data-label="Что нужно" class="muted">токен сообщества</td>
     </tr>
     <tr>
-      <td><strong>Сайт</strong></td>
-      <td><span class="ok">работает</span></td>
-      <td class="muted">заказы и сообщения с формы</td>
+      <td data-label="Канал"><strong>Сайт</strong></td>
+      <td data-label="Состояние"><span class="ok">работает</span></td>
+      <td data-label="Что нужно" class="muted">заказы и сообщения с формы</td>
     </tr>
+    </tbody>
   </table>
 </div>
 

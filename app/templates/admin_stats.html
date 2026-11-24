@@ -14,25 +14,25 @@
 
 <h2>Откуда пришли</h2>
 {% if s.by_source %}
-<table class="tbl">
-  <tr><th>Источник</th><th>Просмотров</th></tr>
-  {% for r in s.by_source %}<tr><td>{{ SOURCE_NAMES.get(r.name, r.name) }}</td><td>{{ r.n }}</td></tr>{% endfor %}
+<table class="tbl tbl-cards" data-labels="1">
+  <thead><tr><th>Источник</th><th>Просмотров</th></tr></thead>
+  <tbody>{% for r in s.by_source %}<tr><td data-label="Источник">{{ SOURCE_NAMES.get(r.name, r.name) }}</td><td data-label="Просмотров" class="num">{{ r.n }}</td></tr>{% endfor %}</tbody>
 </table>
 {% else %}<p class="hint">Пока пусто — данные появятся, когда на сайт придут посетители.</p>{% endif %}
 
 <h2>Какие страницы смотрят</h2>
 {% if s.by_page %}
-<table class="tbl">
-  <tr><th>Страница</th><th>Просмотров</th></tr>
-  {% for r in s.by_page %}<tr><td><code>{{ r.name or '—' }}</code></td><td>{{ r.n }}</td></tr>{% endfor %}
+<table class="tbl tbl-cards" data-labels="1">
+  <thead><tr><th>Страница</th><th>Просмотров</th></tr></thead>
+  <tbody>{% for r in s.by_page %}<tr><td data-label="Страница"><code>{{ r.name or '—' }}</code></td><td data-label="Просмотров" class="num">{{ r.n }}</td></tr>{% endfor %}</tbody>
 </table>
 {% else %}<p class="hint">Пока пусто.</p>{% endif %}
 
 <h2>По дням</h2>
 {% if s.by_day %}
-<table class="tbl">
-  <tr><th>День</th><th>Просмотров</th><th>Заказов</th></tr>
-  {% for r in s.by_day %}<tr><td>{{ r.day.strftime('%d.%m.%Y') }}</td><td>{{ r.views }}</td><td>{{ r.orders }}</td></tr>{% endfor %}
+<table class="tbl tbl-cards" data-labels="1">
+  <thead><tr><th>День</th><th>Просмотров</th><th>Заказов</th></tr></thead>
+  <tbody>{% for r in s.by_day %}<tr><td data-label="День">{{ r.day.strftime('%d.%m.%Y') }}</td><td data-label="Просмотров" class="num">{{ r.views }}</td><td data-label="Заказов" class="num">{{ r.orders }}</td></tr>{% endfor %}</tbody>
 </table>
 {% else %}<p class="hint">Пока пусто.</p>{% endif %}
 {% endblock %}

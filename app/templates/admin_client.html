@@ -11,7 +11,7 @@
 <div class="card" style="margin-top:18px">
   <h2 style="font-size:20px; margin-top:0">Заказы ({{ orders|length }})</h2>
   {% if orders %}
-  <table class="tbl-cards" data-labels="1">
+  <table class="tbl tbl-cards" data-labels="1">
     <tr><th>№</th><th>Дата</th><th>Сумма</th><th>Проектов</th><th>Статус</th></tr>
     {% for o in orders %}
     <tr>
@@ -38,7 +38,7 @@
 <div class="card" style="margin-top:18px">
   <h2 style="font-size:20px; margin-top:0">Проекты — папки клиента ({{ projects|length }})</h2>
   {% if projects %}
-  <table class="tbl-cards" data-labels="1">
+  <table class="tbl tbl-cards" data-labels="1">
     <tr><th>Проект</th><th>Заказ</th><th>Фото</th><th>Создан</th></tr>
     {% for p in projects %}
     <tr>
