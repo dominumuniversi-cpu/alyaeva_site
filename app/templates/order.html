@@ -154,6 +154,9 @@ form.addEventListener('submit', async (e)=>{
     if (data.ok) {
       showUpload(data.number);
       form.reset();
+      /* После сброса в списке снова «выберите товар» — подсказка про цену не должна врать. */
+      var h = document.getElementById('productHint');
+      if (h) h.style.display = 'none';
     } else {
       result.innerHTML = '<div class="err">Не удалось отправить. Попробуйте ещё раз или напишите в Telegram.</div>';
     }
