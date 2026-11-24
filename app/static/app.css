@@ -469,6 +469,10 @@ body{position:relative}
 .empty-hints span{font-size:15px;color:var(--c-body)}
 @media (max-width:820px){ .empty-hints{grid-template-columns:1fr} }
 /* Призыв «нужны фото»: строка в карточке заказа, заметная, но не крикливая. */
+/* Ссылка внутри «что дальше»: шаг говорит словами, ссылка ведёт туда, где это сделать. */
+.next-link{display:inline-block;margin-left:8px;font-weight:800;color:var(--c-accent);text-decoration:none;white-space:nowrap}
+.next-link:hover{text-decoration:underline}
+@media (max-width:600px){ .next-link{display:block;margin:6px 0 0} }
 .order-ask{display:flex;align-items:center;gap:16px;justify-content:space-between;
   background:var(--c-cream);border-radius:var(--radius-sm);padding:14px 16px;margin-top:12px}
 .order-ask b{display:block;color:var(--c-strong);margin-bottom:2px}
