@@ -62,12 +62,12 @@
     {# Пока заказа нет — три коротких ответа на то, что человек обычно спрашивает первым. #}
     <div class="empty-hints">
       <div><b>Сколько ждать</b><span>2–3 недели с момента, когда согласуем макет</span></div>
-      <div><b>Сколько стоит</b><span><a href="/ceny">таблица цен и калькулятор</a> — без звонков</span></div>
+      <div><b>Сколько стоит</b><span><a href="/ceny#tablica">таблица цен и калькулятор</a> — без звонков</span></div>
       <div><b>Что понадобится</b><span>фото ребёнка и короткий рассказ о нём — это всё</span></div>
     </div>
     {% include "_steps_order.html" %}
     <p class="mt-18"><a class="btn" href="/order">Заказать книгу</a>
-      <a class="btn btn-ghost ml-10" href="/ceny">Узнать стоимость</a></p>
+      <a class="btn btn-ghost ml-10" href="/ceny#tablica">Узнать стоимость</a></p>
   </div>
 {% endif %}
 
@@ -146,7 +146,7 @@
 {% endfor %}
 {# Быстрые переходы: из кабинета до цены и до оплаты — один клик. Оплата только когда настроена (#265). #}
 <div class="cab-links">
-  <a href="/ceny">Стоимость и калькулятор</a>
+  <a href="/ceny#tablica">Стоимость и калькулятор</a>
   {% if pay_available %}<a href="/oplata">Способы оплаты</a>{% endif %}
   <a href="/cabinet/projects">Мои фотографии</a>
 </div>
