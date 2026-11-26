@@ -22,7 +22,10 @@
    страницы админки ставят {% block admin_area %}1{% endblock %}, остальные — ничего.
    Это ровно те шаблоны, что уже ставят admin_shell; проверяется в CI-скрипте страниц. #}
 <div class="{% block admin_shell %}{% endblock %}">
-{% if user and user.role == 'admin' and self.admin_area() | trim %}
+{# Проверка: имя блока объявлено в шаблоне страницы. self.admin_area() НЕ работает —
+   Jinja отдаёт TemplateReference без атрибутов, получил 500 на /ceny, /order, /cabinet,
+   /settings, /oplata. self.blocks — это множество имён блоков, объявленных в дочернем шаблоне. #}
+{% if user and user.role == 'admin' and 'admin_area' in self.blocks %}
 {# ОБОЛОЧКА АДМИНКИ (референс LessonCraft, 26.11.2026): на широком экране меню — вертикальный
    сайдбар слева (280 px), страница — рабочая область справа. Класс ставит шаблон страницы:
    {% block admin_shell %}; без класса — обычная страница сайта.
