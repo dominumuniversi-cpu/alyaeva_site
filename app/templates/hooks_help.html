@@ -29,7 +29,7 @@
     <tr>
       <td data-label="Канал"><strong>ВКонтакте</strong></td>
       <td data-label="Состояние">{% if vk_ready %}<span class="ok">токен есть</span>{% else %}<span class="err">токена нет</span>{% endif %}{% if vk_ready and not vk_events_ready %} · <span class="err">события не приходят</span>{% endif %}</td>
-      <td data-label="Откуда и куда" class="muted">{% if vk_ready and not vk_events_ready %}см. «Почему ВКонтакте молчит» выше{% else %}сообщения сообщества — в инбокс{% endif %}</td>
+      <td data-label="Откуда и куда" class="muted">{% if vk_ready and not vk_events_ready %}инструкция — ниже, «ВКонтакте: что сделать»{% else %}сообщения сообщества — в инбокс{% endif %}</td>
     </tr>
     <tr>
       <td data-label="Канал"><strong>Сайт</strong></td>
@@ -55,7 +55,8 @@
       <label>Прокси</label>
       <input type="text" name="telegram_proxy" value="{{ settings.get('telegram.proxy','') }}"
              placeholder="http://host.docker.internal:10809">
-      <div class="hint">API Telegram заблокирован провайдером — прокси обязателен.</div>
+      <div class="hint">Адрес, через который сайт ходит в Telegram. Обычно
+        <code>http://host.docker.internal:10809</code> — без него Telegram не ответит.</div>
 
       {# Тексты подсказок — ответы на прямые вопросы владельца 26.11.2026:
          «Чат для уведомлений — какие уведомления туда будут приходить?»
@@ -134,23 +135,48 @@
     {# Проверка связи с VK (26.11.2026): не гадаем «включите событие», а спрашиваем сам VK
        и печатаем результат простыми словами. Данные готовит app/vk_monitor.py. #}
     {% if vk_check %}
-    <h2 class="card-title">{% if vk_check.ok %}Связь с ВКонтакте работает{% else %}Почему ВКонтакте молчит{% endif %}</h2>
+    {# Владелец 26.11.2026: «Зачем ты пишешь на сайте, почему не работает? Пиши пошаговые
+       инструкции как настраивать. Не работает — выдавай предположения отдельно, со знаком ?»
+       Поэтому тут три части: 1) короткий статус без объяснений, 2) инструкция, что сделать,
+       3) догадки — отдельно, свернутыми, с «?». #}
+    <h2 class="card-title">ВКонтакте: что сделать</h2>
+    <p class="mt-0 status-line">
+      {% if vk_check.ok %}
+        <span class="ok">Связь работает</span> · сообщество «{{ vk_check.group_name }}»
+      {% else %}
+        <span class="err">Связи нет</span>{% if vk_check.group_name %} · сообщество «{{ vk_check.group_name }}»{% endif %}
+      {% endif %}
+    </p>
+    <ol class="steps">
+      <li>Откройте сообщество → «Управление» → <strong>«Работа с API»</strong>.</li>
+      <li>Вкладка <strong>«Сервисный ключ доступа»</strong> → «Создать» → скопируйте ключ.</li>
+      <li>Вставьте его в поле <strong>«Токен ВКонтакте»</strong> выше и нажмите «Сохранить».</li>
+      <li>Там же, «Работа с API» → <strong>«Callback API»</strong> → вкладка «Сообщения» →
+        включите и отметьте события сообщений.</li>
+      <li>«Управление» → <strong>«Сообщения»</strong> → включите «Возможность сообщений сообщества».</li>
+      <li>Нажмите <a href="{{ admin_url }}/hooks?check=vk">«Проверить связь»</a> — должно стать «Связь работает».</li>
+    </ol>
+    <details class="hint mb-12">
+      <summary>Если не заработало — что это может быть?</summary>
+      <ul class="mt-0 mb-0">
+        <li>Ключ скопирован не полностью — вставьте заново, копируя от начала до конца?</li>
+        <li>Ключ создан в другом сообществе — проверьте, что открыли нужное?</li>
+        <li>Пункт 5 пропущен — без него ВКонтакте не даёт писать первым?</li>
+        <li>Изменения в сообществе ещё не применились — подождите минуту и проверьте снова?</li>
+      </ul>
+    </details>
     <table class="tbl tbl-cards mb-12" data-labels="1">
       <tbody>
         <tr><td data-label="Проверка"><strong>Ключ доступа</strong></td>
-            <td>{% if vk_check.group_id %}<span class="ok">рабочий</span> · {{ vk_check.group_name }}{% else %}<span class="err">не от сообщества</span>{% endif %}</td></tr>
+            <td>{% if vk_check.group_id %}<span class="ok">рабочий</span>{% else %}<span class="err">не от сообщества</span>{% endif %}</td></tr>
         <tr><td data-label="Проверка"><strong>События сообщества</strong></td>
-            <td>{% if vk_check.events.state == 'события доступны' %}<span class="ok">доступны</span>{% else %}<span class="err">{{ vk_check.events.state }}</span>{% endif %}</td></tr>
+            <td>{% if vk_check.events.state == 'события доступны' %}<span class="ok">включены</span>{% else %}<span class="err">не включены</span>{% endif %}</td></tr>
         <tr><td data-label="Проверка"><strong>Отправка от имени сообщества</strong></td>
-            <td>{% if vk_check.send.ok %}<span class="ok">работает</span>{% elif vk_check.send.ok is false %}<span class="err">запрещена (код {{ vk_check.send.code }})</span>{% else %}не проверена{% endif %}</td></tr>
+            <td>{% if vk_check.send.ok %}<span class="ok">работает</span>{% elif vk_check.send.ok is false %}<span class="err">не разрешена</span>{% else %}не проверена{% endif %}</td></tr>
       </tbody>
     </table>
-    {% if vk_check.steps %}
-    <p class="mt-0"><strong>Что сделать:</strong></p>
-    <ol class="hint">{% for s in vk_check.steps %}<li>{{ s }}</li>{% endfor %}</ol>
-    {% endif %}
     {% if vk_check.send.ok is false %}
-    <details class="hint"><summary>Ответ ВКонтакте целиком</summary><code>{{ vk_check.send.message }}</code></details>
+    <details class="hint"><summary>Что ответил ВКонтакте</summary><code>{{ vk_check.send.message }}</code></details>
     {% endif %}
     {% endif %}
     <h2 class="card-title">Приём сообщений Telegram</h2>
@@ -159,8 +185,7 @@
       <p class="hint">Сайт сам забирает сообщения у Telegram — они появляются в
       <a href="{{ admin_url }}/inbox">инбоксе</a> в течение минуты после отправки.</p>
     {% else %}
-      <p class="mt-0">Telegram доставляет сообщения на сайт напрямую, но провайдер
-      их не пропускает. Нажмите кнопку — сайт начнёт забирать сообщения сам.</p>
+      <p class="mt-0">Приём выключен. Нажмите кнопку — сообщения начнут приходить в инбокс.</p>
     {% endif %}
     <div class="mt-12 btn-row">
       <button class="btn" type="button" id="btnReceive">{% if polling %}Проверить приём{% else %}Включить приём сообщений{% endif %}</button>

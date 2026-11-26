@@ -1006,3 +1006,11 @@ label > input[type="checkbox"]{margin:0 8px 0 0}
 .cab-links a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border-radius:999px;background:#fff;border:1.5px solid var(--c-lilac);color:var(--c-accent);font-weight:700;text-decoration:none}
 .cab-links a:hover{border-color:var(--c-accent)}
 @media (max-width:600px){ .cab-links{flex-direction:column} .cab-links a{width:100%;box-sizing:border-box} }
+
+/* Шаги инструкции внутри админской карточки (26.11.2026).
+   Глобальный .steps — витрина с крупными кружками на главной; в карточке он распухал.
+   Здесь нужен обычный аккуратный нумерованный список — с номерами, но мельче. */
+.card ol.steps{margin:0 0 12px;padding:0;display:block}
+.card ol.steps li{margin:0 0 10px;padding-left:40px;line-height:1.55}
+.card ol.steps li::before{top:2px;left:0;width:26px;height:26px;line-height:26px;font-size:13px}
+.card .status-line{margin:0 0 10px;font-weight:700}
