@@ -63,6 +63,19 @@
       <input type="text" name="vk_token" placeholder="{{ vk_token_mask }}" autocomplete="off">
       <div class="hint">Сейчас: {{ vk_token_mask }}. Пустое поле — не менять.</div>
 
+      <label>Код подтверждения VK</label>
+      <input type="text" name="vk_confirm_code" autocomplete="off"
+             placeholder="{{ 'код из настроек сообщества' if not vk_confirm_set else 'задан — не менять' }}">
+      <div class="hint">Настройки сообщества в VK → Работа с API → Callback API:
+        адрес <code>{{ site_url }}/hooks/vk</code>. Сейчас: {{ 'задан' if vk_confirm_set else 'не задан' }}.
+        Без кода VK не подключит сообщество: он ждёт, что сайт вернёт его же строку.</div>
+
+      <label>Секрет событий VK</label>
+      <input type="text" name="vk_secret" autocomplete="off"
+             placeholder="{{ 'строка из той же страницы VK' if not settings.get('vk.secret') else 'задан — не менять' }}">
+      <div class="hint">Необязательно: VK подписывает события этой строкой, иначе кто угодно
+        может прислать «сообщение». Сейчас: {{ 'задан' if settings.get('vk.secret') else 'не задан' }}.</div>
+
       <div class="mt-26 btn-row">
         <button class="btn" type="submit">Сохранить</button>
         <span class="save-msg" id="f_hooks_msg" role="status" aria-live="polite"></span>
@@ -71,19 +84,19 @@
   </div>
 
   <div class="card card-lilac">
-    <h2 class="card-title">Адрес для Telegram</h2>
-    {% if hook_secret %}
-      <p class="mt-0">Отдайте этот адрес боту — сообщения начнут приходить в инбокс.</p>
-      <code class="hook-url">
-        {{ site_url }}/hooks/telegram/{{ hook_secret }}
-      </code>
-      <p class="hint mt-10">
-        Или подтвердите подключение одной командой в браузере:
-        <code>api.telegram.org/bot&lt;токен&gt;/setWebhook?url=&lt;адрес выше&gt;</code>
-      </p>
+    <h2 class="card-title">Приём сообщений</h2>
+    {% if polling %}
+      <p class="mt-0"><strong class="ok">Опрос работает</strong>{% if poll_last_at %} · последнее соединение {{ poll_last_at[:16] }}{% endif %}</p>
+      <p class="hint">Сайт сам забирает сообщения у Telegram — они появляются в
+      <a href="{{ admin_url }}/inbox">инбоксе</a> в течение минуты после отправки.</p>
     {% else %}
-      <p class="mt-0">Вставьте токен бота в поле слева и сохраните — здесь появится адрес, который нужно отдать Telegram.</p>
+      <p class="mt-0">Telegram доставляет сообщения на сайт напрямую, но провайдер
+      их не пропускает. Нажмите кнопку — сайт начнёт забирать сообщения сам.</p>
     {% endif %}
+    <div class="mt-12 btn-row">
+      <button class="btn" type="button" id="btnReceive">{% if polling %}Проверить приём{% else %}Включить приём сообщений{% endif %}</button>
+      <span class="save-msg" id="btnReceive_msg" role="status" aria-live="polite"></span>
+    </div>
 
     <h2 class="mt-26">Безопасность</h2>
     <p>Токены хранятся <strong>зашифрованными</strong> и не попадают в файлы конфигурации.</p>
@@ -98,4 +111,31 @@
 
 {% block scripts %}
 <script src="/static/form-save.js" data-form="f_hooks" defer></script>
+<script>
+/* Кнопка приёма: включает опрос Telegram без перезагрузки страницы.
+   Маршрут отвечает JSON, человек остаётся на месте. */
+(function () {
+  var btn = document.getElementById('btnReceive');
+  var msg = document.getElementById('btnReceive_msg');
+  if (!btn || !msg || !window.fetch) return;
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    msg.textContent = 'Соединяюсь с Telegram…';
+    msg.className = 'save-msg';
+    fetch('{{ admin_url }}/hooks/receive-telegram', { method: 'POST', credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.ok) {
+          msg.textContent = 'Приём включён — сообщения появятся в инбоксе в течение минуты';
+          msg.className = 'save-msg save-msg-ok';
+        } else {
+          msg.textContent = d.error || 'Не получилось — попробуйте ещё раз';
+          msg.className = 'save-msg save-msg-bad';
+        }
+      })
+      .catch(function () { msg.textContent = 'Сеть недоступна — попробуйте ещё раз'; msg.className = 'save-msg save-msg-bad'; })
+      .then(function () { btn.disabled = false; });
+  });
+})();
+</script>
 {% endblock %}
