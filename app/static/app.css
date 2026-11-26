@@ -111,8 +111,15 @@ textarea{min-height:90px;resize:vertical}
    в ячейку, растягивали таблицу и перетягивали внимание на себя (#287).
    Тень тише, паддинги вдвое меньше; палец на телефоне не страдает —
    на 600px кнопки и так встают столбиком на всю ширину. */
-.btn-sm{padding:8px 16px;font-size:14px;min-height:38px;white-space:nowrap;box-shadow:0 4px 10px rgba(75,70,144,.12)}
-.btn-ghost.btn-sm{padding:7px 15px;box-shadow:none}
+/* КОМПАКТНЫЕ КНОПКИ — В СТИЛЕ ШАБЛОНА, А НЕ «КРАСИВЫЕ ШАРИКИ» (владелец, 26.11.2026:
+   «кнопки до сих пор огромные и выделяются из стиля шаблона»). Замер до правки: капсула
+   radius 999px, тень 0 4px 10px, высота 38 px, четыре кнопки 441 px в ряд. Теперь — как у
+   кнопок в шапке шаблона: скругление 8px, без тени, высота 32, шрифт 14. Размер пальца
+   сохраняется на телефоне (ниже 600px — 46px и на всю ширину). */
+.btn-sm{padding:6px 12px;font-size:14px;min-height:32px;line-height:1.15;border-radius:8px;white-space:nowrap;box-shadow:none}
+.btn-ghost.btn-sm{padding:5px 11px;border-width:1px;box-shadow:none}
+/* Главная кнопка формы тоже не должна быть «шариком» рядом с мелкими: то же скругление. */
+.card .btn,.card .btn-ghost{border-radius:8px}
 /* Ряд действий поста: кнопки вровень, перенос аккуратный, плашка ответа — рядом. */
 .post-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
 .post-actions .btn,.post-actions .btn-ghost{width:auto;text-align:center}
@@ -530,6 +537,8 @@ body{position:relative}
 @media (max-width:600px){
   .card{padding:18px}
   .btn,.btn-ghost{width:100%;text-align:center;min-height:46px}
+  /* Мелкие кнопки админки на телефоне — снова крупные: палец не должен промахиваться. */
+  .btn-sm,.btn-ghost.btn-sm{padding:10px 16px;min-height:44px;border-radius:10px}
   /* Таблицы прокручиваются внутри себя, а не тянут за собой всю страницу. */
   table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
   .photo-grid{grid-template-columns:repeat(2,1fr)}
