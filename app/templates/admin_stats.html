@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Статистика — админка{% endblock %}
 {% block admin_shell %}admin-shell{% endblock %}
+{# Метка «это страница админки»: только с ней base.html показывает меню админки (26.11.2026). #}
+{% block admin_area %}1{% endblock %}
 {% block content %}
 <h1>Статистика за {{ days }} дней</h1>
 <p class="lead">Свои счётчики: без внешних сервисов и без слежки за людьми. Хранится только событие — ни IP, ни cookie.</p>
