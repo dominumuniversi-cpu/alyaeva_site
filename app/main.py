@@ -737,10 +737,20 @@ _NO_CSRF_PREFIX = ("/hooks/",)
 
 
 def _site_origins(request: Request) -> set[str]:
-    """Какие домены считаем своими: текущий и alyaeva.pro (с www и без)."""
+    """Какие домены считаем своими: текущий и alyaeva.pro (с www и без).
+
+    ПОРТ ОБЯЗАТЕЛЕН (26.11.2026): браузер присылает Origin ВМЕСТЕ с портом, если он
+    нестандартный (http://127.0.0.1:8080). Старая версия сравнивала только домен —
+    и на стенде / на любом нестандартном порту КАЖДАЯ форма получала отказ
+    «Форма пришла не с нашего сайта». На проде порт 443 подразумевается и его нет — там
+    всё работало, поэтому на живом сайте не всплывало. Замер: стенд на :8080 — 403 даже
+    при верном Referer; прод alyaeva.pro — 200.
+    """
+    netloc = (request.url.netloc or "").lower()
     host = (request.url.hostname or "").lower()
-    names = {host, "alyaeva.pro", "www.alyaeva.pro", "alyaeva-app"}
-    return {f"{scheme}://{name}" for scheme in ("https", "http") for name in names if name}
+    servers = {netloc, host} if netloc else {host}
+    servers |= {"alyaeva.pro", "www.alyaeva.pro", "alyaeva-app", "alyaeva-web:8000"}
+    return {f"{scheme}://{name}" for scheme in ("https", "http") for name in servers if name}
 
 
 def _csrf_ok(request: Request, body: bytes) -> bool:
