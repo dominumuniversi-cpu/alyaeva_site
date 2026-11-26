@@ -210,7 +210,8 @@ def hooks_enable_receive(request: Request):
 
 @router.post("/admin/hooks")
 def hooks_save(request: Request, telegram_token: str = Form(""), telegram_proxy: str = Form(""),
-               telegram_chat: str = Form(""), vk_token: str = Form(""),
+               telegram_chat: str = Form(""), telegram_channel: str = Form(""),
+               vk_token: str = Form(""), vk_group: str = Form(""),
                vk_confirm_code: str = Form(""), vk_secret: str = Form("")):
     """Сохранение подключения мессенджеров. Пустое поле — не менять прежнее значение.
 
@@ -232,8 +233,14 @@ def hooks_save(request: Request, telegram_token: str = Form(""), telegram_proxy:
         db.set_setting("telegram.proxy", telegram_proxy.strip(), user["id"])
     if telegram_chat.strip():
         db.set_setting("telegram.chat", telegram_chat.strip(), user["id"])
+    # Куда публиковать посты: без этих адресов кнопка «Опубликовать» на /admin/posts
+    # всегда погашена — раньше их нельзя было задать вообще нигде (задача #286).
+    if telegram_channel.strip():
+        db.set_setting("telegram.channel", telegram_channel.strip(), user["id"])
     if vk_token.strip():
         db.set_setting("vk.token", secrets_helper.encrypt(vk_token.strip()), user["id"])
+    if vk_group.strip():
+        db.set_setting("vk.group", vk_group.strip(), user["id"])
     # Строка подтверждения и секрет событий VK — не токены доступа: без шифрования.
     # Нужны для Callback API: VK шлёт подтверждение, сервер должен вернуть ту же строку.
     if vk_confirm_code.strip():

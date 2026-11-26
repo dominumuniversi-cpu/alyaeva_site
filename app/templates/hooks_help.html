@@ -58,10 +58,21 @@
       <input type="text" name="telegram_chat" value="{{ settings.get('telegram.chat','') }}"
              placeholder="@username или ID">
 
+      <label>Канал для публикаций</label>
+      <input type="text" name="telegram_channel" value="{{ settings.get('telegram.channel','') }}"
+             placeholder="@username канала или -100…">
+      <div class="hint">Куда отправлять посты со <a href="{{ admin_url }}/posts">страницы постов</a>.
+        Сейчас: {{ settings.get('telegram.channel','') or 'не задан' }}.</div>
+
       <h3 class="h3-gap">ВКонтакте</h3>
       <label>Токен сообщества</label>
       <input type="text" name="vk_token" placeholder="{{ vk_token_mask }}" autocomplete="off">
       <div class="hint">Сейчас: {{ vk_token_mask }}. Пустое поле — не менять.</div>
+
+      <label>Сообщество для публикаций</label>
+      <input type="text" name="vk_group" value="{{ settings.get('vk.group','') }}"
+             placeholder="ID сообщества (со знаком минус) или короткий адрес">
+      <div class="hint">Куда отправлять посты. Сейчас: {{ settings.get('vk.group','') or 'не задано' }}.</div>
 
       <label>Код подтверждения VK</label>
       <input type="text" name="vk_confirm_code" autocomplete="off"
