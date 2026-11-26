@@ -234,7 +234,8 @@ def hooks_enable_receive(request: Request):
 def hooks_save(request: Request, telegram_token: str = Form(""), telegram_proxy: str = Form(""),
                telegram_chat: str = Form(""), telegram_channel: str = Form(""),
                vk_token: str = Form(""), vk_group: str = Form(""),
-               vk_confirm_code: str = Form(""), vk_secret: str = Form("")):
+               vk_confirm_code: str = Form(""), vk_secret: str = Form(""),
+               vk_self_peer: str = Form("")):
     """Сохранение подключения мессенджеров. Пустое поле — не менять прежнее значение.
 
     Ошибка 26.11.2026: пустое «Прокси» или «Чат» стирало настроенное — владелец
@@ -269,6 +270,10 @@ def hooks_save(request: Request, telegram_token: str = Form(""), telegram_proxy:
         db.set_setting("vk.confirm_code", vk_confirm_code.strip(), user["id"])
     if vk_secret.strip():
         db.set_setting("vk.secret", vk_secret.strip(), user["id"])
+    # «Кому слать проверку» — свой ID для пробного сообщения (26.11.2026). Без него проверка
+    # отправки писала в само сообщество и получала 901, пугая владельца чужим кодом.
+    if vk_self_peer.strip():
+        db.set_setting("vk.self_peer", vk_self_peer.strip(), user["id"])
     # Ответ без перезагрузки: форма шлёт Accept: application/json и показывает плашку на месте (#217).
     wants_json = "application/json" in (request.headers.get("accept") or "")
     if wants_json:

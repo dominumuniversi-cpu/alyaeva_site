@@ -85,20 +85,35 @@ def _events_state(group_id: int | None) -> dict:
     return {"state": state, "callback": cb_msg or None, "longpoll": lp_msg or None}
 
 
-def _send_state(group_id: int | None) -> dict:
-    """Можно ли отвечать клиентам от имени сообщества.
+def _self_peer() -> str:
+    """Кому отправить пробное сообщение: СЕБЕ (получатель сервисного ключа).
 
-    Пробное сообщение уходит ВЛАДЕЛЬЦУ сообщества (id = id сообщества): так проверяем
-    право отправки, не трогая чужих людей, и сразу видно результат глазами.
-    Код 901 «Can't send messages for users without permission» означает именно
-    отсутствие прав у сообщества — то есть сообщения к вам просто не приходят.
+    Почему не в сообщество (проверено 26.11.2026, прод): `peer_id` равный id сообщества
+    даёт 901 «Can't send messages for users without permission» всегда — у сообщества нет
+    переписки с самим собой, и ошибка ничего не говорит о праве писать людям. Человек видел
+    «отправка не разрешена» и делал вывод, что сломан весь VK.
+    """
+    import db as _db
+
+    return str(_db.get_setting("vk.self_peer", "") or "").strip()
+
+
+def _send_state(group_id: int | None) -> dict:
+    """Можно ли писать от имени сообщества.
+
+    Если получатель проверки сохранён (vk.self_peer) — пишем ему: это настоящая проверка.
+    Если нет — честно говорим «не проверяли», а не пугаем человека ошибкой 901.
     """
     if not group_id:
-        return {"ok": None, "code": 0, "message": "нет сообщества"}
-    d = _call("messages.send", {"peer_id": group_id, "message": "Проверка связи с сайтом alyaeva.pro",
+        return {"ok": None, "code": 0, "message": "нет сообщества", "checked": False}
+    peer = _self_peer()
+    if not peer:
+        return {"ok": None, "code": 0, "checked": False,
+                "message": "Проверка отправки не настроена: сохраните свой получатель в поле «Кому слать проверку»."}
+    d = _call("messages.send", {"user_id": peer, "message": "Проверка связи с сайтом alyaeva.pro",
                                 "random_id": 0})
     code, msg = _err(d)
-    return {"ok": code == 0, "code": code, "message": msg}
+    return {"ok": code == 0, "code": code, "message": msg, "checked": True}
 
 
 def report() -> dict:
@@ -118,9 +133,15 @@ def report() -> dict:
         steps.append("Сообщество → «Управление» → «Работа с API» → «Callback API» → включить «Сообщения».")
     elif events["state"] == "не удалось получить":
         steps.append("Сообщество → «Работа с API»: проверьте, включены ли события «Сообщения».")
-    if send.get("ok") is False and send.get("code") == 901:
-        steps.append("Включите «Возможность сообщений сообщества»: это и есть причина, "
-                     "по которой переписка не доходит и ответы не уходят.")
+    # 901 = «нельзя писать этому человеку». Советы разные для разных кодов:
+    # 901/902 — клиент не писал сообществу или закрыл личные сообщения;
+    # 945 — сообщения сообщества вообще выключены в настройках.
+    if send.get("checked") and send.get("ok") is False:
+        if send.get("code") == 945:
+            steps.append("Сообщество → «Управление» → «Сообщения» → включите «Сообщения сообщества».")
+        elif send.get("code") in (901, 902):
+            steps.append("Напишите сообществу со своего аккаунта одно слово и нажмите «Проверить связь» "
+                         "ещё раз: ВКонтакте разрешает сообществу отвечать только тем, кто писал первым.")
     if not group:
         steps.append("Токен не принадлежит сообществу — выдайте токен в разделе сообщества «Работа с API».")
     ok = bool(group) and events["state"] == "события доступны" and send.get("ok") is not False
