@@ -19,6 +19,12 @@ from notifications import notify
 log = logging.getLogger("reminders")
 # uvicorn настраивает только свои логгеры: без этого наши сообщения не попадают в docker logs.
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+# ТОКЕН НЕ В ЛОГАХ (26.11.2026). На INFO httpx печатает каждый запрос целым URL,
+# а адрес Bot API содержит токен: /bot<id>:<секрет>/getUpdates. В docker logs прода
+# токен светился открытым текстом. httpx на INFO не нужен никогда — приглушаем его
+# отдельно, остальные наши логгеры не трогаем.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # Через сколько дней молчания заказа без фото напоминаем.
 DAYS_WITHOUT_PHOTOS = 3
