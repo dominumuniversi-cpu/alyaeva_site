@@ -58,12 +58,18 @@ def admin_posts(request: Request):
     user, deny = _admin(request)
     if deny:
         return deny
+    ready = _ready_channels()
+    rows = post_queue.list_posts()
+    # Кнопка «Опубликовать» гасится не «вообще», а по конкретному посту:
+    # пост только в VK — и кнопка ждёт настроенного VK, а не Telegram.
+    for p in rows:
+        p["can_publish"] = bool(set(p.get("channels_list") or []) & set(ready))
     return render(
         request,
         "admin_posts.html",
         user=user,
-        posts=post_queue.list_posts(),
-        ready=_ready_channels(),
+        posts=rows,
+        ready=ready,
     )
 
 
