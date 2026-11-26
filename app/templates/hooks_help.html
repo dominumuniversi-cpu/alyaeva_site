@@ -29,7 +29,7 @@
     <tr>
       <td data-label="Канал"><strong>ВКонтакте</strong></td>
       <td data-label="Состояние">{% if vk_ready %}<span class="ok">токен есть</span>{% else %}<span class="err">токена нет</span>{% endif %}{% if vk_ready and not vk_events_ready %} · <span class="err">события не приходят</span>{% endif %}</td>
-      <td data-label="Откуда и куда" class="muted">{% if vk_ready and not vk_events_ready %}см. «Почему VK молчит» ниже{% else %}сообщения сообщества — в инбокс{% endif %}</td>
+      <td data-label="Откуда и куда" class="muted">{% if vk_ready and not vk_events_ready %}см. «Почему ВКонтакте молчит» выше{% else %}сообщения сообщества — в инбокс{% endif %}</td>
     </tr>
     <tr>
       <td data-label="Канал"><strong>Сайт</strong></td>
@@ -152,14 +152,6 @@
     {% if vk_check.send.ok is false %}
     <details class="hint"><summary>Ответ ВКонтакте целиком</summary><code>{{ vk_check.send.message }}</code></details>
     {% endif %}
-    {% endif %}
-    {% if vk_ready and not vk_events_ready %}
-    <h2 class="card-title">Почему VK молчит</h2>
-    <p class="mt-0">Токен ВКонтакте рабочий, но событий от него нет: проверка показала,
-      что у этого ключа нет прав на работу с событиями сообщества — VK отвечает
-      «no access to call this method with current scopes».</p>
-    <p class="hint">Самое быстрое — <strong>новый ключ на вкладке «Сервисный ключ доступа»</strong>
-      (там же, «Работа с API»), затем впишите его выше и включите приём кнопкой ниже.</p>
     {% endif %}
     <h2 class="card-title">Приём сообщений Telegram</h2>
     {% if polling %}
