@@ -40,6 +40,15 @@ async def lifespan(app: FastAPI):
         tg_receiver.start_if_needed()
     except Exception:  # noqa: BLE001 — приём не должен мешать сайту подняться
         logging.getLogger("main").warning("приём Telegram не запущен", exc_info=True)
+    # Контент-завод (modules/content_factory): схема и фоновый исполнитель — СТРОГО после
+    # открытия пула. Если ставить при импорте, пул ещё закрыт, и каждая таблица «не создаётся»
+    # с ошибкой «pool is not open yet»: завод поднимается без схемы и молча пустой
+    # (поймано первым запуском образа — сообщения были в логе, но страница открывалась).
+    try:
+        import content_factory_glue
+        content_factory_glue.start()
+    except Exception:  # noqa: BLE001 — завод не должен мешать сайту подняться
+        logging.getLogger("main").warning("контент-завод не запущен", exc_info=True)
     yield
     db.close_pool()
 
@@ -52,10 +61,16 @@ import yukassa  # noqa: E402
 from order_status import STATUS_ORDER, STAGE_NAMES, STATUS_NAMES, ACTIVE_STATUSES, next_step
 from routes_shop import router as shop_router, status_name
 from admin_clients import router as admin_clients_router
-from admin_posts import router as admin_posts_router
 from hooks import router as hooks_router  # noqa: E402
+# Контент-завод — отдельный модуль (modules/content_factory): страница /admin/posts и её
+# приёмы приходят оттуда вместе с подключением к базе и шифрованию. Старый app/admin_posts.py
+# удалён, чтобы не было двух разных страниц постов (одна тема — одна страница).
+import content_factory_glue  # noqa: E402
+
+content_factory_glue.wire()
+from modules.content_factory.routes import router as cf_router  # noqa: E402
+app.include_router(cf_router)
 app.include_router(admin_clients_router)
-app.include_router(admin_posts_router)
 app.include_router(hooks_router)
 app.include_router(shop_router)
 

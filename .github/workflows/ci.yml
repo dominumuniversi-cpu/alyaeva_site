@@ -31,6 +31,11 @@ jobs:
         run: |
           pip install jinja2
           python scripts/check_templates.py
+
+      # Калькулятор адаптации постов проверяется без базы и без сети: это его свойство —
+      # вход строки, выход строки. Провал здесь значит, что пост уйдёт мимо лимита площадки.
+      - name: Контент-завод — адаптация под площадки
+        run: python modules/content_factory/tests/test_module.py
       - name: Конфиг nginx валиден
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq nginx-light >/dev/null

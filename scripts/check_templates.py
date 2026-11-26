@@ -20,7 +20,8 @@ from types import SimpleNamespace
 # Адрес страницы → шаблон, которым она показывается.
 MENU_PAGES = {
     "/admin": "admin_orders.html",
-    "/admin/posts": "admin_posts.html",
+    # Посты теперь — контент-завод из modules/content_factory (шаблон живёт рядом с модулем).
+    "/admin/posts": "cf_admin_posts.html",
     "/admin/inbox": "admin_inbox.html",
     "/admin/hooks": "hooks_help.html",
     "/admin/settings": "admin_settings.html",
@@ -83,7 +84,10 @@ def main() -> int:
 
     # Вторая проверка — отрисовка: нужен загрузчик и фильтры приложения.
     from jinja2 import Environment as _Env, FileSystemLoader
-    real = _Env(loader=FileSystemLoader("app/templates"), autoescape=True)
+    # Два корня, как в приложении (app/content_factory_ui.py): шаблоны модуля и шаблоны сайта.
+    # Без первого корня cf_admin_posts.html не найти и проверка упадёт на верном коде.
+    real = _Env(loader=FileSystemLoader(["modules/content_factory/templates", "app/templates"]),
+                autoescape=True)
     problems = check_menu(real)
     if problems:
         print("\n".join(problems))

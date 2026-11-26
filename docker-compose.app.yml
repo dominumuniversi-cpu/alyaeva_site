@@ -5,7 +5,10 @@ name: alyaeva-app
 
 services:
   web:
-    build: ./app
+    # Контекст — корень репозитория: кроме app/ в образ кладутся переносимые модули (modules/).
+    build:
+      context: .
+      dockerfile: app/Dockerfile
     image: alyaeva-web:latest
     container_name: alyaeva-web
     restart: unless-stopped

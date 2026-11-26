@@ -82,18 +82,34 @@ async function waitHealthy(name, timeoutMs = 90000) {
   return false;
 }
 
-/** Проверить страницы приложения по IP. */
-async function checkPages(ip) {
-  for (const p of ['/health', '/login', '/api/products']) {
-    const r = docker(['run', '--rm', '--network', NET, 'curlimages/curl:latest', '-s', '-o', '/dev/null',
-      '-w', '%{http_code}', '--max-time', '10', 'http://' + ip + ':8000' + p], 40000);
-    if (r.out !== '200') {
-      console.error('  ' + p + ' -> ' + (r.out || 'нет ответа'));
-      return false;
-    }
-    console.log('  ' + p + ' -> 200');
-  }
-  return true;
+/** Проверить страницы приложения ИЗ САМОГО кандидата: health, вход, товары.
+
+    Так было раньше: поднимался чужой образ (curlimages/curl) и ходил по IP кандидата.
+    На этой машине такой запуск вешается намертво — curl печатает «Trying <ip>…» и не
+    возвращается ни по --max-time, ни по --connect-timeout; проверка «device или no device»
+    одинаково у живого прода, так что виноват не кандидат (поймано 27.11.2026 на деплое
+    контент-завода, деплой откатился на исправном образе). Проверяем через python внутри
+    того же контейнера: те же адреса и порт, никаких временных образов и сетевых чудес.
+    Возвращает IP кандидата (для журнала), а null — если страницы не отвечают. */
+async function checkPages(name, ip) {
+  const pages = ['/health', '/login', '/api/products'];
+  const urls = pages.map((p) => 'http://' + ip + ':8000' + p)
+    .concat(['http://127.0.0.1:8000/health']);
+  const probe = 'import sys, urllib.request\n' +
+    'urls = ' + JSON.stringify(urls) + '\n' +
+    'bad = 0\n' +
+    'for u in urls:\n' +
+    '    try:\n' +
+    '        r = urllib.request.urlopen(u, timeout=8)\n' +
+    '        print(u, r.status)\n' +
+    '        if r.status != 200: bad += 1\n' +
+    '    except Exception as e:\n' +
+    '        print(u, "ERR", e)\n' +
+    '        bad += 1\n' +
+    'sys.exit(1 if bad else 0)\n';
+  const r = docker(['exec', name, 'python', '-c', probe], 60000);
+  for (const line of (r.out || '').split(/\r?\n/).filter(Boolean)) console.log('  ' + line);
+  return r.ok;
 }
 
 /** Поднять контейнер: имя, сетевой алиас, политика рестарта. */
@@ -166,7 +182,7 @@ async function main() {
   console.log('   healthcheck пройден, IP ' + ip);
 
   console.log('3. Проверка страниц кандидата...');
-  if (!(await checkPages(ip))) throw new Error('Страницы кандидата не отвечают');
+  if (!(await checkPages(candidateName, ip))) throw new Error('Страницы кандидата не отвечают');
 
   console.log('4. Переключение постоянного адреса alyaeva-app на новый контейнер...');
   /* Почему не rename: пока имя alyaeva-web ни на кого не указывает, nginx кэширует отказ

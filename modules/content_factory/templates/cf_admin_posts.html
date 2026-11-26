@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Контент-завод — админка{% endblock %}
+{# Метки оболочки админки: вместе они дают сайтбар слева и рабочую область справа (base.html).
+   Без них меню админки пропадёт и страница сожмётся — это уже было (docs/mistakes.md). #}
+{% block admin_shell %}admin-shell{% endblock %}
+{% block admin_area %}1{% endblock %}
+{% block main_class %}wide cf-page{% endblock %}
+{% block content %}
+
+{# Заголовок и статус — одной строкой: человек входит и сразу видит, чем завод может отправлять. #}
+<div class="cf-top">
+  <div>
+    <h1 class="cf-h1">Контент-завод</h1>
+    <p class="cf-sub">Один материал — готовые тексты для каждой площадки. Пишете один раз,
+      завод подгоняет длину, разметку и подпись под каждую.</p>
+  </div>
+  <div class="cf-plats" aria-label="Площадки">
+    {% for p in platforms %}
+      {% set t = targets | selectattr("key", "equalto", p.key) | first %}
+      <span class="cf-plat{% if t and t.ready %} on{% endif %}" title="{{ p.name }}: {{ "подключено" if t and t.ready else ("нужно: " ~ p.needs) }}">
+        {{ p.short }}{% if t and t.ready %}<i class="cf-dot" aria-hidden="true"></i>{% endif %}</span>
+    {% endfor %}
+  </div>
+</div>
+
+{% if saved %}
+<p class="cf-flash{{ " bad" if bad else "" }}">{{ "Не сохранилось — проверьте поля." if bad else ("Сохранено: " ~ saved ~ " " ~ ("поле" if saved == "1" else "полей")) }}</p>
+{% endif %}
+
+{# Две колонки на широком экране: слева работа (материал и лента), справа обвязка
+   (площадки, нейросеть, расписание подсказкой). На телефоне — одна колонка. #}
+<div class="cf-grid">
+  <div class="cf-main">
+
+    {# ---------------- МАТЕРИАЛ ---------------- #}
+    <section class="card cf-card" id="cfEditor">
+      <h2 class="cf-h2">Новый пост</h2>
+      <div class="cf-field">
+        <label for="cfTitle">Заголовок <span class="cf-opt">необязательно</span></label>
+        <input id="cfTitle" type="text" placeholder="Например: как выбирали обложку для Миши">
+      </div>
+      <div class="cf-field">
+        <label for="cfBody">Материал</label>
+        <textarea id="cfBody" rows="8" placeholder="Текст поста. Можно **выделить** важное — в Telegram станет жирным, в остальных площадках просто уберётся разметка."></textarea>
+        <p class="cf-hint"><span id="cfCount">0</span> символов · лимиты площадок учитываются при сохранении</p>
+      </div>
+      <div class="cf-field">
+        <label for="cfLinks">Ссылка <span class="cf-opt">добавится ко всем площадкам</span></label>
+        <input id="cfLinks" type="url" placeholder="https://alyaeva.pro/order">
+      </div>
+      <div class="cf-field">
+        <label for="cfMedia">Фото или видео <span class="cf-opt">ссылка; нужно для Instagram</span></label>
+        <input id="cfMedia" type="url" placeholder="https://alyaeva.pro/static/…">
+      </div>
+
+      <div class="cf-field">
+        <label>Где публиковать</label>
+        <div class="cf-checks">
+          {% for p in platforms %}
+          {% set t = targets | selectattr("key", "equalto", p.key) | first %}
+          <label class="cf-check{{ "" if t and t.ready else " muted" }}" title="{{ p.needs }}">
+            <input type="checkbox" class="cf-chan" value="{{ p.key }}">
+            {{ p.name }}{% if not (t and t.ready) %}<span class="cf-need">настроить</span>{% endif %}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# АВТОГЕНЕРАЦИЯ. Кнопка живая, только если нейросеть подключена (сервер всё равно проверяет —
+         кнопку можно разблокировать в консоли, а ключа у сервера нет). Не подключено — кнопка
+         серая, а рядом объяснение, что сделать. Это прямое слово владельца (26.11.2026). #}
+      <div class="cf-gen{{ " off" if not llm_on else "" }}" id="cfGen">
+        <div class="cf-gen-head">
+          <strong>Сочинить текст</strong>
+          {% if llm_on %}<span class="cf-badge ok">{{ llm_label }}</span>
+          {% else %}<span class="cf-badge off">нейросеть не подключена</span>{% endif %}
+        </div>
+        <div class="cf-gen-row">
+          <input id="cfTopic" type="text" placeholder="О чём пост: например, новая обложка с фото Ани"
+                 {% if not llm_on %}disabled{% endif %}>
+          <button class="btn btn-sm" type="button" id="cfGenBtn" {% if not llm_on %}disabled aria-disabled="true"{% endif %}>Сочинить</button>
+        </div>
+        {% if not llm_on %}
+        <p class="cf-netice">Автогенерация недоступна: ни одна нейросеть не подключена.
+          <a href="#cfLLM">Подключите нейросеть</a> — и кнопка станет активной.</p>
+        {% endif %}
+        <span class="save-msg" id="cfGenMsg"></span>
+      </div>
+
+      <div class="cf-actions">
+        <button class="btn" type="button" id="cfSave">Адаптировать и сохранить</button>
+        <span class="save-msg" id="cfMsg"></span>
+      </div>
+
+      {# Предпросмотр: что уйдёт в каждую площадку. Заполняется без перезагрузки, пока человек
+         печатает. Пустая рамка с подсказкой — чтобы место не прыгало, когда появятся карточки. #}
+      <div id="cfPreview" aria-live="polite"></div>
+      <p class="cf-hint" id="cfPreviewHint">Здесь появятся тексты для каждой площадки, как их увидит читатель.</p>
+    </section>
+
+    {# ---------------- ЛЕНТА ---------------- #}
+    <h2 class="cf-h2 cf-h2-sep">Посты</h2>
+    <div class="post-list" id="cfList">
+      {% for p in posts %}
+      <article class="post-card cf-post" data-post="{{ p.id }}">
+        <div class="post-head">
+          <span class="post-date">{{ (p.publish_at or p.created_at).strftime("%d.%m.%Y %H:%M") }}</span>
+          <span class="post-chans">
+            {% for c in p.channels_list %}{% set pl = platforms | selectattr("key", "equalto", c) | first %}
+              <span class="chan" title="{{ pl.name }}">{{ pl.short or pl.name }}</span>
+            {% endfor %}
+          </span>
+          <span class="badge-status s-{{ p.status }}">{{ p.status_name }}</span>
+        </div>
+        {% if p.title %}<div class="cf-post-title">{{ p.title }}</div>{% endif %}
+        <div class="post-body" data-open>{{ p.body }}</div>
+        {% if p.result_map %}
+        <ul class="cf-results">
+          {% for k, v in p.result_map.items() %}
+          <li class="{{ "ok" if v.startswith("ok") else ("skip" if v.startswith("skip") else "bad") }}">
+            <b>{{ k }}</b>: {{ v.split(": ", 1)[1] if ": " in v else v }}
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        <div class="post-foot">
+          <div class="post-actions">
+            {% if p.status in ("sent", "sending") %}
+              <button class="btn btn-ghost btn-sm" type="button" data-copy="{{ p.id }}">Копия в правку</button>
+            {% else %}
+              <button class="btn btn-ghost btn-sm" type="button" data-variants="{{ p.id }}">Тексты по площадкам</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-del="{{ p.id }}">Удалить</button>
+              <button class="btn btn-sm" type="button" data-pub="{{ p.id }}"
+                {% if not p.can_publish %}disabled title="Ни одна площадка поста не подключена — настройте в разделе «Площадки»"{% endif %}>Опубликовать</button>
+            {% endif %}
+          </div>
+          <span class="save-msg"></span>
+        </div>
+        <div class="cf-variants" data-vp="{{ p.id }}" hidden></div>
+      </article>
+      {% else %}
+      <div class="card"><p class="mb-0">Пока ни одного поста. Первый соберётся в форме выше.</p></div>
+      {% endfor %}
+    </div>
+  </div>
+  {# ---------------- ПРАВАЯ КОЛОНКА: подключения ---------------- #}
+  <aside class="cf-side">
+
+    <section class="card cf-card" id="cfTargets">
+      <h2 class="cf-h2">Площадки</h2>
+      <p class="cf-hint">Пустое поле не стирает прежнее значение. Токены хранятся шифром и на странице не показываются.</p>
+      <form method="post" action="/admin/posts/targets" class="cf-form" id="cfTargetsForm">
+        <input type="hidden" name="csrf" value="1">
+        {% for p in platforms %}
+        {% set t = targets | selectattr("key", "equalto", p.key) | first %}
+        <details class="cf-tgt" {% if p.key == "telegram" or (t and not t.ready) %}open{% endif %}>
+          <summary>
+            <span class="cf-plat{% if t and t.ready %} on{% endif %}">{{ p.short }}</span>
+            <span class="cf-tgt-name">{{ p.name }}</span>
+            <span class="cf-tgt-state {{ "ok" if t and t.ready else "off" }}">{{ "подключено" if t and t.ready else "не подключено" }}</span>
+          </summary>
+          <div class="cf-tgt-body">
+            {% if p.key == "webhook" %}
+            <label for="cfHook">Адрес API</label>
+            <input id="cfHook" name="hook_url" type="url" placeholder="https://…" value="{{ t.address if t else "" }}">
+            <p class="cf-hint">POST JSON: {"title", "text", "platform", "media_url", "meta"}.</p>
+            {% else %}
+            {% set n = p.key|upper|replace("INSTAGRAM", "IG") %}
+            <label for="cf{{ n }}Addr">{{ "Канал (@имя)" if p.key == "telegram" else ("id группы" if p.key in ("vk", "ok") else "id бизнес-аккаунта") }}</label>
+            <input id="cf{{ n }}Addr" name="{{ "ig" if p.key == "instagram" else p.key }}_address" type="text"
+                   value="{{ t.address if t else "" }}" placeholder="{{ "@alyaeva" if p.key == "telegram" else "123456789" }}">
+            <label for="cf{{ n }}Tok">Токен {% if t and t.has_token %}<span class="cf-opt">задан — пустое поле не изменит</span>{% endif %}</label>
+            <input id="cf{{ n }}Tok" name="{{ "ig" if p.key == "instagram" else p.key }}_token" type="password" autocomplete="off" placeholder="вставьте токен">
+            {% if p.key == "ok" %}
+            <label for="cfOKKey">Ключ приложения</label>
+            <input id="cfOKKey" name="ok_appkey" type="text" placeholder="application_key">
+            {% endif %}
+            <label for="cf{{ n }}Handle">Подпись @аккаунт {% if p.signature %}<span class="cf-opt">добавится в конце</span>{% else %}<span class="cf-opt">не используется</span>{% endif %}</label>
+            <input id="cf{{ n }}Handle" name="{{ "ig" if p.key == "instagram" else p.key }}_handle" type="text"
+                   value="{{ t.handle if t is defined and t.handle else "" }}" placeholder="@alyaeva">
+            {% endif %}
+            <p class="cf-hint">{{ p.needs }}</p>
+          </div>
+        </details>
+        {% endfor %}
+        <div class="cf-actions">
+          <button class="btn" type="submit">Сохранить площадки</button>
+          <span class="save-msg" id="cfTgtMsg"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card cf-card" id="cfLLM">
+      <h2 class="cf-h2">Нейросеть</h2>
+      {% if llm_on %}
+      <p class="cf-hint">Подключено: <b>{{ llm_label }}</b>. Кнопка «Сочинить» активна.</p>
+      {% else %}
+      <p class="cf-hint">Пока не подключена — автогенерация выключена. Достаточно одного сервиса.</p>
+      {% endif %}
+      <div class="cf-llms">
+        {% for r in llm_rows %}
+        <form method="post" action="/admin/posts/llm" class="cf-llm" data-provider="{{ r.provider }}">
+          <input type="hidden" name="csrf" value="1">
+          <input type="hidden" name="provider" value="{{ r.provider }}">
+          <div class="cf-llm-head">
+            <b>{{ r.label }}</b>
+            {% if r.research %}<span class="cf-badge info">с разведкой</span>{% endif %}
+            <span class="cf-badge {{ "ok" if r.has_key else "off" }}">{{ "ключ задан" if r.has_key else "нет ключа" }}</span>
+          </div>
+          <div class="cf-llm-row">
+            <input name="token" type="password" autocomplete="off" placeholder="ключ API">
+            <input name="model" type="text" value="{{ r.model }}" placeholder="модель">
+          </div>
+          <div class="cf-llm-row">
+            <input name="base_url" type="url" value="{{ r.base_url }}" placeholder="адрес API">
+            {% if r.provider == "openai" %}<input name="proxy" type="text" placeholder="прокси (необязательно)">{% endif %}
+          </div>
+          <div class="cf-llm-foot">
+            <label class="cf-check"><input type="checkbox" name="enabled" value="1"{% if r.enabled %} checked{% endif %}> включить</label>
+            <button class="btn btn-ghost btn-sm" type="submit">Сохранить</button>
+            {% if r.has_key %}<button class="btn btn-ghost btn-sm" type="button" data-llm-off="{{ r.provider }}">Отключить</button>{% endif %}
+          </div>
+          <p class="cf-hint">{{ r.hint }}</p>
+        </form>
+        {% endfor %}
+      </div>
+      <span class="save-msg" id="cfLLMMsg"></span>
+    </section>
+
+    {% if history %}
+    <section class="card cf-card">
+      <h2 class="cf-h2">Последние генерации</h2>
+      <ul class="cf-hist">
+      {% for h in history %}
+        <li>
+          <span class="cf-hist-date">{{ h.created_at.strftime("%d.%m %H:%M") }}</span>
+          <span class="cf-hist-t">{{ h.provider }}/{{ h.model }}</span>
+          <span class="cf-badge {{ "ok" if h.ok else "off" }}">{{ "получилось" if h.ok else "отказ" }}</span>
+          <span class="cf-hist-brief">{{ (h.brief or "")[:90] }}</span>
+        </li>
+      {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}{% block scripts %}
+<script src="/static/cf_page.js" defer></script>
+{% endblock %}
