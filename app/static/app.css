@@ -208,6 +208,31 @@ textarea{min-height:90px;resize:vertical}
   line-height: 1;
   vertical-align: middle;
 }
+/* ГРУППЫ ПУНКТОВ (референс LessonCraft, 26.11.2026).
+   На телефоне и в строке меню обёртка группы НЕ создаёт своей коробки: display: contents —
+   пункты ведут себя так, будто лежат прямо в .wrap. Поэтому проверенная раскладка
+   «одна строка / 4+4 / столбец» не меняется. Подписи групп в этих режимах скрыты. */
+.subnav-group { display: contents; }
+.subnav-group > .group-label { display: none; }
+
+/* Широкий экран: меню — вертикальный сайдбар (280 px). Группы встают столбцом,
+   каждая со своей подписью капителью. Пункт — во всю ширину, слева, высота 36. */
+@media (min-width: 1001px) {
+  .admin-subnav .wrap { flex-direction: column; align-items: stretch; gap: 2px; padding: 14px 12px; }
+  .subnav-group { display: flex; flex-direction: column; gap: 2px; }
+  .subnav-group + .subnav-group { margin-top: 12px; }
+  .subnav-group > .group-label {
+    display: block;
+    padding: 6px 14px 4px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--c-body);
+    opacity: .65;
+  }
+  .admin-subnav a { justify-content: flex-start; font-size: 13.5px; padding: 0 14px; }
+}
 .admin-subnav a:hover { background: #fff; }
 .admin-subnav a.active { background: var(--c-accent); color: #fff; }
 
@@ -946,14 +971,26 @@ body{
    ПОРЯДОК ВАЖЕН: этот блок идёт ДО телефонного. Раньше телефонный столбец стоял выше,
    идущая следом сетка перебивала его — на 500 px выходила «сетка 5×2», а не столбец. */
 @media (max-width:1000px){
-  .admin-subnav .wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  /* ВЕС СЕЛЕКТОРА (нашёл 26.11.2026): правило строки меню выше объявлено как
+     «.admin-shell .admin-subnav .wrap { flex-direction: row }» — три класса. Мой «.admin-subnav .wrap»
+     это два класса, и он проигрывал: на планшете меню оставалось flex-строкой, сетка 5×2
+     не включалась НИКОГДА (замер: 820 px → 8+2). Пишем с тем же весом. */
+  .admin-shell .admin-subnav .wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
   .admin-subnav a{justify-content:center;text-align:center;width:auto}
+  /* ГРУППЫ В СЕТКЕ РАСТВОРЯЮТСЯ (26.11.2026). После разбиения меню на три группы сетка
+     видела не десять пунктов, а три div-обёртки + подпись: выходило 8 + 2 (замерено на стенде
+     820 px). display: contents убирает коробку группы — пункты снова прямые дети сетки,
+     и раскладка возвращается к проверенным 5 + 5. */
+  .admin-subnav .subnav-group{display:contents}
+  .admin-subnav .group-label{display:none}
 }
 
 /* Телефон — последним: столбец, самая поздняя победа в каскаде. */
 @media (max-width:600px){
   /* Меню админки на телефоне — столбец: строки по ширине экрана, палец попадает целиком. */
-  .admin-subnav .wrap{display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px 16px}
+  /* Тот же вес, что у сетки выше (три класса), иначе сетка побеждает и на телефоне
+     выходит 5×2 (поймано замером 26.11.2026: 390 px → [5,5], а по правилу должен быть столбец). */
+  .admin-shell .admin-subnav .wrap{display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px 16px}
   .admin-subnav a{width:100%;justify-content:space-between;min-height:44px;height:auto;font-size:14px}
   .admin-subnav .badge{margin-left:0}
 }

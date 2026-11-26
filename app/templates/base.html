@@ -49,16 +49,28 @@
     {# ПЕРВЫЙ пункт продублирован: это подпись сайдбара на широком экране («Заказы» в нём — уже ссылка ниже).
        Разметка одна на телефоне и на десктопе; что показать — решает CSS (app.css, .admin-shell). #}
     <span class="subnav-label">Админка</span>
-    <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы{% if counts and counts.new_orders %}<span class="badge">{{ counts.new_orders }}</span>{% endif %}</a>
-    <a href="/admin/clients" {% if request.url.path.startswith('/admin/client') %}class="active"{% endif %}>Клиенты</a>
-    <a href="/admin/photos" {% if request.url.path.startswith('/admin/photos') %}class="active"{% endif %}>Все фото</a>
-    <a href="{{ admin_url }}/inbox" {% if '/inbox' in request.url.path %}class="active"{% endif %}>Инбокс</a>
-    <a href="{{ admin_url }}/products" {% if '/products' in request.url.path %}class="active"{% endif %}>Товары</a>
-    <a href="{{ admin_url }}/posts" {% if '/admin/posts' in request.url.path %}class="active"{% endif %}>Посты</a>
-    <a href="{{ admin_url }}/pay" {% if '/admin/pay' in request.url.path %}class="active"{% endif %}>Оплата</a>
-    <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Интеграция</a>
-    <a href="{{ admin_url }}/stats" {% if '/stats' in request.url.path %}class="active"{% endif %}>Статистика</a>
-    <a href="{{ admin_url }}/settings" {% if '/settings' in request.url.path and '/admin' in request.url.path %}class="active"{% endif %}>Настройки сайта</a>
+    {# ГРУППЫ КАК В САЙДБАРЕ LESSONCRAFT (референс, 26.11.2026): три раздела с подписями.
+       .subnav-group на телефоне и в строке «растворяется» (display: contents) — проверенная
+       раскладка «одна строка / 4+4 / столбец» остаётся прежней. #}
+    <div class="subnav-group">
+      <span class="group-label">Клиенты</span>
+      <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы{% if counts and counts.new_orders %}<span class="badge">{{ counts.new_orders }}</span>{% endif %}</a>
+      <a href="/admin/clients" {% if request.url.path.startswith('/admin/client') %}class="active"{% endif %}>Клиенты</a>
+      <a href="/admin/photos" {% if request.url.path.startswith('/admin/photos') %}class="active"{% endif %}>Все фото</a>
+      <a href="{{ admin_url }}/inbox" {% if '/inbox' in request.url.path %}class="active"{% endif %}>Инбокс</a>
+    </div>
+    <div class="subnav-group">
+      <span class="group-label">Работа</span>
+      <a href="{{ admin_url }}/products" {% if '/products' in request.url.path %}class="active"{% endif %}>Товары</a>
+      <a href="{{ admin_url }}/posts" {% if '/admin/posts' in request.url.path %}class="active"{% endif %}>Посты</a>
+      <a href="{{ admin_url }}/pay" {% if '/admin/pay' in request.url.path %}class="active"{% endif %}>Оплата</a>
+    </div>
+    <div class="subnav-group">
+      <span class="group-label">Сайт</span>
+      <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Интеграция</a>
+      <a href="{{ admin_url }}/stats" {% if '/stats' in request.url.path %}class="active"{% endif %}>Статистика</a>
+      <a href="{{ admin_url }}/settings" {% if '/settings' in request.url.path and '/admin' in request.url.path %}class="active"{% endif %}>Настройки сайта</a>
+    </div>
   </div>
 </nav>
 {% endif %}
