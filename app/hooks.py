@@ -166,7 +166,23 @@ def hooks_root(request: Request):
     user = db.session_user(request.cookies.get("sid", ""))
     if not (user and user.get("role") == "admin"):
         return RedirectResponse("/login?next=" + quote(request.url.path), status_code=303)
-    return render(request, "hooks_help.html", user=user, **_hook_state(request))
+    return render(request, "hooks_help.html", user=user, vk_check=_vk_check(request), **_hook_state(request))
+
+
+def _vk_check(request) -> dict | None:
+    """Проверка связи с ВКонтакте — только по нажатию кнопки (?check=vk).
+
+    Дёргать VK на каждый показ страницы нельзя: проверка отправляет пробное
+    сообщение владельцу сообщества. Один показ — один запрос по кнопке.
+    """
+    if request.query_params.get("check") != "vk":
+        return None
+    import vk_monitor
+    try:
+        return vk_monitor.report()
+    except Exception as e:  # noqa: BLE001 — проверка не имеет права уронить страницу
+        log.warning("проверка VK: %s", e)
+        return {"token": False, "ok": False, "state": "ошибка", "steps": [], "hint": str(e)[:120]}
 
 
 def _hook_state(request) -> dict:
