@@ -23,6 +23,9 @@
    Счётчик оставлен, но выровнен средствами CSS (.admin-subnav .badge) — см. static/app.css. #}
 <nav class="admin-subnav" aria-label="Админка">
   <div class="wrap">
+    {# ПЕРВЫЙ пункт продублирован: это подпись сайдбара на широком экране («Заказы» в нём — уже ссылка ниже).
+       Разметка одна на телефоне и на десктопе; что показать — решает CSS (app.css, .admin-shell). #}
+    <span class="subnav-label">Админка</span>
     <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы{% if counts and counts.new_orders %}<span class="badge">{{ counts.new_orders }}</span>{% endif %}</a>
     <a href="/admin/clients" {% if request.url.path.startswith('/admin/client') %}class="active"{% endif %}>Клиенты</a>
     <a href="/admin/photos" {% if request.url.path.startswith('/admin/photos') %}class="active"{% endif %}>Все фото</a>
@@ -37,9 +40,14 @@
 </nav>
 {% endif %}
 
+{# ОБОЛОЧКА АДМИНКИ (референс LessonCraft, 26.11.2026): на широком экране меню становится
+   вертикальным сайдбаром слева (280 px), а страница — рабочей областью справа.
+   Класс ставит шаблон страницы: {% block admin_shell %}. Без класса — обычная страница сайта. #}
+<div class="{% block admin_shell %}{% endblock %}">
 <main class="wrap {% block main_class %}{% endblock %}">
 {% block content %}{% endblock %}
 </main>
+</div>
 
 {# Кнопка «Наверх»: на телефоне страницы длинные, кружок — под большой палец. Стили .to-top в app.css. #}
 <a class="to-top" href="#top" id="toTop" aria-label="Наверх" title="Наверх">

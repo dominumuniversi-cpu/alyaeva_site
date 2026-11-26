@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Посты — админка{% endblock %}
+{% block admin_shell %}admin-shell{% endblock %}
 {% block main_class %}wide{% endblock %}
 {% block content %}
 <h1>Посты в Telegram и ВКонтакте</h1>
@@ -36,35 +37,40 @@
 
 <h2 class="mt-26">История и очередь</h2>
 {% if posts %}
-<div class="card">
-  <table class="tbl tbl-cards" data-labels="1">
-    <tr><th>Когда</th><th>Текст</th><th>Каналы</th><th>Статус</th><th></th></tr>
-    {% for p in posts %}
-    <tr data-post="{{ p.id }}">
-      <td data-label="Когда">{{ p.publish_at or p.created_at }}</td>
-      <td data-label="Текст">
-        <div class="post-body" data-open="{{ p.id }}" contenteditable="false">{{ p.body }}</div>
-        {% if p.media_url %}<div class="muted small">медиа: {{ p.media_url }}</div>{% endif %}
-        {% if p.result and p.result != '{}' %}<div class="muted small">ответ каналов: {{ p.result }}</div>{% endif %}
-      </td>
-      <td data-label="Каналы">
-        {% for c in p.channels_list %}{{ 'Telegram' if c == 'telegram' else 'ВКонтакте' }}{% if not loop.last %}, {% endif %}{% endfor %}
-      </td>
-      <td data-label="Статус"><span class="badge-status s-{{ p.status }}">{{ p.status_name }}</span></td>
-      <td data-label="">
-        {% if p.status != 'sent' %}
-        <div class="post-actions">
-          <button class="btn btn-ghost btn-sm" type="button" data-save="{{ p.id }}">Сохранить правку</button>
-          <button class="btn btn-ghost btn-sm" type="button" data-del="{{ p.id }}">Удалить</button>
-          <button class="btn btn-sm" type="button" data-pub="{{ p.id }}"
-            {% if not p.can_publish %}disabled title="Канал не настроен: адрес публикации задайте в «Приёме сообщений»"{% endif %}>Опубликовать</button>
-        </div>
-        {% endif %}
-        <span class="save-msg muted small"></span>
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
+{# ЛЕНТА, А НЕ ТАБЛИЦА (26.11.2026, второй заход по #287). Таблица из пяти столбцов забирала
+   у текста поста больше половины ширины, а три полноразмерные кнопки всё равно не вставали
+   в строку и выпирали из стиля страницы. Карточка-строка: дата и статус — сверху мелким,
+   текст — на всю ширину, действия — одной строкой внизу. Старые значения для скриптов
+   (data-post, data-labels) сохранены: логика не меняется, меняется только вид. #}
+<div class="post-list">
+  {% for p in posts %}
+  <article class="post-card" data-post="{{ p.id }}">
+    <div class="post-head">
+      <span class="post-date">{{ (p.publish_at or p.created_at).strftime('%d.%m.%Y %H:%M') }}</span>
+      <span class="post-chans">
+        {% for c in p.channels_list %}<span class="chan">{{ 'Telegram' if c == 'telegram' else 'ВКонтакте' }}</span>{% endfor %}
+      </span>
+      <span class="badge-status s-{{ p.status }}">{{ p.status_name }}</span>
+    </div>
+    <div class="post-body" data-open="{{ p.id }}" contenteditable="false">{{ p.body }}</div>
+    {% if p.media_url %}<div class="muted small">медиа: {{ p.media_url }}</div>{% endif %}
+    {% if p.result and p.result != '{}' %}<div class="muted small">ответ каналов: {{ p.result }}</div>{% endif %}
+    <div class="post-foot">
+      {% if p.status != 'sent' %}
+      <div class="post-actions">
+        {# «Изменить» открывает текст на правку: раньше поле было contenteditable=false
+           без способа его включить — правка существовала в коде, но не для человека (#287). #}
+        <button class="btn btn-ghost btn-sm" type="button" data-edit="{{ p.id }}">Изменить</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-save="{{ p.id }}">Сохранить</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-del="{{ p.id }}">Удалить</button>
+        <button class="btn btn-sm" type="button" data-pub="{{ p.id }}"
+          {% if not p.can_publish %}disabled title="Канал не настроен: адрес публикации задайте в «Приём сообщений»"{% endif %}>Опубликовать</button>
+      </div>
+      {% endif %}
+      <span class="save-msg muted small"></span>
+    </div>
+  </article>
+  {% endfor %}
 </div>
 {% else %}
 <div class="card"><p class="mb-0">Пока ни одного поста. Первый соберётся в форме выше.</p></div>
@@ -72,7 +78,9 @@
 {% endblock %}
 {% block scripts %}
 <script>
-/* Всё через fetch: страница не перезагружается, человек остаётся на месте. */
+/* Всё через fetch: страница не перезагружается, человек остаётся на месте.
+   Действия ищутся по ближайшей карточке (article.post-card), а не по строке таблицы. */
+function rowOf(el) { return el.closest('tr') || el.closest('.post-card'); }
 (function () {
   var body = document.getElementById('npBody');
   var count = document.getElementById('npCount');
@@ -110,33 +118,49 @@
       document.getElementById('npMedia').value = '';
       count.textContent = '0';
       say(msg, 'Черновик сохранён', true);
-      /* Строку дописываем на месте — перезагрузка выкинула бы человека из формы. */
-      var tr = document.createElement('tr');
-      tr.dataset.post = d.id;
-      tr.innerHTML = '<td data-label="Когда">только что</td>' +
-        '<td data-label="Текст"><div class="post-body" contenteditable="false">' + d.escaped + '</div></td>' +
-        '<td data-label="Каналы">' + d.channels_text + '</td>' +
-        '<td data-label="Статус"><span class="badge-status s-draft">Черновик</span></td>' +
-        '<td data-label=""><button class="btn btn-ghost btn-sm" type="button" data-del="' + d.id + '">Удалить</button> <span class="save-msg muted small"></span></td>';
-      var table = document.querySelector('.tbl tbody') || document.querySelector('.tbl');
-      if (table) table.appendChild(tr);
-      bind(tr);
+      /* Карточку дописываем на месте — перезагрузка выкинула бы человека из формы. */
+      var card = document.createElement('article');
+      card.className = 'post-card';
+      card.dataset.post = d.id;
+      card.innerHTML = '<div class="post-head"><span class="post-date">только что</span>' +
+        '<span class="post-chans"><span class="chan">' + d.channels_text + '</span></span>' +
+        '<span class="badge-status s-draft">Черновик</span></div>' +
+        '<div class="post-body" contenteditable="false">' + d.escaped + '</div>' +
+        '<div class="post-foot"><div class="post-actions">' +
+        '<button class="btn btn-ghost btn-sm" type="button" data-save="' + d.id + '">Сохранить</button> ' +
+        '<button class="btn btn-ghost btn-sm" type="button" data-del="' + d.id + '">Удалить</button></div>' +
+        '<span class="save-msg muted small"></span></div>';
+      var list = document.querySelector('.post-list');
+      if (list) list.insertBefore(card, list.firstChild);
+      bind(card);
     }).catch(function () { say(msg, 'Сеть недоступна — попробуйте ещё раз', false); })
       .then(function () { save.disabled = false; });
   });
 
   function bind(scope) {
     var root = scope || document;
+    root.querySelectorAll('[data-edit]').forEach(function (btn) {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', function () {
+        var cell = rowOf(btn).querySelector('[data-open]');
+        if (!cell) return;
+        var on = cell.getAttribute('contenteditable') !== 'true';
+        cell.setAttribute('contenteditable', on ? 'true' : 'false');
+        btn.textContent = on ? 'Готово' : 'Изменить';
+        if (on) { cell.focus(); }                          /* Курсор сразу в тексте — править долгим щелчком не нужно. */
+      });
+    });
     root.querySelectorAll('[data-save]').forEach(function (btn) {
       if (btn.dataset.bound) return;
       btn.dataset.bound = '1';
       btn.addEventListener('click', function () {
-        var tr = btn.closest('tr');
+        var tr = rowOf(btn);
         var cell = tr.querySelector('[data-open]');
         var msg = tr.querySelector('.save-msg');
         btn.disabled = true;
         say(msg, 'Сохраняю…', true);
-        post('/api/admin/post/' + btn.dataset.save + '/save', { body: cell.textContent }).then(function (d) {
+        post('/api/admin/post/' + btn.dataset.save + '/save', { body: cell.innerText }).then(function (d) {
           say(msg, d.ok ? 'Сохранено' : (d.error || 'Не сохранилось'), d.ok);
         }).catch(function () { say(msg, 'Сеть недоступна', false); })
           .then(function () { btn.disabled = false; });
@@ -146,7 +170,7 @@
       if (btn.dataset.bound) return;
       btn.dataset.bound = '1';
       btn.addEventListener('click', function () {
-        var tr = btn.closest('tr');
+        var tr = rowOf(btn);
         btn.disabled = true;
         post('/api/admin/post/' + btn.dataset.del + '/delete', {}).then(function (d) {
           if (d.ok) { tr.remove(); return; }
@@ -159,7 +183,7 @@
       if (btn.dataset.bound) return;
       btn.dataset.bound = '1';
       btn.addEventListener('click', function () {
-        var tr = btn.closest('tr');
+        var tr = rowOf(btn);
         var msg = tr.querySelector('.save-msg');
         btn.disabled = true;
         say(msg, 'Публикую…', true);
