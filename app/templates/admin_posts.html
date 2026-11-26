@@ -58,12 +58,19 @@
     {% if p.media_url %}<div class="muted small">медиа: {{ p.media_url }}</div>{% endif %}
     {% if p.result and p.result != '{}' %}<div class="muted small">ответ каналов: {{ p.result }}</div>{% endif %}
     <div class="post-foot">
-      {% if p.status != 'sent' %}
+      {% if p.status == 'sent' %}
+      <div class="post-actions">
+        <button class="btn btn-ghost btn-sm" type="button" data-edit-sent="{{ p.id }}">Копия в правку</button>
+      </div>
+      {% else %}
       <div class="post-actions">
         {# «Изменить» открывает текст на правку: раньше поле было contenteditable=false
            без способа его включить — правка существовала в коде, но не для человека (#287). #}
         <button class="btn btn-ghost btn-sm" type="button" data-edit="{{ p.id }}">Изменить</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-save="{{ p.id }}">Сохранить</button>
+        {# «Сохранить» показываем только после «Изменить»: кнопка, которая с первого взгляда
+           ничего не делает понятного, сбивает (владелец, 26.11.2026). Скрипт включает её,
+           когда текст открыт на правку. #}
+        <button class="btn btn-ghost btn-sm" type="button" data-save="{{ p.id }}" hidden>Сохранить</button>
         <button class="btn btn-ghost btn-sm" type="button" data-del="{{ p.id }}">Удалить</button>
         <button class="btn btn-sm" type="button" data-pub="{{ p.id }}"
           {% if not p.can_publish %}disabled title="Канал не настроен: адрес публикации задайте в «Приём сообщений»"{% endif %}>Опубликовать</button>
@@ -145,11 +152,16 @@ function rowOf(el) { return el.closest('tr') || el.closest('.post-card'); }
       if (btn.dataset.bound) return;
       btn.dataset.bound = '1';
       btn.addEventListener('click', function () {
-        var cell = rowOf(btn).querySelector('[data-open]');
+        var card = rowOf(btn);
+        var cell = card.querySelector('[data-open]');
         if (!cell) return;
         var on = cell.getAttribute('contenteditable') !== 'true';
         cell.setAttribute('contenteditable', on ? 'true' : 'false');
         btn.textContent = on ? 'Готово' : 'Изменить';
+        /* «Готово» не закрывает текст: человек закончил печатать — и сразу видит «Сохранить».
+           Пока не нажали «Изменить», кнопка скрыта: она без контекста бессмысленна. */
+        var save = card.querySelector('[data-save]');
+        if (save) save.hidden = !on;
         if (on) { cell.focus(); }                          /* Курсор сразу в тексте — править долгим щелчком не нужно. */
       });
     });
@@ -179,6 +191,21 @@ function rowOf(el) { return el.closest('tr') || el.closest('.post-card'); }
           say(tr.querySelector('.save-msg'), d.error || 'Не удалилось', false);
           btn.disabled = false;
         }).catch(function () { btn.disabled = false; });
+      });
+    });
+    /* ОПУБЛИКОВАННЫЙ ПОСТ НЕ ПРАВИТСЯ (владелец, 26.11.2026). Кнопку правки не прячем молча:
+       нажимают — и получают честный ответ, где взять копию для правки. */
+    root.querySelectorAll('[data-edit-sent]').forEach(function (btn) {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', function () {
+        var card = rowOf(btn);
+        var body = card.querySelector('[data-open]') ? card.querySelector('[data-open]').textContent : '';
+        var msg = card.querySelector('.save-msg');
+        say(msg, 'Этот пост уже в канале. Копия перенесена в «Новый пост» — правьте и сохраняйте как новый.', true);
+        var area = document.getElementById('npBody');
+        if (area) { area.value = body.trim(); area.focus(); area.scrollIntoView({ block: 'center' }); }
+        if (area) { var c = document.getElementById('npCount'); if (c) c.textContent = String(area.value.length); }
       });
     });
     root.querySelectorAll('[data-pub]').forEach(function (btn) {
