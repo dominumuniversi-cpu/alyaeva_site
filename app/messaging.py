@@ -46,10 +46,21 @@ def tg_api(method: str, params: dict | None = None, http_timeout: float = 20) ->
         return {"ok": False, "error": str(e)[:160]}
 
 
+#: Почему последняя отправка не удалась — для страницы «Посты».
+#: Раньше в базу писалось просто "fail", и причину нельзя было узнать ни человеку, ни агенту
+#: (владелец: «ни в одном канале не опубликован — почему?», 26.11.2026).
+last_error: dict[str, str] = {}
+
+
 def send_telegram(chat_id: str, text: str) -> bool:
     """Отправить сообщение в Telegram."""
     token = secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or ""))
-    if not token or not chat_id:
+    if not token:
+        last_error["telegram"] = "не задан токен бота"
+        log.info("telegram: не настроен токен или чат")
+        return False
+    if not chat_id:
+        last_error["telegram"] = "не указан канал для публикаций (страница «Интеграция»)"
         log.info("telegram: не настроен токен или чат")
         return False
     try:
@@ -60,17 +71,32 @@ def send_telegram(chat_id: str, text: str) -> bool:
             )
         ok = r.status_code == 200 and r.json().get("ok", False)
         if not ok:
+            try:
+                desc = str(r.json().get("description") or "")[:120]
+            except Exception:  # noqa: BLE001
+                desc = r.text[:120]
+            last_error["telegram"] = f"Telegram ответил: {desc}"
             log.warning("telegram send failed: %s", r.text[:200])
         return ok
     except Exception as e:
+        last_error["telegram"] = f"нет связи с Telegram: {str(e)[:100]}"
         log.warning("telegram error: %s", e)
         return False
 
 
 def send_vk(peer_id: str, text: str) -> bool:
-    """Отправить сообщение во ВКонтакте от имени сообщества."""
+    """Отправить сообщение во ВКонтакте от имени сообщества.
+
+    ВКонтакте разрешает сообществу писать только тем, кто написал ему первым.
+    Ошибка 901 — нет разрешения, 945 — сообщения сообщества выключены.
+    """
     token = secrets_helper.decrypt(str(db.get_setting("vk.token", "") or ""))
-    if not token or not peer_id:
+    if not token:
+        last_error["vk"] = "не задан токен сообщества"
+        log.info("vk: не настроен токен или получатель")
+        return False
+    if not peer_id:
+        last_error["vk"] = "не указано сообщество для публикаций (страница «Интеграция»)"
         log.info("vk: не настроен токен или получатель")
         return False
     try:
@@ -82,10 +108,15 @@ def send_vk(peer_id: str, text: str) -> bool:
             )
         data = r.json()
         if "error" in data:
-            log.warning("vk error: %s", data["error"].get("error_msg"))
+            err = data["error"] or {}
+            code = err.get("error_code")
+            msg_vk = str(err.get("error_msg") or "")[:120]
+            last_error["vk"] = f"ВКонтакте ответил {code}: {msg_vk}"
+            log.warning("vk error: %s", msg_vk)
             return False
         return True
     except Exception as e:
+        last_error["vk"] = f"нет связи с ВКонтакте: {str(e)[:100]}"
         log.warning("vk error: %s", e)
         return False
 

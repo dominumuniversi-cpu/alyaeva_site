@@ -220,7 +220,10 @@ function rowOf(el) { return el.closest('tr') || el.closest('.post-card'); }
           if (!d.ok) { say(msg, d.error || 'Не опубликовалось', false); btn.disabled = false; return; }
           var badge = tr.querySelector('.badge-status');
           if (badge) { badge.textContent = d.status_name; badge.className = 'badge-status s-' + d.status; }
-          say(msg, d.status === 'sent' ? 'Опубликован' : 'Ушёл не во все каналы', d.status === 'sent');
+          /* Итог приходит с сервера словами: «Ничего не ушло» / «Ушло только в Telegram» /
+             «Опубликовано». Раньше любой неуспех подписывался «Ушёл не во все каналы» —
+             человек справедливо решил, что куда-то всё же ушло (замечание 26.11.2026). */
+          say(msg, d.summary || (d.status === 'sent' ? 'Опубликовано' : 'Ничего не ушло'), d.status === 'sent');
         }).catch(function () { say(msg, 'Сеть недоступна', false); btn.disabled = false; });
       });
     });

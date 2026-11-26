@@ -648,9 +648,14 @@ body{position:relative}
 @media (max-width:600px){ .order-photos .mini{width:74px;height:74px} }
 
 /* ---------- Шкала прогресса заказа ---------- */
+/* ХОД ЗАКАЗА. ПОДПИСИ НАД ЛИНИЕЙ (замечание владельца, 26.11.2026: «слова перекрываются»).
+   Было: кружок и подпись в одну строку, а соединительная линия ::after шла по центру кружка
+   (top:14px, left:34px), то есть ровно по тексту. Замер до правки на 1440 px: перекрытие у всех
+   семи шагов. Стало: колонка «кружок — подпись», линия идёт на уровне центров кружков
+   и начинается за кружком, поэтому текст линии не касается. */
 .prog{display:flex;gap:4px;margin-top:14px;flex-wrap:wrap}
-.prog-step{display:flex;align-items:center;gap:7px;flex:1;min-width:74px;position:relative;color:var(--c-body);opacity:.45}
-.prog-step::after{content:"";position:absolute;left:34px;right:0;top:14px;height:2px;background:var(--c-lilac)}
+.prog-step{display:flex;flex-direction:column;align-items:flex-start;gap:6px;flex:1;min-width:74px;position:relative;color:var(--c-body);opacity:.45}
+.prog-step::after{content:"";position:absolute;left:34px;right:0;top:13px;height:2px;background:var(--c-lilac)}
 .prog-step:last-child::after{display:none}
 .prog-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:800;background:var(--c-lilac);color:var(--c-strong);flex:none;position:relative;z-index:1}
@@ -664,8 +669,8 @@ body{position:relative}
 .prog-cancelled{color:#9A3B3B;font-weight:700;opacity:1}
 @media (max-width:600px){
   .prog{gap:2px}
-  .prog-step{flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
-  .prog-step::after{left:0;right:0;top:14px}
+  .prog-step{flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+  .prog-step::after{left:34px;right:0;top:13px}
   .prog-name{font-size:10.5px;white-space:normal;line-height:1.15}
 }
 

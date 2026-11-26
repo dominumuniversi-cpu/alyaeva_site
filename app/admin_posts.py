@@ -154,18 +154,32 @@ def publish_post(request: Request, post_id: int):
     result: dict[str, str] = {}
     if "telegram" in chans:
         chat = str(db.get_setting("telegram.channel", "") or "").strip()
-        result["telegram"] = "ok" if messaging.send_telegram(chat, posts.cut(text, posts.MAX_TELEGRAM)) else "fail"
+        ok = messaging.send_telegram(chat, posts.cut(text, posts.MAX_TELEGRAM))
+        # ПРИЧИНА, а не просто "fail" (26.11.2026): владелец увидел «Ушёл не во все каналы» и не мог
+        # понять, куда же ушло. Теперь в базе лежит ответ канала словами.
+        result["telegram"] = "ok" if ok else ("fail: " + messaging.last_error.get("telegram", "неизвестно"))
     if "vk" in chans:
         group = str(db.get_setting("vk.group", "") or "").strip()
         # ВКонтакте разметку не понимает: отправляем чистый текст.
-        result["vk"] = "ok" if messaging.send_vk(group, posts.html_to_plain(posts.cut(text, posts.MAX_VK))) else "fail"
+        ok = messaging.send_vk(group, posts.html_to_plain(posts.cut(text, posts.MAX_VK)))
+        result["vk"] = "ok" if ok else ("fail: " + messaging.last_error.get("vk", "неизвестно"))
 
-    sent = [c for c, v in result.items() if v == "ok"]
+    sent = [c for c, v in result.items() if str(v).startswith("ok")]
     status = "sent" if len(sent) == len(chans) else ("partial" if sent else "failed")
     post_queue.mark_result(post_id, status, result)
+    # Текст итога словами, как ждёт владелец: «Ничего не ушло», «Ушло только в Telegram»…
+    # Раньше на ЛЮБОЙ неуспех писалось «Ушёл не во все каналы», и человек думал, что куда-то всё-таки ушло.
+    names = {"telegram": "Telegram", "vk": "ВКонтакте"}
+    if not sent:
+        summary = "Ничего не ушло"
+    elif len(sent) == len(chans):
+        summary = "Опубликовано"
+    else:
+        summary = "Ушло только в " + ", ".join(names.get(c, c) for c in sent)
     return JSONResponse({
         "ok": True,
         "status": status,
         "status_name": post_queue.STATUSES[status],
+        "summary": summary,
         "result": json.dumps(result, ensure_ascii=False),
     })
