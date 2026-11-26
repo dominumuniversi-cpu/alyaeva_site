@@ -33,6 +33,13 @@ async def lifespan(app: FastAPI):
         reminders.start()
     except Exception:  # noqa: BLE001 — фон не должен мешать сайту подняться
         logging.getLogger("main").warning("напоминания не запущены", exc_info=True)
+    # Приём сообщений Telegram опросом (вебхук блокируется провайдером, #285).
+    # Поток сам проверяет режим и токен: выключенный приём ничего не делает.
+    try:
+        import tg_receiver
+        tg_receiver.start_if_needed()
+    except Exception:  # noqa: BLE001 — приём не должен мешать сайту подняться
+        logging.getLogger("main").warning("приём Telegram не запущен", exc_info=True)
     yield
     db.close_pool()
 

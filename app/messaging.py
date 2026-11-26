@@ -22,6 +22,26 @@ def _telegram_http() -> httpx.Client:
     return httpx.Client(timeout=20, proxy=proxy or None)
 
 
+def tg_api(method: str, params: dict | None = None, http_timeout: float = 20) -> dict:
+    """Вызов метода Telegram Bot API через прокси из настроек.
+
+    Возвращает разобранный JSON. Ошибки сети не бросает, а возвращает
+    {"ok": False, "error": ...}: вызывающий код (кнопка админки, приёмник)
+    решает, что считать отказом и что показать человеку.
+    """
+    token = secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or ""))
+    if not token:
+        return {"ok": False, "error": "не задан токен бота"}
+    proxy = str(db.get_setting("telegram.proxy", "") or "").strip() or None
+    try:
+        with httpx.Client(timeout=http_timeout, proxy=proxy) as client:
+            r = client.get(f"https://api.telegram.org/bot{token}/{method}", params=params or {})
+            return r.json()
+    except Exception as e:
+        log.warning("telegram api %s: %s", method, e)
+        return {"ok": False, "error": str(e)[:160]}
+
+
 def send_telegram(chat_id: str, text: str) -> bool:
     """Отправить сообщение в Telegram."""
     token = secrets_helper.decrypt(str(db.get_setting("telegram.token", "") or ""))

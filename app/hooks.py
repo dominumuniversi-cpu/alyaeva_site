@@ -44,9 +44,13 @@ def thread_for(channel: str, external_chat_id: str, title: str = "") -> int:
         return row["id"]
 
 
-def _incoming(channel: str, chat_id: str, author: str, body: str, external_id: str = "",
-              title: str = "", meta: dict | None = None) -> int:
-    """Положить входящее сообщение в инбокс. Возвращает id диалога."""
+def incoming(channel: str, chat_id: str, author: str, body: str, external_id: str = "",
+             title: str = "", meta: dict | None = None) -> int:
+    """Положить входящее сообщение в инбокс. Возвращает id диалога.
+
+    Публичное имя: кроме вебхуков сюда пишет приёмник Telegram (tg_receiver),
+    чтобы разбор сообщений жил в одном месте.
+    """
     if not (body or "").strip():
         return 0
     tid = thread_for(channel, chat_id, title)
@@ -71,14 +75,25 @@ async def telegram_hook(secret: str, request: Request):
         data = await request.json()
     except Exception:
         return JSONResponse({"ok": False, "error": "не JSON"}, status_code=400)
-    msg = data.get("message") or data.get("edited_message") or {}
+    handle_tg_update(data)
+    return JSONResponse({"ok": True})
+
+
+def handle_tg_update(update: dict) -> int:
+    """Разобрать апдейт Telegram и положить сообщение в инбокс. Возвращает update_id.
+
+    Один код для двух способов доставки: вебхук (POST /hooks/telegram/<secret>)
+    и long polling (tg_receiver). Служебные события без чата молча пропускаются:
+    Telegram ждёт ответа «получил», но писать в инбокс нечего.
+    """
+    msg = (update or {}).get("message") or (update or {}).get("edited_message") or {}
     chat = msg.get("chat") or {}
     if not chat:
-        return JSONResponse({"ok": True})  # служебное событие, отвечаем «получил»
+        return int((update or {}).get("update_id") or 0)
     frm = msg.get("from") or {}
     name = " ".join(x for x in [frm.get("first_name"), frm.get("last_name")] if x) \
         or frm.get("username") or "Гость"
-    _incoming(
+    incoming(
         channel="telegram",
         chat_id=str(chat.get("id")),
         author=name,
@@ -87,7 +102,7 @@ async def telegram_hook(secret: str, request: Request):
         title=f"Telegram: {name}",
         meta={"username": frm.get("username"), "chat_type": chat.get("type")},
     )
-    return JSONResponse({"ok": True})
+    return int((update or {}).get("update_id") or 0)
 
 
 @router.post("/hooks/vk")
@@ -165,6 +180,9 @@ def _hook_state(request) -> dict:
         "tg_ready": bool(tg_raw), "vk_ready": bool(vk_raw),
         "tg_token_mask": _mask(tg_raw), "vk_token_mask": _mask(vk_raw),
         "hook_secret": hook_secret, "site_url": site,
+        "vk_confirm_set": bool(str(db.get_setting("vk.confirm_code", "") or "").strip()),
+        "polling": str(db.get_setting("telegram.mode", "") or "") == "polling",
+        "poll_last_at": str(db.get_setting("telegram.poll.last_at", "") or ""),
         "saved": request.query_params.get("saved") == "1",
     }
 
@@ -176,10 +194,30 @@ def _mask(secret: str) -> str:
     return "задан ···· " + secret[-4:] if len(secret) > 4 else "задан"
 
 
+@router.post("/admin/hooks/receive-telegram")
+def hooks_enable_receive(request: Request):
+    """Включить приём сообщений Telegram опросом (кнопка на странице приёма).
+
+    Вебхук не доходит: провайдер рвёт входящие соединения с зарубежных адресов
+    (задача #285). Опрос идёт исходяще, через прокси — включаем его.
+    """
+    user = db.session_user(request.cookies.get("sid", ""))
+    if not (user and user.get("role") == "admin"):
+        return JSONResponse({"ok": False, "error": "Нужно войти"}, status_code=401)
+    from tg_receiver import enable_polling
+    return JSONResponse(enable_polling())
+
+
 @router.post("/admin/hooks")
 def hooks_save(request: Request, telegram_token: str = Form(""), telegram_proxy: str = Form(""),
-               telegram_chat: str = Form(""), vk_token: str = Form("")):
-    """Сохранение подключения мессенджеров. Пустое поле токена — не менять."""
+               telegram_chat: str = Form(""), vk_token: str = Form(""),
+               vk_confirm_code: str = Form(""), vk_secret: str = Form("")):
+    """Сохранение подключения мессенджеров. Пустое поле — не менять прежнее значение.
+
+    Ошибка 26.11.2026: пустое «Прокси» или «Чат» стирало настроенное — владелец
+    заполнял только токен VK, а форма затирала прокси Telegram, и отправка
+    ломалась «сама по себе». Теперь все поля ведут себя как токены: пустое не трогаем.
+    """
     user = db.session_user(request.cookies.get("sid", ""))
     if not (user and user.get("role") == "admin"):
         return RedirectResponse("/login?next=" + quote("/admin/hooks"), status_code=303)
@@ -190,10 +228,18 @@ def hooks_save(request: Request, telegram_token: str = Form(""), telegram_proxy:
             import secrets as _secrets
             db.set_setting("telegram.hook_secret",
                            secrets_helper.encrypt(_secrets.token_urlsafe(32)), user["id"])
-    db.set_setting("telegram.proxy", telegram_proxy.strip(), user["id"])
-    db.set_setting("telegram.chat", telegram_chat.strip(), user["id"])
+    if telegram_proxy.strip():
+        db.set_setting("telegram.proxy", telegram_proxy.strip(), user["id"])
+    if telegram_chat.strip():
+        db.set_setting("telegram.chat", telegram_chat.strip(), user["id"])
     if vk_token.strip():
         db.set_setting("vk.token", secrets_helper.encrypt(vk_token.strip()), user["id"])
+    # Строка подтверждения и секрет событий VK — не токены доступа: без шифрования.
+    # Нужны для Callback API: VK шлёт подтверждение, сервер должен вернуть ту же строку.
+    if vk_confirm_code.strip():
+        db.set_setting("vk.confirm_code", vk_confirm_code.strip(), user["id"])
+    if vk_secret.strip():
+        db.set_setting("vk.secret", vk_secret.strip(), user["id"])
     # Ответ без перезагрузки: форма шлёт Accept: application/json и показывает плашку на месте (#217).
     wants_json = "application/json" in (request.headers.get("accept") or "")
     if wants_json:
