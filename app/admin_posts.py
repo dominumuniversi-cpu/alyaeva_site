@@ -147,7 +147,7 @@ def publish_post(request: Request, post_id: int):
     if not chans:
         return JSONResponse({
             "ok": False,
-            "error": "Каналы не настроены — впишите токены в «Приём сообщений»",
+            "error": "Каналы не настроены — впишите токены на странице «Интеграция»",
         }, status_code=400)
 
     text = row["body"]

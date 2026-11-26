@@ -30,7 +30,7 @@
     <a href="{{ admin_url }}/products" {% if '/products' in request.url.path %}class="active"{% endif %}>Товары</a>
     <a href="{{ admin_url }}/posts" {% if '/admin/posts' in request.url.path %}class="active"{% endif %}>Посты</a>
     <a href="{{ admin_url }}/pay" {% if '/admin/pay' in request.url.path %}class="active"{% endif %}>Оплата</a>
-    <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Приём сообщений</a>
+    <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Интеграция</a>
     <a href="{{ admin_url }}/stats" {% if '/stats' in request.url.path %}class="active"{% endif %}>Статистика</a>
     <a href="{{ admin_url }}/settings" {% if '/settings' in request.url.path and '/admin' in request.url.path %}class="active"{% endif %}>Настройки сайта</a>
   </div>

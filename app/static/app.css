@@ -120,6 +120,9 @@ textarea{min-height:90px;resize:vertical}
 /* Подписи, подсказки */
 .muted{color:var(--c-body);opacity:.75}
 .hint{font-size:14px;color:var(--c-body);opacity:.8;margin:6px 0 0}
+/* Пояснение прямо в подписи поля: «Чат для уведомлений — куда бот пишет сам».
+   Владелец 26.11.2026: у полей не было понятного смысла, приходилось спрашивать. */
+.hint-inline{font-weight:400;font-size:14px;color:var(--c-body);opacity:.75}
 
 /* Статус заказа */
 .pill{
