@@ -113,6 +113,10 @@
         вам «сообщения от клиентов». Необязательно, но с ним — безопаснее.
         Сейчас: {{ 'задан' if settings.get('vk.secret') else 'не задан' }}.</div>
 
+      <p class="mt-12 btn-row">
+        <a class="btn btn-ghost" href="{{ admin_url }}/hooks?check=vk">Проверить связь с ВКонтакте</a>
+        <span class="hint">Спросим сам VK: ключ, события, право отвечать. Ничего не меняет.</span>
+      </p>
       <div class="mt-26 btn-row">
         <button class="btn" type="submit">Сохранить</button>
         <span class="save-msg" id="f_hooks_msg" role="status" aria-live="polite"></span>
@@ -127,6 +131,28 @@
        groups.getCallbackConfirmationCode / groups.getLongPollServer → ошибка 15
        «no access to call this method ... current scopes». То есть события VK
        этим ключом не включаются и не забираются по опросу. Нужен отдельный ключ. #}
+    {# Проверка связи с VK (26.11.2026): не гадаем «включите событие», а спрашиваем сам VK
+       и печатаем результат простыми словами. Данные готовит app/vk_monitor.py. #}
+    {% if vk_check %}
+    <h2 class="card-title">{% if vk_check.ok %}Связь с ВКонтакте работает{% else %}Почему ВКонтакте молчит{% endif %}</h2>
+    <table class="tbl tbl-cards mb-12" data-labels="1">
+      <tbody>
+        <tr><td data-label="Проверка"><strong>Ключ доступа</strong></td>
+            <td>{% if vk_check.group_id %}<span class="ok">рабочий</span> · {{ vk_check.group_name }}{% else %}<span class="err">не от сообщества</span>{% endif %}</td></tr>
+        <tr><td data-label="Проверка"><strong>События сообщества</strong></td>
+            <td>{% if vk_check.events.state == 'события доступны' %}<span class="ok">доступны</span>{% else %}<span class="err">{{ vk_check.events.state }}</span>{% endif %}</td></tr>
+        <tr><td data-label="Проверка"><strong>Отправка от имени сообщества</strong></td>
+            <td>{% if vk_check.send.ok %}<span class="ok">работает</span>{% elif vk_check.send.ok is false %}<span class="err">запрещена (код {{ vk_check.send.code }})</span>{% else %}не проверена{% endif %}</td></tr>
+      </tbody>
+    </table>
+    {% if vk_check.steps %}
+    <p class="mt-0"><strong>Что сделать:</strong></p>
+    <ol class="hint">{% for s in vk_check.steps %}<li>{{ s }}</li>{% endfor %}</ol>
+    {% endif %}
+    {% if vk_check.send.ok is false %}
+    <details class="hint"><summary>Ответ ВКонтакте целиком</summary><code>{{ vk_check.send.message }}</code></details>
+    {% endif %}
+    {% endif %}
     {% if vk_ready and not vk_events_ready %}
     <h2 class="card-title">Почему VK молчит</h2>
     <p class="mt-0">Токен ВКонтакте рабочий, но событий от него нет: проверка показала,
