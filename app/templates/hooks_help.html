@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Приём сообщений — Алёна Аляева{% endblock %}
+{% block title %}Интеграция — Алёна Аляева{% endblock %}
 {% block main_class %}wide{% endblock %}
 {% block content %}
 {# ЕДИНСТВЕННОЕ место, где настраиваются мессенджеры. В «Настройках сайта» их нет. #}
-<h1>Приём сообщений</h1>
+<h1>Интеграция</h1>
 <p class="muted mt-neg">
   Здесь подключаются мессенджеры. Всё, что оттуда придёт, собирается в
   <a href="{{ admin_url }}/inbox">инбоксе</a> — вместе с заказами и сообщениями с сайта.
@@ -16,17 +16,17 @@
 <div class="card mb-20">
   <h2 class="card-title">Как это работает</h2>
   <table class="tbl tbl-cards" data-labels="1">
-    <thead><tr><th>Канал</th><th>Состояние</th><th>Что нужно</th></tr></thead>
+    <thead><tr><th>Канал</th><th>Состояние</th><th>Откуда и куда</th></tr></thead>
     <tbody>
     <tr>
       <td data-label="Канал"><strong>Telegram</strong></td>
       <td data-label="Состояние">{% if tg_ready %}<span class="ok">подключён</span>{% else %}<span class="err">не подключён</span>{% endif %}</td>
-      <td data-label="Что нужно" class="muted">токен бота от @BotFather</td>
+      <td data-label="Откуда и куда" class="muted">всё, что пишут вашему боту, — в инбокс; ответ из инбокса уходит в тот же чат</td>
     </tr>
     <tr>
       <td data-label="Канал"><strong>ВКонтакте</strong></td>
-      <td data-label="Состояние">{% if vk_ready %}<span class="ok">подключён</span>{% else %}<span class="err">не подключён</span>{% endif %}</td>
-      <td data-label="Что нужно" class="muted">токен сообщества</td>
+      <td data-label="Состояние">{% if vk_ready %}<span class="ok">токен есть</span>{% else %}<span class="err">токена нет</span>{% endif %}{% if vk_ready and not vk_events_ready %} · <span class="err">события не приходят</span>{% endif %}</td>
+      <td data-label="Откуда и куда" class="muted">{% if vk_ready and not vk_events_ready %}см. «Почему VK молчит» ниже{% else %}сообщения сообщества — в инбокс{% endif %}</td>
     </tr>
     <tr>
       <td data-label="Канал"><strong>Сайт</strong></td>
@@ -54,38 +54,61 @@
              placeholder="http://host.docker.internal:10809">
       <div class="hint">API Telegram заблокирован провайдером — прокси обязателен.</div>
 
-      <label>Чат для уведомлений</label>
+      {# Тексты подсказок — ответы на прямые вопросы владельца 26.11.2026:
+         «Чат для уведомлений — какие уведомления туда будут приходить?»
+         «Канал для публикаций — какой канал необходимо указывать?» #}
+      <label>Чат для уведомлений <span class="hint-inline">— куда бот пишет сам</span></label>
       <input type="text" name="telegram_chat" value="{{ settings.get('telegram.chat','') }}"
              placeholder="@username или ID">
+      <div class="hint">Сюда бот пишет <strong>вам</strong>, а не клиентам: новые заказы,
+        напоминания о фото, сообщения с сайта. Это ваш личный чат с ботом или служебный
+        — например, «Избранное» (там ID из настроек). Клиенту бот пишет только в ответ из инбокса.
+        Пусто — бот не пишет вам вообще.</div>
 
-      <label>Канал для публикаций</label>
+      <label>Канал для публикаций <span class="hint-inline">— куда уходят посты</span></label>
       <input type="text" name="telegram_channel" value="{{ settings.get('telegram.channel','') }}"
-             placeholder="@username канала или -100…">
-      <div class="hint">Куда отправлять посты со <a href="{{ admin_url }}/posts">страницы постов</a>.
-        Сейчас: {{ settings.get('telegram.channel','') or 'не задан' }}.</div>
+             placeholder="@имя_канала или -100…">
+      <div class="hint">Указывать <strong>свой канал</strong> (не бот-чат и не @BotFather):
+        <code>@имя_канала</code> — если канал публичный, или числовой ID <code>-100…</code> —
+        если закрытый. Бот обязан быть <strong>администратором этого канала</strong>
+        (в канале → «Участники» → добавить бота).
+        Сейчас: {{ settings.get('telegram.channel','') or 'не задан — поэтому «Опубликовать» на странице постов погашена' }}.</div>
 
       <h3 class="h3-gap">ВКонтакте</h3>
+      {# Вопросы владельца 26.11.2026: «Код подтверждения VK — какой и где взять?»,
+         «Секрет событий VK — что это?», «Сообщество для публикаций — токена не хватает?» #}
       <label>Токен сообщества</label>
       <input type="text" name="vk_token" placeholder="{{ vk_token_mask }}" autocomplete="off">
-      <div class="hint">Сейчас: {{ vk_token_mask }}. Пустое поле — не менять.</div>
+      <div class="hint">Сообществом-получателем. Сейчас: {{ vk_token_mask }}. Пустое поле — не менять.</div>
 
-      <label>Сообщество для публикаций</label>
+      <label>Сообщество для публикаций <span class="hint-inline">— куда уходят посты</span></label>
       <input type="text" name="vk_group" value="{{ settings.get('vk.group','') }}"
-             placeholder="ID сообщества (со знаком минус) или короткий адрес">
-      <div class="hint">Куда отправлять посты. Сейчас: {{ settings.get('vk.group','') or 'не задано' }}.</div>
+             placeholder="ID сообщества (239215857) или короткий адрес (neuroart_ekb)">
+      <div class="hint">ID — <strong>без минуса</strong> (минус VK добавляет сам, это «от имени
+        сообщества»). Токен выше должен быть выдан <strong>этого же сообщества</strong> — токен
+        не может публиковать в чужое. Порядок: сообщество → «Управление» → «Работа с API»
+        → «Создать ключ» с правами «Сообщения» и «Записи на стене» → вставить сюда.
+        Сейчас: {{ settings.get('vk.group','') or 'не задано' }}.</div>
 
-      <label>Код подтверждения VK</label>
+      <label>Код подтверждения VK <span class="hint-inline">— нужен только для приёма сообщений</span></label>
       <input type="text" name="vk_confirm_code" autocomplete="off"
-             placeholder="{{ 'код из настроек сообщества' if not vk_confirm_set else 'задан — не менять' }}">
-      <div class="hint">Настройки сообщества в VK → Работа с API → Callback API:
-        адрес <code>{{ site_url }}/hooks/vk</code>. Сейчас: {{ 'задан' if vk_confirm_set else 'не задан' }}.
-        Без кода VK не подключит сообщество: он ждёт, что сайт вернёт его же строку.</div>
+             placeholder="{{ 'адрес уже настроен — поле не нужно' if not vk_confirm_set else 'задан — не менять' }}">
+      <div class="hint">VK сам придумывает эту строку и показывает её ровно один раз, при
+        подключении Callback API. Где взять: сообщество → «Управление» → «Работа с API» →
+        «Callback API» → вкладка «Настройки сервера» → вписать адрес
+        <code>{{ site_url }}/hooks/vk</code> → VK покажет <strong>строку подтверждения</strong>
+        — скопировать сюда и сохранить. Сайт вернёт её VK, и события включатся.
+        Сейчас: {{ 'задан' if vk_confirm_set else 'не задан' }}.
+        Для одних только постов этот код не нужен.</div>
 
-      <label>Секрет событий VK</label>
+      <label>Секрет событий VK <span class="hint-inline">— замок на входе</span></label>
       <input type="text" name="vk_secret" autocomplete="off"
-             placeholder="{{ 'строка из той же страницы VK' if not settings.get('vk.secret') else 'задан — не менять' }}">
-      <div class="hint">Необязательно: VK подписывает события этой строкой, иначе кто угодно
-        может прислать «сообщение». Сейчас: {{ 'задан' if settings.get('vk.secret') else 'не задан' }}.</div>
+             placeholder="{{ 'то, что вы сами впишете в VK' if not settings.get('vk.secret') else 'задан — не менять' }}">
+      <div class="hint">Придумываете <strong>вы сами</strong> (любая строка) и вписываете в двух местах:
+        здесь и в VK на той же странице Callback API (поле «Секретный ключ»). VK присылает его
+        с каждым событием, и сайт отбрасывает чужие: без этого кто угодно мог бы слать
+        вам «сообщения от клиентов». Необязательно, но с ним — безопаснее.
+        Сейчас: {{ 'задан' if settings.get('vk.secret') else 'не задан' }}.</div>
 
       <div class="mt-26 btn-row">
         <button class="btn" type="submit">Сохранить</button>
@@ -95,7 +118,21 @@
   </div>
 
   <div class="card card-lilac">
-    <h2 class="card-title">Приём сообщений</h2>
+    {# Владелец 26.11.2026: «С VK группы сообщения не приходят». Проверено живьём:
+       токен — рабочий «ключ сообщества» с правами photos/docs/messages/wall/market;
+       им можно ЧИТАТЬ переписку (messages.getConversations), но НЕЛЬЗЯ
+       groups.getCallbackConfirmationCode / groups.getLongPollServer → ошибка 15
+       «no access to call this method ... current scopes». То есть события VK
+       этим ключом не включаются и не забираются по опросу. Нужен отдельный ключ. #}
+    {% if vk_ready and not vk_events_ready %}
+    <h2 class="card-title">Почему VK молчит</h2>
+    <p class="mt-0">Токен ВКонтакте рабочий, но событий от него нет: проверка показала,
+      что у этого ключа нет прав на работу с событиями сообщества — VK отвечает
+      «no access to call this method with current scopes».</p>
+    <p class="hint">Самое быстрое — <strong>новый ключ на вкладке «Сервисный ключ доступа»</strong>
+      (там же, «Работа с API»), затем впишите его выше и включите приём кнопкой ниже.</p>
+    {% endif %}
+    <h2 class="card-title">Приём сообщений Telegram</h2>
     {% if polling %}
       <p class="mt-0"><strong class="ok">Опрос работает</strong>{% if poll_last_at %} · последнее соединение {{ poll_last_at[:16] }}{% endif %}</p>
       <p class="hint">Сайт сам забирает сообщения у Telegram — они появляются в

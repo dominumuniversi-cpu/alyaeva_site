@@ -15,6 +15,13 @@
 <body id="top">
 {% include "_header.html" %}
 
+{# ОБОЛОЧКА АДМИНКИ (референс LessonCraft, 26.11.2026): на широком экране меню — вертикальный
+   сайдбар слева (280 px), страница — рабочая область справа. Класс ставит шаблон страницы:
+   {% block admin_shell %}; без класса — обычная страница сайта.
+   ВАЖНО: div открывается ДО меню и закрывается ПОСЛЕ контента — меню и страница должны быть
+   детьми сетки. Первая версия ставила меню до div, и сетка видела только main: рабочий столбец
+   280 px вместо сайтбара (замерено на стенде). #}
+<div class="{% block admin_shell %}{% endblock %}">
 {% if user and user.role == 'admin' %}
 {# Меню админки. Разметка одна на все пункты — но «Заказы» отличался не тегом, а содержимым:
    внутрь ссылки вложен счётчик <span class="badge">. Из-за него только у этого пункта есть
@@ -23,6 +30,9 @@
    Счётчик оставлен, но выровнен средствами CSS (.admin-subnav .badge) — см. static/app.css. #}
 <nav class="admin-subnav" aria-label="Админка">
   <div class="wrap">
+    {# ПЕРВЫЙ пункт продублирован: это подпись сайдбара на широком экране («Заказы» в нём — уже ссылка ниже).
+       Разметка одна на телефоне и на десктопе; что показать — решает CSS (app.css, .admin-shell). #}
+    <span class="subnav-label">Админка</span>
     <a href="{{ admin_url }}" {% if request.url.path == admin_url %}class="active"{% endif %}>Заказы{% if counts and counts.new_orders %}<span class="badge">{{ counts.new_orders }}</span>{% endif %}</a>
     <a href="/admin/clients" {% if request.url.path.startswith('/admin/client') %}class="active"{% endif %}>Клиенты</a>
     <a href="/admin/photos" {% if request.url.path.startswith('/admin/photos') %}class="active"{% endif %}>Все фото</a>
@@ -30,7 +40,7 @@
     <a href="{{ admin_url }}/products" {% if '/products' in request.url.path %}class="active"{% endif %}>Товары</a>
     <a href="{{ admin_url }}/posts" {% if '/admin/posts' in request.url.path %}class="active"{% endif %}>Посты</a>
     <a href="{{ admin_url }}/pay" {% if '/admin/pay' in request.url.path %}class="active"{% endif %}>Оплата</a>
-    <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Приём сообщений</a>
+    <a href="{{ admin_url }}/hooks" {% if '/hooks' in request.url.path %}class="active"{% endif %}>Интеграция</a>
     <a href="{{ admin_url }}/stats" {% if '/stats' in request.url.path %}class="active"{% endif %}>Статистика</a>
     <a href="{{ admin_url }}/settings" {% if '/settings' in request.url.path and '/admin' in request.url.path %}class="active"{% endif %}>Настройки сайта</a>
   </div>
@@ -40,6 +50,7 @@
 <main class="wrap {% block main_class %}{% endblock %}">
 {% block content %}{% endblock %}
 </main>
+</div>
 
 {# Кнопка «Наверх»: на телефоне страницы длинные, кружок — под большой палец. Стили .to-top в app.css. #}
 <a class="to-top" href="#top" id="toTop" aria-label="Наверх" title="Наверх">

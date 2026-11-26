@@ -178,6 +178,12 @@ def _hook_state(request) -> dict:
     return {
         "settings": {k: v for k, v in db.all_settings("telegram.").items()},
         "tg_ready": bool(tg_raw), "vk_ready": bool(vk_raw),
+        # «vk_events_ready»: ключ сообщества с обычными правами НЕ умеет ни Callback API,
+        # ни опрос (VK: ошибка 15 «no access to call this method with current scopes»).
+        # Считаем события настроенными, только если задана строка подтверждения —
+        # её можно получить лишь при подключённом Callback API. Иначе честно говорим
+        # «события не приходят» и объясняем, что делать (замер 26.11.2026).
+        "vk_events_ready": bool(str(db.get_setting("vk.confirm_code", "") or "").strip()),
         "tg_token_mask": _mask(tg_raw), "vk_token_mask": _mask(vk_raw),
         "hook_secret": hook_secret, "site_url": site,
         "vk_confirm_set": bool(str(db.get_setting("vk.confirm_code", "") or "").strip()),
