@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
 from datetime import datetime, timezone
@@ -73,6 +74,13 @@ def _loop() -> None:
     while True:
         mode = str(db.get_setting("telegram.mode", "") or "")
         has_token = bool(db.get_setting("telegram.token", "") or "")
+        # ВЫКЛЮЧАТЕЛЬ ОПРОСА (26.11.2026). Бот в Telegram умеет отдавать обновления
+        # ТОЛЬКО ОДНОМУ получателю: второй опросчик получает 409 Conflict и
+        # забирает часть сообщений. Стенд смотрит ту же базу и тот же токен, что прод,
+        # поэтому по умолчанию опрос на стенде ВЫКЛЮЧЕН. Прод его не задаёт —
+        # и работает как раньше. Ставить 0 только тому, кто не мешает проду.
+        if str(os.environ.get("TG_POLLING", "1")).strip() == "0":
+            has_token = False
         if mode != "polling" or not has_token:
             time.sleep(PAUSE_ON_ERROR_SECONDS)
             continue
