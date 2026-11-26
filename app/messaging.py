@@ -35,7 +35,11 @@ def tg_api(method: str, params: dict | None = None, http_timeout: float = 20) ->
     proxy = str(db.get_setting("telegram.proxy", "") or "").strip() or None
     try:
         with httpx.Client(timeout=http_timeout, proxy=proxy) as client:
-            r = client.get(f"https://api.telegram.org/bot{token}/{method}", params=params or {})
+            # POST JSON, а НЕ GET с параметрами (исправлено 26.11.2026, #295):
+            # Telegram Bot API принимает аргументы метода только в теле JSON —
+            # на GET он отвечает 404 «Not Found» / игнорирует параметры, и такие
+            # методы, как answerCallbackQuery, молча не работали.
+            r = client.post(f"https://api.telegram.org/bot{token}/{method}", json=params or {})
             return r.json()
     except Exception as e:
         log.warning("telegram api %s: %s", method, e)
