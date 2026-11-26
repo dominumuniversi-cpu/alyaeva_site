@@ -52,10 +52,12 @@
       <td data-label="Статус"><span class="badge-status s-{{ p.status }}">{{ p.status_name }}</span></td>
       <td data-label="">
         {% if p.status != 'sent' %}
-        <button class="btn btn-ghost btn-sm" type="button" data-save="{{ p.id }}">Сохранить правку</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-del="{{ p.id }}">Удалить</button>
-        <button class="btn btn-sm" type="button" data-pub="{{ p.id }}"
-          {% if not ready %}disabled title="Нет токенов — настроить в «Приём сообщений»"{% endif %}>Опубликовать</button>
+        <div class="post-actions">
+          <button class="btn btn-ghost btn-sm" type="button" data-save="{{ p.id }}">Сохранить правку</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-del="{{ p.id }}">Удалить</button>
+          <button class="btn btn-sm" type="button" data-pub="{{ p.id }}"
+            {% if not ready %}disabled title="Нет токенов — настроить в «Приём сообщений»"{% endif %}>Опубликовать</button>
+        </div>
         {% endif %}
         <span class="save-msg muted small"></span>
       </td>

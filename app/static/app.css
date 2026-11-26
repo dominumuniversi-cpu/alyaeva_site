@@ -107,6 +107,15 @@ textarea{min-height:90px;resize:vertical}
   border:1.5px solid var(--c-accent);
 }
 .btn-ghost:hover{background:var(--c-lilac);color:var(--c-strong)}
+/* Компактные кнопки для таблиц (посты): три полноразмерные .btn не помещались
+   в ячейку, растягивали таблицу и перетягивали внимание на себя (#287).
+   Тень тише, паддинги вдвое меньше; палец на телефоне не страдает —
+   на 600px кнопки и так встают столбиком на всю ширину. */
+.btn-sm{padding:8px 16px;font-size:14px;min-height:38px;white-space:nowrap;box-shadow:0 4px 10px rgba(75,70,144,.12)}
+.btn-ghost.btn-sm{padding:7px 15px;box-shadow:none}
+/* Ряд действий поста: кнопки вровень, перенос аккуратный, плашка ответа — рядом. */
+.post-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
+.post-actions .btn,.post-actions .btn-ghost{width:auto;text-align:center}
 
 /* Подписи, подсказки */
 .muted{color:var(--c-body);opacity:.75}
