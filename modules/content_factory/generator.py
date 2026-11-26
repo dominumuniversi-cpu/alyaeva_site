@@ -71,3 +71,18 @@ def generate(topic: str, kind: str = "", extra: str = "", created_by=None,
 def history(limit: int = 10) -> list[dict]:
     """Последние генерации — чтобы видели, что просили и что вышло."""
     return dbsession.run("SELECT * FROM cf_generations ORDER BY id DESC LIMIT %s", (limit,))
+
+
+def advice() -> dict:
+    """Что показать человеку, пока нейросеть не подключена.
+
+    Три вещи: зачем это, какой сервис взять первым и что будет после подключения.
+    Четыре строки одинаковых «подключите» человек пролистывает не читая.
+    """
+    return {
+        "first": "DeepSeek",
+        "why": "пишет текст поста по вашему описанию",
+        "research": "Perplexity",
+        "research_why": "то же, но со свежими фактами и ссылками на источники",
+        "after": "кнопка «Сочинить» станет активной, а рядом появится название сервиса",
+    }

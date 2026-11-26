@@ -99,6 +99,7 @@ def _page(request: Request, user, saved: str = "", bad: bool = False):
         user=user, posts=rows, targets=_targets_table(), platforms=platforms.PLATFORMS,
         llm_on=bool(conn), llm_label=(conn["label"] if conn else ""),
         llm_rows=llm.rows(), history=generator.history(5), ready=queue.ready_list(),
+        llm_advice=generator.advice(),
         default_when=datetime.now().strftime("%Y-%m-%dT09:00"),
         saved=saved, bad=bad, statuses=access.STATUSES,
     )
@@ -160,6 +161,8 @@ def cf_create(request: Request, body: str = Form(""), title: str = Form(""),
         "channels_text": ", ".join(platforms.get(k).name for k in chans),
         "status": "queued" if when else "draft",
         "status_name": access.STATUSES["queued" if when else "draft"],
+        # Время строкой: страница пишет «уйдёт 27.11 в 09:00», не разбирая формат базы.
+        "publish_at": when.strftime("%Y-%m-%dT%H:%M") if when else "",
     })
 
 

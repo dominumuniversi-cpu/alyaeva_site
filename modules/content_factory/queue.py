@@ -183,6 +183,8 @@ def schedule(post_id: int, when) -> dict:
     """Поставить пост в очередь. Время пустое — снять с очереди (останется черновиком)."""
     if when:
         access.update(post_id, publish_at=when, status="queued")
-        return {"ok": True, "status": "queued", "status_name": access.STATUSES["queued"]}
+        # Время возвращаем строкой: страница пишет человеку «уйдёт 27.11 в 09:00», не разбирая объект.
+        return {"ok": True, "status": "queued", "status_name": access.STATUSES["queued"],
+                "when": when.strftime("%Y-%m-%dT%H:%M")}
     access.update(post_id, publish_at=None, status="draft")
-    return {"ok": True, "status": "draft", "status_name": access.STATUSES["draft"]}
+    return {"ok": True, "status": "draft", "status_name": access.STATUSES["draft"], "when": ""}

@@ -71,7 +71,12 @@ def check_menu(env: Environment) -> list[str]:
 
 def main() -> int:
     """Разбирает все шаблоны и проверяет меню админки."""
+    # Фильтры rub/money/plural приложение регистрирует на старте — здесь заглушки,
+    # иначе шаблоны денег «не компилируются» и проверка падает на пустом месте.
     env = Environment()
+    env.filters.setdefault("rub", lambda v, *a: v)
+    env.filters.setdefault("money", lambda v, *a: v)
+    env.filters.setdefault("plural", lambda v, *a: "")
     bad = []
     for p in sorted(pathlib.Path("app/templates").glob("*.html")):
         try:

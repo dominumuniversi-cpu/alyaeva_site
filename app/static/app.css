@@ -24,4 +24,1071 @@
   --c-cta:#FFE7A0;   /* главная кнопка как на сайте: тёплая, тёмный текст */
   --radius:14px;
   --radius-sm:10px;
-  --shadow:0 10px 30px rgba(42,38,80,.08)�)޶��q�^v�6�M���
+  --shadow:0 10px 30px rgba(42,38,80,.08);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color:var(--c-body);
+  background:linear-gradient(180deg,#fff 0%,#FBF9FF 100%);
+  line-height:1.55;
+  min-height:100vh;
+}
+
+h1,h2,h3{
+  font-family:'Philosopher','Nunito',serif;
+  color:var(--c-strong);
+  margin:0 0 8px;
+  line-height:1.2;
+}
+h1{font-size:32px}
+a{color:var(--c-accent)}
+
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+
+/* Карточки */
+.card{
+  background:#fff;
+  border:1px solid var(--c-lilac);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow);
+}
+
+/* Вход/регистрация — по центру, уютно */
+.auth-box{max-width:420px;margin:48px auto}
+
+/* Формы */
+label{display:block;font-weight:700;color:var(--c-strong);margin:16px 0 6px;font-size:15px}
+input[type=text],input[type=email],input[type=tel],input[type=password],textarea,select{
+  width:100%;
+  padding:12px 14px;
+  border:1.5px solid var(--c-lilac);
+  border-radius:var(--radius-sm);
+  font:inherit;
+  color:var(--c-strong);
+  background:#fff;
+  transition:border-color .15s, box-shadow .15s;
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;
+  border-color:var(--c-accent);
+  box-shadow:0 0 0 3px rgba(75,70,144,.12);
+}
+textarea{min-height:90px;resize:vertical}
+
+/* Кнопки */
+.btn{
+  display:inline-block;
+  padding:12px 24px;
+  border:none;
+  border-radius:999px;
+  background:var(--c-cta);
+  color:var(--c-strong);
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+  text-decoration:none;
+  transition:background .15s, transform .1s, box-shadow .15s;
+  box-shadow:0 8px 18px rgba(75,70,144,.18);
+}
+.btn:hover{background:#FFDF8C}
+/* Нажатие: кнопка заметно «утапливается» — палец получает ответ до отправки формы. */
+.btn:active,.btn-ghost:active{transform:translateY(1px)}
+/* Недоступная кнопка не должна выглядеть доступной: иначе человек жмёт и ждёт. */
+.btn[disabled],.btn-ghost[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none}
+/* Второстепенное действие («Отмена», «Назад») — тихое, чтобы рядом с главным не спорило. */
+.btn-ghost{
+  background:transparent;
+  color:var(--c-accent);
+  border:1.5px solid var(--c-accent);
+}
+.btn-ghost:hover{background:var(--c-lilac);color:var(--c-strong)}
+/* Компактные кнопки для таблиц (посты): три полноразмерные .btn не помещались
+   в ячейку, растягивали таблицу и перетягивали внимание на себя (#287).
+   Тень тише, паддинги вдвое меньше; палец на телефоне не страдает —
+   на 600px кнопки и так встают столбиком на всю ширину. */
+/* КОМПАКТНЫЕ КНОПКИ — В СТИЛЕ ШАБЛОНА, А НЕ «КРАСИВЫЕ ШАРИКИ» (владелец, 26.11.2026:
+   «кнопки до сих пор огромные и выделяются из стиля шаблона»). Замер до правки: капсула
+   radius 999px, тень 0 4px 10px, высота 38 px, четыре кнопки 441 px в ряд. Теперь — как у
+   кнопок в шапке шаблона: скругление 8px, без тени, высота 32, шрифт 14. Размер пальца
+   сохраняется на телефоне (ниже 600px — 46px и на всю ширину). */
+.btn-sm{padding:6px 12px;font-size:14px;min-height:32px;line-height:1.15;border-radius:8px;white-space:nowrap;box-shadow:none}
+.btn-ghost.btn-sm{padding:5px 11px;border-width:1px;box-shadow:none}
+/* Главная кнопка формы тоже не должна быть «шариком» рядом с мелкими: то же скругление. */
+.card .btn,.card .btn-ghost{border-radius:8px}
+/* Ряд действий поста: кнопки вровень, перенос аккуратный, плашка ответа — рядом. */
+.post-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
+.post-actions .btn,.post-actions .btn-ghost{width:auto;text-align:center}
+/* ================== МЕНЮ АДМИНКИ (правило #221) ==================
+   Перенесено 26.11.2026 из середины файла ВВЕРХ без изменения содержимого. Причина — замер:
+   каркас сайдбара (.admin-shell) стоял ВЫШЕ объявлений меню, и его колонка молча не действовала
+   (меню получалось блоком 1280 px, рабочая область — 280). CSS решает по ПОРЯДКУ, не по глубине.
+   Эта же ошибка ловилась 24.11 («Заказы не в линии») и в #287 — поэтому оба комментария остаются. */
+/* Вторая строка навигации — разделы админки. В стилистике сайта. */
+.admin-subnav {
+  background: var(--c-lilac);
+  border-bottom: 1px solid rgba(75, 70, 144, .12);
+}
+/* РАСКЛАДКА МЕНЮ — правило (24.11.2026, задача #221):
+   1. широкий экран — все пункты В ОДНУ строку, одной высоты;
+   2. не влезает — переносим целиком: строки выровнены по центру, высота одинаковая;
+   3. телефон — один столбец: пункты друг под другом, каждый во всю ширину;
+   4. значок новых заказов не выше строки, иначе «Заказы» выше остальных.
+
+   ЗАМЕР 24.11.2026 (Chrome, реальные окна, 10 пунктов):
+       1912 / 1432 / 1272 / 1016 px — в строку влезали ДЕВЯТЬ, «Настройки сайта» падал вторым рядом;
+       812 px — планшетное правило не срабатывало вовсе, выходило 4 + 4 + 2;
+       500 px — столбец, 10 строк по 44 px (правильно).
+   Причина на широком: пункты тянулись по содержимому («Приём сообщений» и «Настройки сайта»
+   по 142 px), сумма ~1010 px при доступных ~960. Лечение — разрешить пунктам поджиматься
+   (flex-shrink) и запретить им переносить текст: тогда десять пунктов укладываются в строку
+   на 1280 и шире, а на узком экран честно уходит по правилу 2–3.
+
+   ПОЧЕМУ «ЗАКАЗЫ» ВЫПАДАЛ (нашёл 24.11.2026, повторное замечание владельца).
+   Тег у всех пунктов один — <a>. Отличалось СОДЕРЖИМОЕ: только у «Заказов» внутри есть
+   счётчик <span class="badge">. В inline-flex он становится вторым flex-элементом,
+   и вертикаль считается иначе, чем у соседей с одиноким текстом: значок садился
+   по базовой линии и поднимал строку. Лечение — не «поправить один пункт», а задать
+   выравнивание явно для ВСЕХ: в строке стираем baseline, а счётчику даём свою высоту. */
+.admin-subnav .wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 20px;
+}
+/* Строгий центр по поперечной оси: правило одинаково для пункта с текстом и со значком. */
+.admin-subnav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 6px;
+  min-height: 36px;
+  height: 36px;              /* одна высота у всех: текст не растягивает, значок не поднимает */
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-accent);
+  text-decoration: none;
+  vertical-align: middle;
+  white-space: nowrap;       /* «Приём сообщений» не рвётся на две строки внутри кнопки */
+  flex: 0 1 auto;            /* может поджаться, чтобы десять пунктов встали в одну строку */
+  min-width: 0;
+}
+/* ЗАМЕР (Chrome 24.11.2026), .wrap = 960 px минус padding 40 = 920 доступно:
+   десять пунктов по 14px давали 991 — не хватало 71 px, отсюда «Настройки сайта» вторым рядом.
+   Меню уже не помещается в контейнер сайта при 10 пунктах и кегле 14.
+   Решение: на широком экране пункты чуть компактнее (12.5px, отступ 10, зазор 4):
+   это ~830 px — строка одна с запасом. Ниже 1000 px — сетка 5×2, на телефоне — столбец. */
+@media (min-width: 1001px) {
+  .admin-subnav a { padding: 0 10px; font-size: 12.5px; gap: 4px; }
+}
+/* Счётчик внутри пункта: не выше строки, не сдвигает текст, стоит строго по центру. */
+.admin-subnav .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex: 0 0 auto;
+  min-width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+}
+/* ГРУППЫ ПУНКТОВ (референс LessonCraft, 26.11.2026).
+   На телефоне и в строке меню обёртка группы НЕ создаёт своей коробки: display: contents —
+   пункты ведут себя так, будто лежат прямо в .wrap. Поэтому проверенная раскладка
+   «одна строка / 4+4 / столбец» не меняется. Подписи групп в этих режимах скрыты. */
+.subnav-group { display: contents; }
+.subnav-group > .group-label { display: none; }
+
+/* Широкий экран: меню — вертикальный сайдбар (280 px). Группы встают столбцом,
+   каждая со своей подписью капителью. Пункт — во всю ширину, слева, высота 36. */
+@media (min-width: 1001px) {
+  .admin-subnav .wrap { flex-direction: column; align-items: stretch; gap: 2px; padding: 14px 12px; }
+  .subnav-group { display: flex; flex-direction: column; gap: 2px; }
+  .subnav-group + .subnav-group { margin-top: 12px; }
+  .subnav-group > .group-label {
+    display: block;
+    padding: 6px 14px 4px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--c-body);
+    opacity: .65;
+  }
+  .admin-subnav a { justify-content: flex-start; font-size: 13.5px; padding: 0 14px; }
+}
+.admin-subnav a:hover { background: #fff; }
+.admin-subnav a.active { background: var(--c-accent); color: #fff; }
+
+/* ---------- ЛЕНТА ПОСТОВ (26.11.2026, #287 второй заход) ---------- */
+.post-list{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.post-card{background:#fff;border:1px solid rgba(75,70,144,.12);border-radius:16px;padding:14px 18px;
+  box-shadow:0 6px 18px rgba(75,70,144,.06)}
+.post-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.post-date{font-size:12.5px;color:var(--c-body);opacity:.7}
+.post-chans{display:flex;gap:6px;flex-wrap:wrap}
+.chan{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;background:var(--c-lilac);
+  color:var(--c-accent);font-size:12px;font-weight:700;line-height:1.5}
+.post-card .badge-status{margin-left:auto;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;line-height:1.6;background:var(--c-lilac);color:var(--c-accent)}
+.post-card .badge-status.s-sent{background:var(--c-mint);color:#1f7a5c}
+.post-card .badge-status.s-failed{background:var(--c-peach);color:#b4472a}
+.post-card .badge-status.s-partial{background:var(--c-cream);color:#8a6a12}
+.post-card .post-body{white-space:pre-wrap;font-size:15px;line-height:1.5;color:var(--c-body);border-radius:10px;padding:2px 0}
+.post-card .post-body[contenteditable="true"]{background:#fffdf3;outline:2px solid var(--c-accent);outline-offset:2px;padding:8px 10px}
+.post-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.post-foot .save-msg{font-size:13px}
+
+/* ---------- САЙДБАР АДМИНКИ (референс LessonCraft, 26.11.2026) ----------
+   На широком экране меню админки — вертикальная колонка слева, страница — справа.
+   Русская раскладка по правилу «меню в линию» НЕ нарушается: колонка читается сверху вниз.
+   На 1000 и уже — прежняя сетка, на 600 — столбец (правила ниже не перебиваются: порядок важен). */
+.admin-shell{display:grid;grid-template-columns:280px minmax(0,1fr);gap:28px;align-items:start;padding:24px 0 8px}
+.admin-shell > .wrap{max-width:none;margin:0;padding:0 20px 0 0}
+.admin-shell > .admin-subnav{position:sticky;top:14px;display:flex;flex-direction:column;gap:2px;
+  padding:14px 12px 16px;border-radius:20px;border-bottom:0;box-shadow:0 10px 30px rgba(75,70,144,.10)}
+.admin-shell .admin-subnav .wrap{display:flex;flex-direction:column;align-items:stretch;gap:2px;padding:0}
+.admin-shell .admin-subnav .subnav-label{display:block;padding:4px 12px 10px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--c-accent);opacity:.75}
+.admin-shell .admin-subnav a{width:100%;justify-content:flex-start;text-align:left;height:auto;min-height:40px;padding:8px 12px;border-radius:12px;font-size:14px;font-weight:600;white-space:normal}
+.admin-shell .admin-subnav a.active{background:var(--c-accent);color:#fff}
+@media (min-width:1001px){
+  .admin-shell .admin-subnav a{padding:8px 12px;font-size:14px;gap:8px}
+  .admin-shell .admin-subnav .badge{margin-left:auto}
+}
+/* Узкий экран: каркас превращается в прежний одноколоночный (сайдбар — полосой сверху). */
+@media (max-width:1000px){
+  .admin-shell{display:block;padding:0}
+  .admin-shell > .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+  .admin-shell > .admin-subnav{position:static;padding:0;border-radius:0;box-shadow:none}
+  .admin-shell .admin-subnav .wrap{flex-direction:row;flex-wrap:wrap;gap:6px;padding:8px 16px}
+  .admin-shell .admin-subnav .subnav-label{display:none}
+  .admin-shell .admin-subnav a{width:auto;justify-content:center;min-height:40px;padding:8px 12px}
+}
+@media (max-width:600px){
+  .admin-shell .admin-subnav .wrap{flex-direction:column;align-items:stretch;gap:4px}
+  .admin-shell .admin-subnav a{width:100%;justify-content:space-between;min-height:44px}
+}
+
+/* Подписи, подсказки */
+.muted{color:var(--c-body);opacity:.75}
+.hint{font-size:14px;color:var(--c-body);opacity:.8;margin:6px 0 0}
+/* Пояснение прямо в подписи поля («Чат для уведомлений — куда бот пишет сам»). */
+.hint-inline{font-weight:400;font-size:14px;color:var(--c-body);opacity:.75}
+
+/* Статус заказа */
+.pill{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:999px;
+  background:var(--c-mint);
+  color:var(--c-strong);
+  font-size:13px;
+  font-weight:700;
+}
+
+/* Ошибки */
+.errors{
+  background:var(--c-peach);
+  border:1px solid #F0C9BC;
+  color:#8A3B23;
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  margin:16px 0 0;
+  font-size:14px;
+}
+.errors:empty{display:none}
+
+/* Предупреждение/успех */
+
+/* Таблицы (админка) */
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radius);overflow:hidden}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--c-lilac)}
+th{background:var(--c-lilac);color:var(--c-strong);font-weight:700;font-size:14px}
+tr:last-child td{border-bottom:none}
+
+@media (max-width:600px){
+  h1{font-size:26px}
+  .card{padding:18px}
+  .auth-box{margin:24px auto}
+}
+
+/* Объявления меню админки перенесены выше — блок «МЕНЮ АДМИНКИ» перед каркасом. */
+
+
+/* ---------- Общие раскладки и утилиты ---------- */
+.grid { display: grid; gap: 20px; }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.card-lilac { background: var(--c-lilac); }
+.card-cream { background: var(--c-cream); }
+
+.ok {
+  background: var(--c-mint);
+  color: var(--c-strong);
+  padding: 12px 16px;
+  border-radius: 10px;
+  border-left: 4px solid var(--c-accent);
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+/* ---------- Инбокс ---------- */
+.inbox { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+@media (max-width: 820px) { .inbox { grid-template-columns: 1fr; } }
+.threads {
+  background: #fff;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.thread { padding: 14px 18px; border-bottom: 1px solid var(--c-mint); cursor: pointer; }
+.thread:hover { background: var(--c-mint); }
+.thread.active { background: var(--c-lilac); }
+.thread .ch { font-weight: 800; color: var(--c-strong); }
+.thread .t { color: var(--c-accent); font-weight: 700; font-size: 14px; }
+.thread .b { color: var(--c-body); font-size: 13px; }
+.chat { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; }
+.chat .empty { padding: 40px 20px; text-align: center; color: var(--c-body); }
+.msgs { padding: 18px; display: flex; flex-direction: column; gap: 10px; max-height: 55vh; overflow-y: auto; }
+.msgs .m {
+  max-width: 78%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--c-mint);
+  color: var(--c-strong);
+  align-self: flex-start;
+  line-height: 1.45;
+}
+.msgs .m.out { align-self: flex-end; background: var(--c-accent); color: #fff; }
+.msgs .tm { font-size: 11px; opacity: .75; margin-top: 4px; }
+.reply { display: flex; gap: 10px; padding: 14px; border-top: 1px solid var(--c-mint); }
+.reply input { flex: 1; }
+/* Телефон: письмо и ответ не влезают рядом — вкладки «Диалоги / Переписка».
+   Форма ответа рассчитана на строку ввода, а поле у нас многострочное. */
+.reply textarea { flex: 1; min-height: 64px; resize: vertical; }
+@media (max-width: 820px) {
+  .threads { max-height: 52vh; }
+  .msgs { max-height: 50vh; }
+  .reply { flex-direction: column; }
+  /* Пока диалог не выбран, лента на телефоне только мешает: сначала список. */
+  .inbox:not(.reading) .chat { display: none; }
+  .inbox.reading .threads { display: none; }
+  .back-to-threads { display: inline-flex; align-items: center; gap: 6px; }
+}
+.back-to-threads { display: none; margin: 0 0 10px; font-weight: 700; }
+
+/* ---------- Страница заказа ---------- */
+.hero { padding: 32px 0 12px; }
+.steps { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 22px 0; }
+.step {
+  background: var(--c-mint);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  color: var(--c-strong);
+  font-weight: 700;
+}
+.row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+/* Поля ввода: заметная рамка, крупное касание. В кабинете и админке их много,
+   и человек не должен искать, куда нажимать. */
+input:not([type="checkbox"]):not([type="radio"]),select,textarea{
+  font:inherit;color:var(--c-strong);background:#fff;
+  border:1.5px solid rgba(75,70,144,.22);border-radius:12px;
+  padding:11px 14px;width:100%;box-sizing:border-box;
+  transition:border-color .15s,box-shadow .15s;
+}
+input:not([type="checkbox"]):not([type="radio"]):focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--c-accent);box-shadow:0 0 0 3px rgba(75,70,144,.14);
+}
+input::placeholder,textarea::placeholder{color:rgba(74,70,120,.55)}
+@media (max-width:600px){
+  /* 16 px — иначе iOS при касании поля зумит страницу и человек теряется. */
+  input:not([type="checkbox"]):not([type="radio"]),select,textarea{font-size:16px;padding:12px 14px}
+}
+.consent { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; }
+.consent input { width: 22px; height: 22px; flex: 0 0 auto; margin-top: 2px; }
+.err, .errors { color: #a3283a; }
+
+/* ---- Фотографии в кабинете и у админа ---- */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-top:6px}
+.photo{margin:0;background:#fff;border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--c-lilac);box-shadow:0 2px 10px rgba(42,38,80,.06);transition:box-shadow .18s,transform .18s}
+.photo:hover{box-shadow:0 8px 24px rgba(42,38,80,.13);transform:translateY(-2px)}
+.photo img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--c-lilac)}
+.photo figcaption{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:13px}
+.photo-name{color:var(--c-body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.photo-dl{color:var(--c-accent);font-weight:700;text-decoration:none;white-space:nowrap}
+.photo-dl:hover{text-decoration:underline}
+
+/* ==========================================================================
+   ОФОРМЛЕНИЕ КАК НА САЙТЕ (23.11.2026)
+   Сайт: мягкие цветные пятна на фоне, крупные скругления, «пилюли»-кнопки.
+   Кабинет и админка должны читаться продолжением сайта, а не другим сервисом.
+   ========================================================================== */
+
+body{position:relative}
+
+/* Фоновые пятна — те же цвета, что на главной, но не мешают читать текст. */
+.deco{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.blob{position:absolute;border-radius:50%;display:block;filter:blur(2px)}
+.b1{width:340px;height:340px;background:#FFD3DA;opacity:.42;top:-130px;right:-90px}
+.b2{width:260px;height:260px;background:#FFE7A0;opacity:.40;bottom:-90px;left:-80px}
+.b3{width:300px;height:300px;background:#F1ECFF;opacity:.75;top:38%;right:-140px}
+@media (max-width:600px){ .b1,.b2,.b3{opacity:.28} }
+
+/* ШАПКА: прибита к верху и не уезжает при прокрутке. */
+/* Кнопка «наверх» — кружок в цветах сайта. Прибита к окну, а не к шапке:
+   на телефоне шапка уже занята бургером, а кружок нужен там, где лежит палец. */
+.to-top{
+  position:fixed;right:20px;bottom:24px;z-index:45;
+  width:52px;height:52px;border-radius:50%;
+  display:grid;place-items:center;text-decoration:none;
+  color:#fff;background:var(--c-accent);
+  box-shadow:0 10px 24px rgba(42,38,80,.28);
+  opacity:0;visibility:hidden;transform:translateY(12px);
+  transition:opacity .18s ease,transform .18s ease,visibility .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.to-top.on{opacity:1;visibility:visible;transform:none}
+.to-top:hover,.to-top:focus-visible{background:var(--c-strong)}
+.to-top:focus-visible{outline:3px solid var(--c-cream);outline-offset:3px}
+@media (max-width:600px){ .to-top{right:14px;bottom:16px;width:48px;height:48px} }
+@media (prefers-reduced-motion: reduce){ .to-top{transition:none} }
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:saturate(140%) blur(10px);
+  border-bottom:1px solid var(--c-lilac);
+  padding:10px 0;
+  margin-bottom:28px;
+  transition:box-shadow .18s;
+}
+.topbar.scrolled{box-shadow:0 6px 22px rgba(42,38,80,.10)}
+.topbar-in{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{font-family:'Philosopher',serif;font-size:22px;font-weight:700;color:var(--c-strong);text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;min-height:44px}
+.brand:hover{color:var(--c-accent)}
+.nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.nav a{
+  color:var(--c-body);text-decoration:none;font-weight:700;font-size:15px;
+  padding:9px 12px;border-radius:999px;transition:background .15s,color .15s;white-space:nowrap;
+}
+/* 901–1400: восемь пунктов (администратор) должны стоять в ОДНУ строку (#254).
+   Горизонтальные отступы чуть плотнее, высота — та же 44 px, палец не страдает. */
+@media (min-width:901px){
+  .nav{gap:4px;flex-wrap:nowrap}
+  .nav a{padding:9px 9px;font-size:14.5px}
+}
+.nav a:hover,.nav a.on{background:var(--c-lilac);color:var(--c-strong)}
+.nav a.nav-out{border:1.5px solid var(--c-lilac)}
+/* Кнопка «Вход» в один ряд с пунктами: та же высота, рамка вместо заливки. */
+.nav a[href="/login"]{border:1.5px solid var(--c-accent);color:var(--c-accent)}
+.nav a.nav-out:hover{border-color:var(--c-accent);background:transparent;color:var(--c-accent)}
+.nav-icons{display:inline-flex;gap:6px;align-items:center;padding:0 6px;border-left:1px solid var(--c-lilac);margin-left:4px}
+
+/* Значки мессенджеров */
+.soc{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:50%;flex:0 0 auto;
+  background:var(--c-lilac);transition:transform .12s, background .15s;
+}
+.soc svg{width:20px;height:20px;fill:var(--c-strong)}
+.soc:hover{transform:translateY(-1px)}
+.soc-tg:hover{background:#D6ECFF}
+.soc-vk:hover{background:#DCE7FF}
+.soc-wa:hover{background:#D6F5DF}
+
+/* Кнопка меню на телефоне — в обычном виде её нет */
+.burger{display:none;background:none;border:0;padding:10px;cursor:pointer;margin-left:auto}
+.burger span{display:block;width:24px;height:2px;background:var(--c-strong);border-radius:2px;margin:5px 0;transition:transform .18s,opacity .18s}
+.burger[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger[aria-expanded="true"] span:nth-child(2){opacity:0}
+.burger[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* ПОДВАЛ */
+.foot{margin-top:48px;background:#fff;border-top:1px solid var(--c-lilac);padding:32px 0 24px}
+.foot-in{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:28px}
+.foot-brand{font-family:'Philosopher',serif;font-size:22px;font-weight:700;color:var(--c-strong);margin-bottom:6px}
+.foot-h{font-weight:800;color:var(--c-strong);margin-bottom:12px}
+.foot-col p{margin:0 0 8px}
+.foot-col a{color:var(--c-body);text-decoration:none}
+.foot-col a:hover{color:var(--c-accent)}
+.foot-soc{display:flex;gap:10px;margin-bottom:12px}
+@media (max-width:820px){ .foot-in{grid-template-columns:1fr 1fr} }
+@media (max-width:600px){ .foot-in{grid-template-columns:1fr;gap:20px} }
+
+/* МОБИЛЬНАЯ АДАПТАЦИЯ: всё, что могло вылезти за экран. */
+@media (max-width:820px){
+  .burger{display:block;min-width:44px;min-height:44px}
+  /* Меню на телефоне — панель поверх страницы, а не раскрытый список в шапке:
+     открытый список толкает контент вниз и остаётся на экране при прокрутке. */
+  .nav{
+    display:none;position:fixed;left:0;right:0;top:0;z-index:60;
+    flex-direction:column;align-items:stretch;gap:2px;
+    max-height:100vh;overflow-y:auto;
+    background:#fff;border-bottom:1px solid var(--c-lilac);
+    padding:64px 16px 20px;box-shadow:0 18px 40px rgba(42,38,80,.18);
+  }
+  .nav.open{display:flex}
+  /* Пока панель открыта, страница под ней не едет. */
+  body.nav-open{overflow:hidden}
+  /* Первый экран панели закрывает бренд, чтобы шапка не «просвечивала» под пунктами. */
+  .nav::before{
+    content:"Меню";position:absolute;top:20px;left:16px;
+    font-family:'Philosopher',serif;font-size:20px;font-weight:700;color:var(--c-strong);
+  }
+  .burger{position:relative;z-index:61}
+  body.nav-open .burger span{background:var(--c-strong)}
+  .nav a{padding:12px 14px;font-size:16px}
+  .nav-icons{border-left:0;padding:8px 0;justify-content:flex-start}
+  .nav-out{text-align:center}
+  .wrap{padding:0 16px}
+  h1{font-size:26px}
+}
+@media (max-width:600px){
+  .card{padding:18px}
+  .btn,.btn-ghost{width:100%;text-align:center;min-height:46px}
+  /* Мелкие кнопки админки на телефоне — снова крупные: палец не должен промахиваться. */
+  .btn-sm,.btn-ghost.btn-sm{padding:10px 16px;min-height:44px;border-radius:10px}
+  /* Таблицы прокручиваются внутри себя, а не тянут за собой всю страницу. */
+  table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  .photo-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+:focus-visible{outline:3px solid rgba(75,70,144,.35);outline-offset:2px}
+
+/* Страница цен */
+.ceny-hero{background:var(--c-lilac);border-radius:28px;padding:36px 28px;margin-bottom:24px;text-align:center}
+.ceny-hero h1{font-size:clamp(28px,5vw,44px);margin:0}
+.price-table{width:100%;border-collapse:collapse}
+.price-table th{text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--c-body);opacity:.7;padding:0 12px 12px;border-bottom:1px solid var(--c-lilac)}
+.price-table td{padding:16px 12px;border-bottom:1px solid var(--c-lilac);vertical-align:top}
+.price-table tr:last-child td{border-bottom:0}
+.price-table .num{text-align:right;white-space:nowrap;font-size:18px;color:var(--c-strong)}
+.price-table .old{opacity:.5;font-weight:600;font-size:14px;margin-right:6px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media (max-width:820px){ .grid-3{grid-template-columns:1fr} }
+
+/* Шаги заказа — оформление как у блоков «Как заказать» на главной:
+   номер в цветном кружке, белая карточка с крупным скруглением. */
+.steps-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:0 0 28px}
+.step-card{background:#fff;border-radius:24px;padding:22px;box-shadow:var(--shadow)}
+.step-card .n{
+  width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'Philosopher',serif;font-size:22px;font-weight:700;color:var(--c-strong);
+}
+.step-card:nth-child(1) .n{background:#FFD3DA}
+.step-card:nth-child(2) .n{background:#C8EEE9}
+.step-card:nth-child(3) .n{background:#FFE7A0}
+.step-card:nth-child(4) .n{background:#E6DFFA}
+.step-card h3{font-size:19px;margin:12px 0 6px}
+.step-card p{margin:0;font-size:15px}
+@media (max-width:820px){ .steps-cards{grid-template-columns:1fr 1fr} }
+@media (max-width:560px){ .steps-cards{grid-template-columns:1fr} }
+
+/* ---------- Кабинет: сводка и карточки заказов ---------- */
+.cab-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.stat{font-family:'Philosopher',serif;font-size:34px;font-weight:700;color:var(--c-strong);line-height:1.1;margin-top:4px}
+.order-card{margin-top:18px}
+.order-first{border-color:var(--c-accent);box-shadow:0 12px 34px rgba(75,70,144,.14)}
+.order-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.order-num{font-family:'Philosopher',serif;font-size:20px;font-weight:700;color:var(--c-strong);text-decoration:none}
+.order-num:hover{color:var(--c-accent)}
+.order-next{background:var(--c-cream);border-radius:14px;padding:12px 16px;margin-top:14px;font-size:15px;color:var(--c-strong)}
+.order-photos{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+/* Связь по заказу: рядом с номером, а не «где-то в шапке». Номер заказа уже вставлен в текст сообщения. */
+/* Пустые состояния: не «тут ничего нет», а что делать дальше. */
+.empty-hints{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 4px}
+.empty-hints > div{background:var(--c-mint);border-radius:var(--radius-sm);padding:14px 16px}
+.empty-hints b{display:block;color:var(--c-strong);margin-bottom:4px}
+.empty-hints span{font-size:15px;color:var(--c-body)}
+@media (max-width:820px){ .empty-hints{grid-template-columns:1fr} }
+/* Призыв «нужны фото»: строка в карточке заказа, заметная, но не крикливая. */
+/* Ссылка внутри «что дальше»: шаг говорит словами, ссылка ведёт туда, где это сделать. */
+.next-link{display:inline-block;margin-left:8px;font-weight:800;color:var(--c-accent);text-decoration:none;white-space:nowrap}
+.next-link:hover{text-decoration:underline}
+@media (max-width:600px){ .next-link{display:block;margin:6px 0 0} }
+.order-ask{display:flex;align-items:center;gap:16px;justify-content:space-between;
+  background:var(--c-cream);border-radius:var(--radius-sm);padding:14px 16px;margin-top:12px}
+.order-ask b{display:block;color:var(--c-strong);margin-bottom:2px}
+.order-ask span{font-size:15px;color:var(--c-body)}
+@media (max-width:600px){ .order-ask{flex-direction:column;align-items:stretch;gap:10px} }
+.order-help{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--c-lilac)}
+.order-help-label{font-size:15px;color:var(--c-body);margin-right:2px}
+.help-link{
+  display:inline-flex;align-items:center;justify-content:center;min-height:44px;gap:6px;padding:8px 14px;border-radius:999px;
+  border:1.5px solid var(--c-lilac);color:var(--c-accent);font-weight:700;font-size:15px;text-decoration:none;
+}
+.help-link:hover{background:var(--c-lilac);border-color:var(--c-accent)}
+@media (max-width:600px){ .order-help{gap:6px} .help-link{flex:1 1 auto;justify-content:center;min-height:44px} }
+.order-photos .mini{width:88px;height:88px;border-radius:14px;overflow:hidden;background:var(--c-lilac);display:block}
+.order-photos .mini img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.order-photos .mini:hover img{transform:scale(1.05)}
+.order-actions{margin-top:16px}
+/* Цвет статуса: новому — лавандовый, работе — жёлтый, отправлен — мятный, готово — зелёный */
+.pill-new{background:var(--c-lilac)}
+.pill-in_work{background:#FFE7A0}
+.pill-sent{background:var(--c-mint)}
+.pill-done{background:#CDEFD8}
+.pill-cancelled{background:#F2D9D9}
+@media (max-width:600px){ .order-photos .mini{width:74px;height:74px} }
+
+/* ---------- Шкала прогресса заказа ---------- */
+/* ХОД ЗАКАЗА. ПОДПИСИ НАД ЛИНИЕЙ (замечание владельца, 26.11.2026: «слова перекрываются»).
+   Было: кружок и подпись в одну строку, а соединительная линия ::after шла по центру кружка
+   (top:14px, left:34px), то есть ровно по тексту. Замер до правки на 1440 px: перекрытие у всех
+   семи шагов. Стало: колонка «кружок — подпись», линия идёт на уровне центров кружков
+   и начинается за кружком, поэтому текст линии не касается. */
+.prog{display:flex;gap:4px;margin-top:14px;flex-wrap:wrap}
+.prog-step{display:flex;flex-direction:column;align-items:flex-start;gap:6px;flex:1;min-width:74px;position:relative;color:var(--c-body);opacity:.45}
+.prog-step::after{content:"";position:absolute;left:34px;right:0;top:13px;height:2px;background:var(--c-lilac)}
+.prog-step:last-child::after{display:none}
+.prog-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;background:var(--c-lilac);color:var(--c-strong);flex:none;position:relative;z-index:1}
+.prog-name{font-size:12.5px;font-weight:700;white-space:nowrap}
+.prog-done{opacity:1}
+.prog-done .prog-dot{background:#CDEFD8;color:#1F6B45}
+.prog-done::after{background:#CDEFD8}
+.prog-now{opacity:1}
+.prog-now .prog-dot{background:var(--c-accent);color:#fff;box-shadow:0 0 0 4px rgba(75,70,144,.15)}
+.prog-now .prog-name{color:var(--c-strong)}
+.prog-cancelled{color:#9A3B3B;font-weight:700;opacity:1}
+@media (max-width:600px){
+  .prog{gap:2px}
+  .prog-step{flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+  .prog-step::after{left:34px;right:0;top:13px}
+  .prog-name{font-size:10.5px;white-space:normal;line-height:1.15}
+}
+
+/* ---------- Напоминание про фото ---------- */
+.need-photos{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  background:#FFF1C7;border:1px solid #F0DFA8;border-radius:20px;padding:16px 22px;margin-bottom:22px}
+.need-photos strong{font-size:17px;color:var(--c-strong)}
+.need-photos .btn{flex:none}
+.no-photos-note{margin:12px 0 0;padding:10px 14px;background:#FFF7E0;border-radius:12px;color:#7A5A12;font-size:14.5px}
+.no-photos-note a{font-weight:800;color:var(--c-accent)}
+@media (max-width:600px){
+  .need-photos{flex-direction:column;align-items:stretch}
+  .need-photos .btn{width:100%}
+}
+
+/* ---------- Загрузка фото ---------- */
+.dropzone{margin-top:26px;border:2px dashed #C9C2EE;border-radius:22px;padding:26px 20px;text-align:center;
+  color:var(--c-body);background:rgba(230,223,250,.35);transition:background .18s,border-color .18s}
+.dropzone.over{background:rgba(230,223,250,.85);border-color:var(--c-accent)}
+.dropzone.busy{opacity:.75}
+.drop-title{font-weight:800;color:var(--c-strong);font-size:17px;margin-top:10px}
+.drop-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.drop-actions .btn{min-width:170px;justify-content:center}
+.drop-status{margin-top:12px;min-height:20px;font-weight:700;color:var(--c-strong)}
+.drop-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.drop-thumb{width:84px;height:84px;border-radius:12px;overflow:hidden;background:var(--c-lilac);display:block}
+.drop-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+@media (max-width:600px){
+  .dropzone{padding:20px 14px}
+  .drop-actions{flex-direction:column}
+  .drop-actions .btn{width:100%}
+}
+
+/* ---------- Значок новых заказов в подменю админки ---------- */
+/* .admin-subnav a раскладку уже задал выше (правило #221) — здесь только позиция-страховка. */
+.admin-subnav a{position:relative}
+/* ЦВЕТ и форма значка. Отступ и вертикаль задаются в блоке .admin-subnav .badge выше:
+   дублировать margin/height здесь нельзя — это правило идёт ниже и молча перебивало их.
+   Поправка 24.11.2026: именно margin-left:7px и сбивал строку у «Заказов». */
+.badge{border-radius:999px;background:#D9534F;color:#fff}
+
+/* ---------- Лента событий заказа ---------- */
+.feed{list-style:none;margin:0;padding:0 0 0 4px}
+.feed-item{position:relative;display:flex;gap:14px;padding:0 0 18px 0}
+.feed-item::before{content:"";position:absolute;left:7px;top:18px;bottom:0;width:2px;background:var(--c-lilac)}
+.feed-item:last-child{padding-bottom:0}
+.feed-item:last-child::before{display:none}
+.feed-dot{width:16px;height:16px;border-radius:50%;background:var(--c-accent);flex:none;margin-top:2px;position:relative;z-index:1}
+.feed-created .feed-dot{background:var(--c-accent)}
+.feed-photos .feed-dot{background:#C8A951}
+.feed-status .feed-dot{background:#3E9A6E}
+.feed-title{font-weight:700;color:var(--c-strong);font-size:15.5px}
+.feed-date{font-size:13px;color:var(--c-body);opacity:.8;margin-top:2px}
+
+/* ---------- Политика ПДн ---------- */
+.policy{max-width:760px;line-height:1.75}
+.policy h2{font-size:20px;margin:28px 0 10px;color:var(--c-strong)}
+.policy p,.policy li{color:var(--c-body)}
+.policy ul{padding-left:22px;margin:8px 0 14px}
+.policy li{margin-bottom:6px}
+.policy-updated{background:var(--c-mint);display:inline-block;padding:6px 14px;border-radius:8px;font-size:14px}
+
+.foot-legal{margin-top:18px;padding-top:14px;border-top:1px solid rgba(75,70,144,.12);font-size:13px;text-align:center}
+
+/* ---------- Статистика в админке ---------- */
+.stats-row{display:flex;flex-wrap:wrap;gap:14px;margin:20px 0 8px}
+.stat{flex:1 1 150px;background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 4px 18px rgba(75,70,144,.08);border:1px solid var(--c-lilac)}
+.stat-accent{background:var(--c-accent);border-color:var(--c-accent)}
+.stat-accent .stat-num,.stat-accent .stat-label{color:#fff}
+.stat-num{display:block;font-family:Philosopher,Georgia,serif;font-size:30px;font-weight:700;color:var(--c-strong)}
+.stat-label{display:block;font-size:13.5px;color:var(--c-body);margin-top:4px}
+/* Заголовок таблицы держится при прокрутке: в заказах и товарах строк много,
+   и без него человек не помнит, что за колонка перед ним. */
+.tbl thead th{position:sticky;top:0;z-index:2;background:#FBF9FF;
+  box-shadow:inset 0 -1px 0 var(--c-lilac)}
+/* Цифры в колонках цен и сумм — по правому краю: так они сравниваются глазом. */
+.tbl .num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tbl{width:100%;border-collapse:collapse;margin:8px 0 24px;background:#fff;border-radius:12px;overflow:hidden}
+.tbl th,.tbl td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--c-lilac);font-size:15px}
+.tbl th{background:var(--c-lilac);font-weight:700;color:var(--c-strong)}
+.tbl tr:last-child td{border-bottom:none}
+@media (max-width:600px){.stat-num{font-size:24px}.stat{padding:14px 16px}.tbl th,.tbl td{padding:8px 10px;font-size:14px}}
+
+.feed-item.unread .feed-title{font-weight:800}
+.feed-item.unread{background:var(--c-cream)}
+.feed-item .feed-text{display:block;font-size:14px;color:var(--c-body);margin-top:2px}
+a.feed-item:hover{background:var(--c-lilac)}
+
+/* --- Кабинет и админка: оформление под сайт + мобильный вид (24.11.2026) --- */
+
+/* Фон страниц за входом: тот же мягкий переход, что на главной, но чуть заметнее. */
+body{background:linear-gradient(180deg,#fff 0%,#FBF9FF 55%,#F6F2FF 100%)}
+
+/* Заголовок и подпись страницы кабинета — как заголовки на сайте. */
+.page-head{margin:0 0 20px}
+.page-head h1{margin-bottom:4px}
+.page-head p{margin:0;color:var(--c-body);opacity:.85}
+
+/* Карточка списка: одна запись заказа или клиента. */
+
+/* Плашка статуса: цвет берётся из своего класса, форма одна на всех страницах. */
+.pill,.badge{white-space:nowrap}
+
+@media (max-width:600px){
+  /* Таблица на телефоне не влезает: прокрутка вместо разъезжающейся вёрстки. */
+  .card{padding:16px}
+  .card > table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  .cab-head{align-items:flex-start}
+}
+
+@media (max-width:700px){
+  /* Таблицы с data-label разворачиваются в карточки: на телефоне таблица в 7 колонок
+     не читается вообще. Где подписей нет — остаётся прокрутка (правило в начале файла). */
+  .tbl-cards[data-labels="1"]{display:block;overflow:visible;white-space:normal;margin:0}
+  .tbl-cards[data-labels="1"] tr:first-child{display:none}
+  .tbl-cards[data-labels="1"] tr{
+    display:block;border:1px solid var(--c-lilac);border-radius:var(--radius-sm);
+    padding:12px 14px;margin-bottom:12px;background:#fff;
+  }
+  .tbl-cards[data-labels="1"] td{
+    display:flex;justify-content:space-between;gap:14px;
+    border:0;padding:6px 0;font-size:14px;text-align:right;
+  }
+  .tbl-cards[data-labels="1"] td::before{
+    content:attr(data-label);
+    font-weight:700;color:var(--c-strong);text-align:left;flex:0 0 auto;
+  }
+  .tbl-cards[data-labels="1"] td:not([data-label])::before{content:""}
+  /* Таблица цен — главная таблица сайта: прокручивать её на телефоне нельзя. */
+  .price-table[data-labels="1"]{border-collapse:separate;border-spacing:0}
+  .price-table[data-labels="1"] thead{display:none}
+  .price-table[data-labels="1"], .price-table[data-labels="1"] tbody{display:block;width:100%}
+  .price-table[data-labels="1"] tr{display:block;border-bottom:0}
+  .price-table[data-labels="1"] td{border-bottom:0;padding:4px 0}
+  .price-table[data-labels="1"] td[colspan]{text-align:center}
+}
+
+/* Кнопка удаления фото: рядом со «Скачать», но менее заметная — удаление не главное действие. */
+.photo-del {
+  /* Палец должен попадать: не меньше 44px (правило кабинета). Отсюда padding и рамка, а не 13px текста. */
+  background: none; border: 1px solid transparent; border-radius: 999px;
+  min-height: 44px; padding: 8px 14px; margin-left: 4px;
+  color: #B03A3A; font: inherit; font-size: 14px; cursor: pointer; text-decoration: underline;
+}
+.photo-del:hover { color: #8E2626; }
+.photo-del:disabled { color: #A9A4BD; cursor: default; }
+
+/* ---------- Шаги заказа в кабинете: один в один с блоком «Как заказать» на сайте ---------- */
+.steps{list-style:none;counter-reset:step;padding:0}
+.steps li{counter-increment:step;position:relative;padding-left:52px}
+.steps li::before{
+  content:counter(step);position:absolute;left:18px;top:16px;
+  width:24px;height:24px;border-radius:50%;
+  background:var(--c-accent);color:#fff;
+  font-size:14px;font-weight:800;line-height:24px;text-align:center;
+}
+.steps li b{display:block;margin-bottom:4px}
+.steps li span{display:block;font-weight:400;color:var(--c-body);font-size:15px;line-height:1.5}
+
+/* ---------- ФОН КАБИНЕТА: тёплая основа и мягкие пятна, как на главной ---------- */
+body{
+  background:
+    radial-gradient(1100px 600px at 12% -8%, #FFF6E4 0%, rgba(255,246,228,0) 60%),
+    radial-gradient(900px 520px at 92% 4%, #EFEAFE 0%, rgba(239,234,254,0) 62%),
+    #FFFDF9;
+  background-attachment:fixed;
+}
+/* Статусы заказа — цвета сайта. Классы: pill-<status> из order_status.py. */
+.pill{background:var(--c-lilac);color:var(--c-strong);border:1px solid rgba(75,70,144,.18)}
+.pill-new{background:var(--c-cream);color:#7A5A00}
+.pill-in_work,.pill-layout{background:var(--c-peach);color:#8A4A22}
+.pill-paid{background:var(--c-lilac);color:var(--c-strong)}
+.pill-printing,.pill-shipped{background:#E7EEFF;color:#2B4A8A}
+.pill-done{background:var(--c-mint);color:#1F6B5B}
+.pill-cancelled{background:#F2F2F5;color:#6B6B7B}
+
+/* Утилиты страниц кабинета и админки (24.11.2026). Перенос встроенных style="…"
+   в классы: одна и та же разметка выглядит одинаково, а правка шапки карточки
+   не превращается в поиск по 26 местам. */
+.page-head{padding:26px 0 10px}
+.page-title{margin:10px 0 4px}
+.card-stack{margin-top:18px}
+.card-title{font-size:20px;margin-top:0}
+.tight{margin:0}
+.last{margin-bottom:0}
+.bare-link{text-decoration:none}
+.bare-link.inherit{color:inherit}
+.sum-toggle{cursor:pointer;color:var(--c-accent);font-weight:700}
+.w-full{width:100%}
+.field-grow{flex:1;min-width:200px}
+.field-grow-sm{flex:1;min-width:180px}
+/* ================= КОНТЕНТ-ЗАВОД (/admin/posts) =================
+   Стили одной страницы-модуля. Токены и кнопки — те же, что у сайта (--c-*, .btn, .card),
+   поэтому страница не выбивается из админки. Своё здесь — только раскладка: две колонки
+   на широком экране, карточки предпросмотра, свёрнутые блоки площадок.
+   Вес селектора: правила про поля и галочки под .cf-page — иначе общие правила админки
+   их перебьют (это уже случалось, docs/mistakes.md «правило CSS есть, а не действует»). */
+
+.cf-page h1.cf-h1{font-family:'Philosopher','Nunito',serif;margin:0 0 4px;font-size:30px}
+.cf-top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;justify-content:space-between;margin-bottom:14px}
+.cf-sub{margin:0;max-width:60ch;font-size:15px;color:var(--c-body);opacity:.85}
+.cf-plats{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* Значок площадки: две буквы в кружке. Подключена — тёмный с точкой, нет — приглушённый. */
+.cf-plat{display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:2px 10px;border-radius:999px;
+  background:var(--c-lilac);color:var(--c-accent);font-weight:800;font-size:12.5px;letter-spacing:.02em}
+.cf-plat.on{background:var(--c-accent);color:#fff}
+.cf-dot{width:6px;height:6px;border-radius:50%;background:var(--c-cta);display:inline-block}
+
+.cf-flash{margin:0 0 14px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--c-mint);
+  color:#1f7a5c;font-weight:700;font-size:14px}
+.cf-flash.bad{background:var(--c-peach);color:#b4472a}
+
+/* Две колонки: работа слева, подключения справа. Узкий экран — одна колонка. */
+.cf-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+.cf-side{display:flex;flex-direction:column;gap:14px}
+.cf-card{padding:18px 20px}
+.cf-page .cf-h2{font-size:19px;margin:0 0 10px}
+.cf-h2-sep{margin:22px 0 8px}
+.cf-main{min-width:0}
+
+/* Поля: подпись мелким над полем, подсказка под полем. */
+.cf-field{margin:0 0 12px}
+.cf-page .cf-field label{display:block;margin:0 0 6px;font-size:13.5px;font-weight:800;color:var(--c-strong)}
+.cf-opt{font-weight:400;font-size:12.5px;color:var(--c-body);opacity:.7}
+.cf-hint{margin:6px 0 0;font-size:13px;color:var(--c-body);opacity:.8}
+
+/* Галочки площадок — сеткой: ровные строки, на телефоне в столбец. */
+.cf-checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px 14px}
+.cf-page .cf-check{display:flex;align-items:center;gap:8px;min-height:44px;font-weight:600;
+  font-size:14.5px;color:var(--c-strong);margin:0}
+.cf-page .cf-check.muted{opacity:.62}
+.cf-need{font-size:11.5px;font-weight:800;color:#8a6a12;background:var(--c-cream);
+  border-radius:999px;padding:1px 8px;margin-left:auto}
+
+/* Блок автогенерации: рамка; выключенный — приглушённый и с заметной просьбой подключить. */
+.cf-gen{margin:14px 0 4px;padding:12px 14px;border:1px dashed rgba(75,70,144,.35);border-radius:var(--radius-sm);
+  background:#FBF9FF}
+.cf-gen.off{background:#F4F3F7;border-color:rgba(74,70,120,.25)}
+.cf-gen-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.cf-gen-row{display:flex;gap:8px}
+.cf-gen-row input{flex:1;min-width:0}
+.cf-page .cf-gen-row input:disabled{background:#ECEBF1;color:#8B88A3}
+.cf-page .cf-gen-row .btn[disabled]{opacity:.5}
+.cf-netice{margin:8px 0 0;font-size:13.5px;color:#7a3b22;background:var(--c-peach);
+  border-radius:var(--radius-sm);padding:8px 10px}
+.cf-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+
+/* Значки-метки: «подключено», «обрезано», «с разведкой» — одной формы, разного цвета. */
+.cf-badge{display:inline-flex;align-items:center;padding:1px 8px;border-radius:999px;font-size:11.5px;
+  font-weight:800;line-height:1.7;background:var(--c-lilac);color:var(--c-accent);white-space:nowrap}
+.cf-badge.ok{background:var(--c-mint);color:#1f7a5c}
+.cf-badge.off{background:var(--c-peach);color:#b4472a}
+.cf-badge.info{background:var(--c-cream);color:#8a6a12}
+
+/* Предпросмотр адаптации: карточка на площадку, текст с прокруткой. */
+#cfPreview{display:grid;gap:10px;margin-top:12px}
+.cf-prev{border:1px solid rgba(75,70,144,.14);border-radius:var(--radius-sm);padding:10px 12px;background:#fff}
+.cf-prev-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-size:14px}
+.cf-prev-num{font-size:12px;color:var(--c-body);opacity:.75;font-variant-numeric:tabular-nums}
+.cf-prev-text{white-space:pre-wrap;font-size:14px;line-height:1.5;color:var(--c-body);
+  max-height:240px;overflow:auto;background:#FBFAFE;border-radius:8px;padding:8px 10px}
+.cf-prev-text b{color:var(--c-strong)}
+
+/* Карточка поста: заголовок, ответы площадок списком. */
+.cf-post-title{font-family:'Philosopher','Nunito',serif;font-size:17px;color:var(--c-strong);margin:0 0 6px}
+.cf-results{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.cf-results li{padding:4px 10px;border-radius:8px;background:#F7F6FB}
+.cf-results li.ok{background:var(--c-mint);color:#1f7a5c}
+.cf-results li.bad{background:var(--c-peach);color:#b4472a}
+.cf-results li.skip{background:var(--c-cream);color:#8a6a12}
+.cf-variants{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.cf-var textarea{width:100%;min-height:110px}
+.cf-var-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;font-size:14px}
+
+/* Площадки: свёрнутые блоки — на телефоне экран не превращается в простыню полей. */
+.cf-form{display:flex;flex-direction:column;gap:8px}
+.cf-tgt{border:1px solid rgba(75,70,144,.14);border-radius:var(--radius-sm);padding:4px 10px;background:#fff}
+.cf-tgt summary{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;list-style:none;font-size:14px}
+.cf-tgt summary::-webkit-details-marker{display:none}
+.cf-tgt-name{font-weight:700;color:var(--c-strong)}
+.cf-tgt-state{margin-left:auto;font-size:12px;font-weight:800}
+.cf-tgt-state.ok{color:#1f7a5c}
+.cf-tgt-state.off{color:#b4472a}
+.cf-tgt-body{padding:0 2px 10px}
+.cf-page .cf-tgt-body label{margin:10px 0 4px;font-size:12.5px}
+
+/* Нейросети: карточки-формы. */
+.cf-llms{display:flex;flex-direction:column;gap:10px}
+.cf-llm{border:1px solid rgba(75,70,144,.14);border-radius:var(--radius-sm);padding:10px 12px;background:#fff}
+.cf-llm-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;font-size:14px}
+.cf-llm-row{display:flex;gap:6px;margin-bottom:6px}
+.cf-llm-row input{flex:1;min-width:0;font-size:13.5px;padding:8px 10px;min-height:38px}
+.cf-llm-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cf-page .cf-llm-foot .cf-check{min-height:38px;font-size:13.5px}
+
+.cf-hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.cf-hist li{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cf-hist-date,.cf-hist-t{color:var(--c-body);opacity:.8}
+.cf-hist-brief{flex-basis:100%;opacity:.75}
+
+/* Телефон и планшет: одна колонка, поля на всю ширину, цели пальцем не меньше 44 px. */
+@media (max-width:1100px){
+  .cf-grid{grid-template-columns:minmax(0,1fr)}
+}
+/* До 900 px — как на планшете и телефоне: кнопки в ленте постов тоже 44 px,
+   иначе пальцем в них не попасть (правило сайта, замер 27.11.2026: .btn-sm давал 32 px). */
+@media (max-width:900px){
+  .cf-page .post-foot .btn-sm{min-height:44px}
+  .cf-page .cf-llm .btn-sm{min-height:44px}
+}
+@media (max-width:600px){
+  .cf-page .cf-gen-row{flex-direction:column}
+  .cf-page .cf-gen-row .btn{min-height:44px}
+  .cf-page .cf-checks{grid-template-columns:1fr}
+  .cf-llm-row{flex-direction:column}
+  .cf-actions .btn{min-height:44px}
+}
+
+/* ------------- Пустая рамка предпросмотра: место не прыгает, пока человек печатает ------------- */
+.cf-page #cfPreview{display:grid;gap:10px;margin-top:14px}
+.cf-page #cfPreview:empty{display:none}
+.cf-page .cf-prev{border:1px solid rgba(42,38,80,.12);border-radius:var(--radius-sm);padding:10px 12px;background:#fff}
+.cf-page .cf-prev-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 8px;font-size:13.5px}
+.cf-page .cf-prev-num{font-size:12.5px;font-weight:700;color:var(--c-body);opacity:.8}
+.cf-page .cf-prev-text{white-space:pre-wrap;word-break:break-word;color:var(--c-body);font-size:14px;line-height:1.55}
+
+/* ------------- Правка текстов по площадкам: поле во всю ширину, счётчик рядом ------------- */
+.cf-page .cf-var{margin:0 0 12px}
+.cf-page .cf-var-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 6px;font-size:13.5px}
+.cf-page .cf-var textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;border-radius:var(--radius-sm);
+  border:1px solid rgba(42,38,80,.18);font:inherit;font-size:14px;line-height:1.55;color:var(--c-body);resize:vertical}
+.cf-page .cf-var textarea:focus{outline:2px solid var(--c-accent);outline-offset:1px;border-color:var(--c-accent)}
+.cf-page .cf-variants{margin:10px 0 0;padding:12px 14px;border-radius:var(--radius-sm);background:var(--c-mint)}
+
+/* ------------- Ответы площадок: одна строка на площадку, цвет по итогу ------------- */
+.cf-page .cf-results{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:13px}
+.cf-page .cf-results li{padding:6px 10px;border-radius:8px;background:var(--c-lilac);color:var(--c-strong)}
+.cf-page .cf-results li.ok{background:var(--c-mint);color:#1f7a5c}
+.cf-page .cf-results li.bad{background:var(--c-peach);color:#b4472a}
+.cf-page .cf-results li.skip{background:#f1eefb;color:var(--c-body)}
+
+/* ------------- Пост в ленте: заголовок, текст, кнопки в линию ------------- */
+.cf-page .cf-post-title{font-weight:800;color:var(--c-strong);margin:0 0 6px}
+.cf-page .cf-post .post-body{white-space:pre-wrap;word-break:break-word}
+.cf-page .cf-post .post-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.cf-page .cf-post .post-actions{display:flex;flex-wrap:wrap;gap:8px}
+
+/* ------------- Площадки и нейросети: строки полей ровные, подпись сверху ------------- */
+.cf-page .cf-tgt{margin:0 0 8px;border-radius:var(--radius-sm);background:var(--c-mint)}
+.cf-page .cf-tgt[open]{background:#fff;box-shadow:inset 0 0 0 1px rgba(42,38,80,.12)}
+.cf-page .cf-tgt summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;cursor:pointer;
+  list-style:none;font-weight:700;font-size:14px}
+.cf-page .cf-tgt summary::-webkit-details-marker{display:none}
+.cf-page .cf-tgt-name{flex:1 1 auto;min-width:0;color:var(--c-strong)}
+.cf-page .cf-tgt-state{font-size:12.5px;font-weight:700;opacity:.85}
+.cf-page .cf-tgt-state.ok{color:#1f7a5c}
+.cf-page .cf-tgt-state.off{color:#b4472a}
+.cf-page .cf-tgt-body{padding:2px 10px 12px}
+.cf-page .cf-tgt-body label{display:block;margin:10px 0 5px;font-size:13px;font-weight:800;color:var(--c-strong)}
+.cf-page .cf-tgt-body input{width:100%;padding:9px 11px;border-radius:var(--radius-sm);
+  border:1px solid rgba(42,38,80,.18);font:inherit;font-size:14px}
+.cf-page .cf-tgt-body input:focus{outline:2px solid var(--c-accent);outline-offset:1px}
+
+.cf-page .cf-llms{display:grid;gap:10px}
+.cf-page .cf-llm{padding:10px 12px;border-radius:var(--radius-sm);background:var(--c-lilac)}
+.cf-page .cf-llm-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 8px;font-size:14px}
+.cf-page .cf-llm-row{display:flex;gap:8px;margin:0 0 8px}
+.cf-page .cf-llm-row input{flex:1 1 0;min-width:0;padding:9px 11px;border-radius:var(--radius-sm);
+  border:1px solid rgba(42,38,80,.18);font:inherit;font-size:14px;background:#fff}
+.cf-page .cf-llm-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+
+/* ------------- История генераций и значок «нейросеть не подключена» ------------- */
+.cf-page .cf-hist{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:13px}
+.cf-page .cf-hist li{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:#fff}
+.cf-page .cf-hist-date{font-weight:700;color:var(--c-strong)}
+.cf-page .cf-hist-t{color:var(--c-body);opacity:.85}
+.cf-page .cf-hist-brief{flex:1 1 100%;color:var(--c-body);overflow-wrap:anywhere}
+.cf-page .cf-netice{margin:8px 0 0;padding:10px 12px;border-radius:var(--radius-sm);background:var(--c-cream);
+  color:var(--c-strong);font-size:13.5px;line-height:1.5}
+.cf-page .cf-netice a{color:var(--c-accent);font-weight:700}
+.cf-page .cf-netice-how{display:block;margin:6px 0 8px}
+.cf-page .cf-netice .btn-sm{background:var(--c-cta);color:var(--c-strong);border:0}
+.cf-page .cf-gen.off{opacity:.85}
+
+/* ------------- Узкий экран: одна колонка, кнопки в палец, ничего не вылезает ------------- */
+@media (max-width:1100px){
+  .cf-page .cf-grid{grid-template-columns:minmax(0,1fr)}
+  .cf-page .cf-side{order:2}
+}
+@media (max-width:900px){
+  .cf-page .post-foot .btn-sm,
+  .cf-page .cf-llm .btn-sm,
+  .cf-page .cf-actions .btn{min-height:44px}
+  .cf-page .cf-llm-row{flex-direction:column}
+  .cf-page .cf-checks{grid-template-columns:1fr}
+  .cf-page .cf-gen-row{flex-direction:column}
+  .cf-page .cf-gen-row .btn{min-height:44px}
+}
+/* ------------- Инструкция по шагам и «если не заработало»: свёрнуто, чтобы не мешать ------------- */
+.cf-page .cf-howto{margin:0 0 12px;border-radius:var(--radius-sm);background:var(--c-cream);padding:8px 12px}
+.cf-page .cf-howto summary{min-height:36px;display:flex;align-items:center;cursor:pointer;font-weight:800;
+  font-size:13.5px;color:var(--c-strong);list-style:none}
+.cf-page .cf-howto summary::-webkit-details-marker{display:none}
+.cf-page .cf-howto summary::before{content:'›';margin-right:8px;font-size:18px;line-height:1;transition:transform .15s}
+.cf-page .cf-howto[open] summary::before{transform:rotate(90deg)}
+.cf-page .cf-steps{margin:4px 0 6px;padding-left:20px;font-size:13.5px;line-height:1.55;color:var(--c-strong)}
+.cf-page .cf-steps li{margin:0 0 4px}
+.cf-page .cf-why{margin:6px 0 0;padding:6px 10px;border-radius:8px;background:#fff}
+.cf-page .cf-why summary{min-height:32px;display:flex;align-items:center;cursor:pointer;font-weight:700;
+  font-size:13px;color:var(--c-accent);list-style:none}
+.cf-page .cf-why summary::-webkit-details-marker{display:none}
+.cf-page .cf-why ul{margin:4px 0 6px;padding-left:18px;font-size:13px;line-height:1.5;color:var(--c-body)}
+.cf-page .cf-post-media{margin:6px 0 0;font-size:12.5px;color:var(--c-body);opacity:.85;overflow-wrap:anywhere}
+.cf-page .cf-post-media a{color:var(--c-accent)}
+.cf-page input#cfWhen{max-width:260px}
+@media (max-width:900px){
+  .cf-page input#cfWhen{max-width:none;width:100%;min-height:44px}
+  .cf-page .cf-howto summary{min-height:44px}
+  .cf-page .cf-netice .btn-sm{min-height:44px}
+}

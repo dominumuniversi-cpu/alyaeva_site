@@ -110,28 +110,50 @@
       function (m, slash, tag, rest) { return '<' + slash + tag + rest; });
   }
 
-  /* ---------- Сохранить пост ---------- */
-  var saveBtn = $('#cfSave');
-  if (saveBtn) saveBtn.addEventListener('click', function () {
+  /* ---------- Сохранить пост ----------
+     Одна функция на две кнопки: сохранить и «сохранить и в очередь». Разница — только в
+     времени отложенной публикации, поэтому дублировать проверки в двух местах незачем. */
+  function savePost(when, list) {
     var msg = $('#cfMsg');
     var ch = channels();
     if (!body.value.trim()) { say(msg, 'Пустой пост публиковать некуда', 'bad'); return; }
     if (!ch.length) { say(msg, 'Отметьте хотя бы одну площадку', 'bad'); return; }
-    saveBtn.disabled = true;
-    say(msg, 'Сохраняю…');
+    /* Поле времени может быть пустым: тогда в очередь не ставим, а говорим, что сделать.
+       Иначе «в очереди на  в » без времени — и человек не понимает, что произошло. */
+    if (when && !String(($('#cfWhen') || {}).value || '').trim()) {
+      say(msg, 'Выберите дату и время — или нажмите «Сохранить» без очереди', 'bad'); return;
+    }
+    var btns = $$('#cfSave, #cfSaveQueue');
+    btns.forEach(function (b) { b.disabled = true; });
+    say(msg, when ? 'Сохраняю и ставлю в очередь…' : 'Сохраняю…');
     post('/api/admin/cf/post', {
       title: ($('#cfTitle') || {}).value || '', body: body.value, channels: ch.join(','),
-      media: ($('#cfMedia') || {}).value || '', links: ($('#cfLinks') || {}).value || ''
+      media: ($('#cfMedia') || {}).value || '', links: ($('#cfLinks') || {}).value || '',
+      publish_at: when ? (($('#cfWhen') || {}).value || '') : ''
     }).then(function (d) {
       if (!d.ok) { say(msg, d.error || 'Не сохранилось', 'bad'); return; }
       body.value = '';
       if ($('#cfTitle')) $('#cfTitle').value = '';
       if (count) count.textContent = '0';
-      say(msg, 'Сохранено. Тексты по площадкам готовы — откройте «Тексты по площадкам».', 'ok');
+      /* Время берём из ответа сервера — там уже то, что записано в базе. */
+      say(msg, when
+        ? 'Сохранено и в очереди на ' + whenText(String(d.publish_at || '')) + '. Уйдёт само.'
+        : 'Сохранено. Тексты по площадкам готовы — откройте «Тексты по площадкам».', 'ok');
       addCard(d);
     }).catch(function () { say(msg, 'Сеть недоступна — попробуйте ещё раз', 'bad'); })
-      .then(function () { saveBtn.disabled = false; });
-  });
+      .then(function () { btns.forEach(function (b) { b.disabled = false; }); });
+  }
+
+  /* «2026-11-27T09:00» → «27.11 в 09:00»: человеку так понятнее, чем ISO. */
+  function whenText(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(v || ''));
+    return m ? (m[3] + '.' + m[2] + ' в ' + m[4] + ':' + m[5]) : '';
+  }
+
+  var saveBtn = $('#cfSave');
+  if (saveBtn) saveBtn.addEventListener('click', function () { savePost(false); });
+  var queueBtn = $('#cfSaveQueue');
+  if (queueBtn) queueBtn.addEventListener('click', function () { savePost(true); });
 
   function addCard(d) {
     var list = $('#cfList');
@@ -146,6 +168,7 @@
       '<div class="post-foot"><div class="post-actions">' +
       '<button class="btn btn-ghost btn-sm" type="button" data-variants="' + d.id + '">Тексты по площадкам</button>' +
       '<button class="btn btn-ghost btn-sm" type="button" data-del="' + d.id + '">Удалить</button>' +
+      '<button class="btn btn-ghost btn-sm" type="button" data-when="' + d.id + '">Отложить</button>' +
       '<button class="btn btn-sm" type="button" data-pub="' + d.id + '">Опубликовать</button></div>' +
       '<span class="save-msg"></span></div>' +
       '<div class="cf-variants" data-vp="' + d.id + '" hidden></div>';
@@ -182,6 +205,28 @@
         });
       });
     });
+    /* Отложить: спрашиваем время и ставим в очередь. Пустое — снимаем с очереди (останется черновиком). */
+    $$('[data-when]', root).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var card = btn.closest('.cf-post'), msg = $('.save-msg', card);
+        var now = btn.dataset.at || ($('#cfWhen') ? $('#cfWhen').value : '');
+        var when = window.prompt('Когда опубликовать? Формат: ГГГГ-ММ-ДДTЧЧ:ММ (пустое — снять с очереди)', now || '');
+        if (when === null) return;
+        post('/api/admin/cf/post/' + btn.dataset.when + '/schedule', { when: when.trim() }).then(function (d) {
+          if (!d.ok) { say(msg, d.error || 'Не поставилось в очередь', 'bad'); return; }
+          /* Ответ сервера — результат queue.schedule(): статус и время лежат внутри него. */
+          if (d.when) { btn.dataset.at = d.when; } else { delete btn.dataset.at; }
+          var badge = $('.badge-status', card);
+          if (badge) {
+            badge.textContent = d.when ? 'В очереди' : 'Черновик';
+            badge.className = 'badge-status s-' + (d.when ? 'queued' : 'draft');
+          }
+          say(msg, d.when ? ('В очереди на ' + whenText(String(d.when)) + '. Уйдёт само.') : 'Снято с очереди: снова черновик.',
+              d.when ? 'ok' : '');
+        }).catch(function () { say(msg, 'Сеть недоступна', 'bad'); });
+      });
+    });
+
     $$('[data-pub]', root).forEach(function (btn) {
       btn.addEventListener('click', function () {
         var card = btn.closest('.cf-post'), msg = $('.save-msg', card);

@@ -33,7 +33,9 @@
   <div class="cf-main">
 
     {# ---------------- МАТЕРИАЛ ---------------- #}
-    <section class="card cf-card" id="cfEditor">
+    {# Якорь «к материалу» нужен кнопке «Копия в правку» из опубликованного поста ниже. #}
+    <a id="cfEditor"></a>
+    <section class="card cf-card" id="cfEditorCard">
       <h2 class="cf-h2">Новый пост</h2>
       <div class="cf-field">
         <label for="cfTitle">Заголовок <span class="cf-opt">необязательно</span></label>
@@ -45,11 +47,11 @@
         <p class="cf-hint"><span id="cfCount">0</span> символов · лимиты площадок учитываются при сохранении</p>
       </div>
       <div class="cf-field">
-        <label for="cfLinks">Ссылка <span class="cf-opt">добавится ко всем площадкам</span></label>
+        <label for="cfLinks">Ссылка <span class="cf-opt">необязательно; Telegram покажет её карточкой, остальные — текстом</span></label>
         <input id="cfLinks" type="url" placeholder="https://alyaeva.pro/order">
       </div>
       <div class="cf-field">
-        <label for="cfMedia">Фото или видео <span class="cf-opt">ссылка; нужно для Instagram</span></label>
+        <label for="cfMedia">Фото или видео <span class="cf-opt">ссылка на файл; нужно для Instagram и для поста с картинкой</span></label>
         <input id="cfMedia" type="url" placeholder="https://alyaeva.pro/static/…">
       </div>
 
@@ -81,14 +83,27 @@
           <button class="btn btn-sm" type="button" id="cfGenBtn" {% if not llm_on %}disabled aria-disabled="true"{% endif %}>Сочинить</button>
         </div>
         {% if not llm_on %}
-        <p class="cf-netice">Автогенерация недоступна: ни одна нейросеть не подключена.
-          <a href="#cfLLM">Подключите нейросеть</a> — и кнопка станет активной.</p>
+        <div class="cf-netice" role="note">
+          <b>Автогенерация выключена</b> — ни одна нейросеть не подключена.
+          <span class="cf-netice-how">
+            Начните с <b>{{ llm_advice.first }}</b>: он {{ llm_advice.why }}.
+            Нужны факты со ссылками — ставьте <b>{{ llm_advice.research }}</b>: {{ llm_advice.research_why }}.
+            После подключения {{ llm_advice.after }}.
+          </span>
+          <a class="btn btn-sm" href="#cfLLM-title">Подключить нейросеть</a>
+        </div>
         {% endif %}
         <span class="save-msg" id="cfGenMsg"></span>
       </div>
 
+      <div class="cf-field">
+        <label for="cfWhen">Отложить <span class="cf-opt">необязательно; пустое поле — публикация вручную</span></label>
+        <input id="cfWhen" type="datetime-local" value="{{ default_when }}" step="60">
+      </div>
+
       <div class="cf-actions">
         <button class="btn" type="button" id="cfSave">Адаптировать и сохранить</button>
+        <button class="btn btn-ghost" type="button" id="cfSaveQueue">Сохранить и в очередь</button>
         <span class="save-msg" id="cfMsg"></span>
       </div>
 
@@ -114,6 +129,8 @@
         </div>
         {% if p.title %}<div class="cf-post-title">{{ p.title }}</div>{% endif %}
         <div class="post-body" data-open>{{ p.body }}</div>
+        {# Фото и ссылка в ленте видно сразу: иначе человек не помнит, что приложил к посту. #}
+        {% if p.media_url %}<p class="cf-post-media">Фото: <a href="{{ p.media_url }}" target="_blank" rel="noopener">{{ p.media_url }}</a></p>{% endif %}
         {% if p.result_map %}
         <ul class="cf-results">
           {% for k, v in p.result_map.items() %}
@@ -130,6 +147,8 @@
             {% else %}
               <button class="btn btn-ghost btn-sm" type="button" data-variants="{{ p.id }}">Тексты по площадкам</button>
               <button class="btn btn-ghost btn-sm" type="button" data-del="{{ p.id }}">Удалить</button>
+              <button class="btn btn-ghost btn-sm" type="button" data-when="{{ p.id }}"
+                {% if p.publish_at %}data-at="{{ p.publish_at.strftime('%Y-%m-%dT%H:%M') }}"{% endif %}>Отложить</button>
               <button class="btn btn-sm" type="button" data-pub="{{ p.id }}"
                 {% if not p.can_publish %}disabled title="Ни одна площадка поста не подключена — настройте в разделе «Площадки»"{% endif %}>Опубликовать</button>
             {% endif %}
@@ -148,7 +167,26 @@
 
     <section class="card cf-card" id="cfTargets">
       <h2 class="cf-h2">Площадки</h2>
-      <p class="cf-hint">Пустое поле не стирает прежнее значение. Токены хранятся шифром и на странице не показываются.</p>
+      <p class="cf-hint">Подключите те, куда публикуете. Пустое поле не стирает прежнее значение, токены хранятся шифром.</p>
+      <details class="cf-howto">
+        <summary>Где взять токены — по шагам</summary>
+        <ol class="cf-steps">
+          <li><b>Telegram.</b> Напишите @BotFather → /newbot → скопируйте токен. Бота добавьте в свой канал администратором.</li>
+          <li><b>ВКонтакте.</b> Создайте приложение на vk.com/apps → в нём получите токен с правом «управление сообществом» → вставьте токен и id группы.</li>
+          <li><b>Одноклассники.</b> Создайте приложение на ok.ru/dev/methods → возьмите ключ приложения и access_token.</li>
+          <li><b>Instagram.</b> Нужен бизнес-аккаунт и токен в Instagram Graph API — обычно его выдаёт тот, кто ведёт рекламу.</li>
+          <li>Вставьте значения в поля ниже, нажмите «Сохранить площадки» и дождитесь ответа «Сохранено».</li>
+        </ol>
+        <details class="cf-why">
+          <summary>Если не заработало — что это может быть?</summary>
+          <ul>
+            <li>Токен скопирован не целиком — вставьте заново без лишних пробелов?</li>
+            <li>Бот добавлен в канал, а права «публиковать сообщения» у него нет?</li>
+            <li>Группа ВКонтакте закрытая — возможно, поэтому публикация не проходит?</li>
+            <li>Для Одноклассников нужны и ключ приложения, и access_token — заполнены оба?</li>
+          </ul>
+        </details>
+      </details>
       <form method="post" action="/admin/posts/targets" class="cf-form" id="cfTargetsForm">
         <input type="hidden" name="csrf" value="1">
         {% for p in platforms %}
@@ -161,21 +199,22 @@
           </summary>
           <div class="cf-tgt-body">
             {% if p.key == "webhook" %}
-            <label for="cfHook">Адрес API</label>
+            <label for="cfHook">1. Адрес API <span class="cf-opt">куда завод отправит пост</span></label>
             <input id="cfHook" name="hook_url" type="url" placeholder="https://…" value="{{ t.address if t else "" }}">
-            <p class="cf-hint">POST JSON: {"title", "text", "platform", "media_url", "meta"}.</p>
+            <p class="cf-hint">2. На той стороне примите POST с JSON: {"title", "text", "platform", "media_url", "meta"}.</p>
+            <p class="cf-hint">3. Нажмите «Сохранить площадки» — проверка придёт ответом, если адрес не ответит.</p>
             {% else %}
             {% set n = p.key|upper|replace("INSTAGRAM", "IG") %}
-            <label for="cf{{ n }}Addr">{{ "Канал (@имя)" if p.key == "telegram" else ("id группы" if p.key in ("vk", "ok") else "id бизнес-аккаунта") }}</label>
+            <label for="cf{{ n }}Addr">1. {{ "Канал — @имя бота в вашем канале" if p.key == "telegram" else ("id группы со знаком минус" if p.key in ("vk", "ok") else "id бизнес-аккаунта") }}</label>
             <input id="cf{{ n }}Addr" name="{{ "ig" if p.key == "instagram" else p.key }}_address" type="text"
                    value="{{ t.address if t else "" }}" placeholder="{{ "@alyaeva" if p.key == "telegram" else "123456789" }}">
-            <label for="cf{{ n }}Tok">Токен {% if t and t.has_token %}<span class="cf-opt">задан — пустое поле не изменит</span>{% endif %}</label>
+            <label for="cf{{ n }}Tok">2. Токен {% if t and t.has_token %}<span class="cf-opt">задан — пустое поле не изменит</span>{% endif %}</label>
             <input id="cf{{ n }}Tok" name="{{ "ig" if p.key == "instagram" else p.key }}_token" type="password" autocomplete="off" placeholder="вставьте токен">
             {% if p.key == "ok" %}
-            <label for="cfOKKey">Ключ приложения</label>
+            <label for="cfOKKey">3. Ключ приложения</label>
             <input id="cfOKKey" name="ok_appkey" type="text" placeholder="application_key">
             {% endif %}
-            <label for="cf{{ n }}Handle">Подпись @аккаунт {% if p.signature %}<span class="cf-opt">добавится в конце</span>{% else %}<span class="cf-opt">не используется</span>{% endif %}</label>
+            <label for="cf{{ n }}Handle">{{ "4." if p.key == "ok" else "3." }} Подпись @аккаунт {% if p.signature %}<span class="cf-opt">добавится в конце поста</span>{% else %}<span class="cf-opt">в этой площадке не нужна</span>{% endif %}</label>
             <input id="cf{{ n }}Handle" name="{{ "ig" if p.key == "instagram" else p.key }}_handle" type="text"
                    value="{{ t.handle if t is defined and t.handle else "" }}" placeholder="@alyaeva">
             {% endif %}
@@ -191,12 +230,31 @@
     </section>
 
     <section class="card cf-card" id="cfLLM">
-      <h2 class="cf-h2">Нейросеть</h2>
+      <h2 class="cf-h2" id="cfLLM-title">Нейросеть</h2>
       {% if llm_on %}
       <p class="cf-hint">Подключено: <b>{{ llm_label }}</b>. Кнопка «Сочинить» активна.</p>
       {% else %}
       <p class="cf-hint">Пока не подключена — автогенерация выключена. Достаточно одного сервиса.</p>
       {% endif %}
+      {# Инструкция по шагам, а не разбор: где взять ключ, что включить, чем проверить.
+         Предположения «почему не сработало» — отдельным свёрнутым блоком и с «?» в конце. #}
+      <details class="cf-howto">
+        <summary>Как подключить — три шага</summary>
+        <ol class="cf-steps">
+          <li>Создайте ключ API в личном кабинете выбранного сервиса ниже.</li>
+          <li>Вставьте ключ в поле выбранного сервиса ниже, отметьте «включить» и нажмите «Сохранить».</li>
+          <li>Вернитесь к посту: кнопка «Сочинить» станет активной, а рядом появится название подключённого сервиса.</li>
+        </ol>
+        <details class="cf-why">
+          <summary>Если не заработало — что это может быть?</summary>
+          <ul>
+            <li>Ключ скопирован не целиком — попробуйте вставить ещё раз без пробелов в начале и в конце?</li>
+            <li>У ключа закончились деньги или не включён доступ к модели — смените модель в поле рядом с ключом?</li>
+            <li>Сервис недоступен из России без прокси — заполните поле «прокси» в блоке OpenAI?</li>
+            <li>Нужна не текстовая модель, а поиск — подключите Perplexity, он отвечает со ссылками на источники?</li>
+          </ul>
+        </details>
+      </details>
       <div class="cf-llms">
         {% for r in llm_rows %}
         <form method="post" action="/admin/posts/llm" class="cf-llm" data-provider="{{ r.provider }}">
